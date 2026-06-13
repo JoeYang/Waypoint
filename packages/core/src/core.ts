@@ -3,9 +3,12 @@ import type {
   NodeStatus,
   Ask,
   AskOption,
+  AskState,
   ContextPack,
   CreateNodeInput,
   DependencyEdge,
+  InboxItem,
+  InboxResponse,
   TransitionInput,
   ParkAskInput,
 } from "@waypoint/shared";
@@ -71,6 +74,10 @@ function resolutionText(ask: Ask): string {
 
 const RESOLVED_STATES = new Set(["ANSWERED", "CONFIRMED", "OVERTURNED"]);
 
+// Asks still awaiting a human decision — the inbox's membership. OPEN asks block; ASSUMED
+// asks let the agent proceed but the human may still confirm or overturn them.
+const PENDING_STATES = new Set<AskState>(["OPEN", "ASSUMED"]);
+
 // Loads an ask and enforces the optimistic-concurrency guard before any state change.
 async function requireAsk(
   ctx: RepositoryContext,
@@ -100,6 +107,7 @@ export interface Core {
   // Reads — computed on demand, never stored (a future cache MUST equal these values).
   computeBlocked(projectId: string, nodeId: string): Promise<boolean>;
   blastRadius(projectId: string, nodeId: string): Promise<number>;
+  listInbox(projectId: string): Promise<InboxResponse>;
   getContext(projectId: string): Promise<ContextPack>;
 }
 
@@ -350,7 +358,12 @@ export function createCore(deps: CoreDeps): Core {
           throw new ValidationError(`cannot confirm a ${ask.state} ask`, { askId: ask.id });
         }
         const now = clock.now();
-        const updated: Ask = { ...ask, state: "CONFIRMED", version: ask.version + 1, updatedAt: now };
+        const updated: Ask = {
+          ...ask,
+          state: "CONFIRMED",
+          version: ask.version + 1,
+          updatedAt: now,
+        };
         await ctx.asks.update(updated);
         await ctx.events.append({
           id: ids.generate(),
@@ -483,6 +496,53 @@ export function createCore(deps: CoreDeps): Core {
       });
     },
 
+    async listInbox(projectId) {
+      return uow.run(async (ctx) => {
+        const project = await ctx.projects.findById(projectId);
+        if (!project) throw new NotFoundError("project", projectId);
+
+        // One transaction, sequential reads (a single pg client can't run concurrent
+        // queries — see getContext). Blast radius is computed inline from the edge list,
+        // not via core.blastRadius per ask, to avoid an N+1 on this hot read path.
+        const asks = await ctx.asks.listByProject(projectId);
+        const nodes = await ctx.nodes.listByProject(projectId);
+        const edges = await ctx.nodes.listDependencies(projectId);
+        const events = await ctx.events.listSince(projectId, 0);
+
+        const nodeById = new Map(nodes.map((n) => [n.id, n]));
+        const dependentsOf = (nodeId: string) =>
+          edges.filter((e) => e.dependsOnId === nodeId).length;
+        const seq = events.length > 0 ? events[events.length - 1]!.seq : 0;
+
+        const items: InboxItem[] = asks
+          .filter((a) => PENDING_STATES.has(a.state))
+          .flatMap((a) => {
+            const node = nodeById.get(a.nodeId);
+            if (!node) return []; // an ask without its node is not surfacable; skip defensively
+            return [
+              {
+                askId: a.id,
+                nodeId: a.nodeId,
+                nodeTitle: node.title,
+                type: a.type,
+                state: a.state,
+                prompt: a.prompt,
+                required: a.required,
+                options: a.options,
+                blastRadius: dependentsOf(a.nodeId),
+                parkedAt: a.createdAt,
+                askVersion: a.version,
+                nodeVersion: node.version,
+              },
+            ];
+          })
+          // Rank: most-blocking first; ties broken by who has waited longest.
+          .sort((x, y) => y.blastRadius - x.blastRadius || x.parkedAt - y.parkedAt);
+
+        return { projectId, seq, items };
+      });
+    },
+
     async getContext(projectId) {
       return uow.run(async (ctx) => {
         const project = await ctx.projects.findById(projectId);
@@ -496,8 +556,7 @@ export function createCore(deps: CoreDeps): Core {
         const events = await ctx.events.listSince(projectId, 0);
 
         const goal = nodes.find((n) => n.kind === "goal" && n.parentId === null)?.title ?? null;
-        const dependents = (nodeId: string) =>
-          edges.filter((e) => e.dependsOnId === nodeId).length;
+        const dependents = (nodeId: string) => edges.filter((e) => e.dependsOnId === nodeId).length;
 
         const openAsks = asks
           .filter((a) => a.state === "OPEN")
