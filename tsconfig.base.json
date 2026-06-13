@@ -13,7 +13,9 @@
 
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
+    // exactOptionalPropertyTypes intentionally NOT enabled: it conflicts with third-party
+    // library types (MCP SDK, ws, react) that model optional props without `| undefined`,
+    // forcing casts at every boundary. All other strict checks remain on.
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
