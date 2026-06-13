@@ -22,6 +22,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc -b --noEmit",
+    "db:up": "bash scripts/dev-db.sh",
     "db:migrate": "node --experimental-strip-types packages/server/src/db/migrate.ts",
     "db:seed": "node --experimental-strip-types packages/server/src/db/seed.ts"
   },
