@@ -31,7 +31,7 @@
 - [x] 4.1 First migration (schema only — its own commit): `project`, `node`, `ask`, `event`, `dependency` with `version`, unique `(project_id, seq)`, indexes; reversible down step. Added a no-dep SQL migration runner (`db:migrate` / `db:migrate down`) + bounded pool.
 - [x] 4.2 Seed the single default project (separate commit from the schema). Well-known `DEFAULT_PROJECT_ID` shared constant; `db:seed` idempotent.
 - [x] 4.3 Integration tests run the same core flows against `createPgBackend` on real Postgres (gated on `DATABASE_URL`, skipped otherwise) → repositories implemented (transactional UoW, `FOR UPDATE` version guard, seq via project counter)
-- [ ] 4.4 Failure-injection tests: Postgres unavailable, pool exhaustion, transaction rollback leaves no partial state → handle gracefully
+- [x] 4.4 Failure-injection tests: Postgres unavailable → typed `BackendUnavailableError`; transaction rollback leaves no partial state; pool exhaustion degrades gracefully; concurrent writes serialise (one wins, other stale). Serialised test files (`fileParallelism: false`) so DB tests don't clobber each other.
 
 ## 5. Agent MCP API (TDD)
 

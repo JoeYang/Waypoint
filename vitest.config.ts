@@ -17,6 +17,10 @@ export default defineConfig({
     include: ["packages/**/*.{test,spec}.{ts,tsx}"],
     environment: "node",
     passWithNoTests: true,
+    // Integration tests share one Postgres and TRUNCATE between cases; running test
+    // files serially keeps them from clobbering each other. The unit suite is tiny, so
+    // the lost cross-file parallelism is negligible. Split into projects if this grows.
+    fileParallelism: false,
     coverage: {
       provider: "v8",
       include: ["packages/*/src/**"],
