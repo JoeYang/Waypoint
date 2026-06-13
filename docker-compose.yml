@@ -1,0 +1,22 @@
+# Local development dependencies only. The Waypoint backend and web app run on the
+# host (npm run dev); this brings up Postgres for them to talk to. Not for production.
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: waypoint-postgres
+    environment:
+      POSTGRES_USER: ${WAYPOINT_DB_USER:-waypoint}
+      POSTGRES_PASSWORD: ${WAYPOINT_DB_PASSWORD:-waypoint_local_dev}
+      POSTGRES_DB: ${WAYPOINT_DB_NAME:-waypoint}
+    ports:
+      - "${WAYPOINT_DB_PORT:-5432}:5432"
+    volumes:
+      - waypoint_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${WAYPOINT_DB_USER:-waypoint}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  waypoint_pgdata:
