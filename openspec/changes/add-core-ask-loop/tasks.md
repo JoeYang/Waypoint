@@ -9,7 +9,7 @@
 ## 2. Shared contracts (interfaces — own commit, before implementation)
 
 - [x] 2.1 Define zod schemas + inferred types for `Project`, `Node` (kind, status spine), `Ask` (type, state union, required, options), `Event`
-- [ ] 2.2 Define MCP tool arg/result schemas (`get_context`, `create_node`, `park_ask`, `transition`) and REST/WS DTOs
+- [x] 2.2 Define MCP tool arg/result schemas (`get_context`, `create_node`, `park_ask`, `transition`) and REST/WS DTOs
 - [ ] 2.3 Define typed domain errors (`StaleVersion`, `NotFound`, `Validation`) and the repository port interfaces (`NodeRepository`, `AskRepository`, `EventLog`, `Clock`)
 
 ## 3. Core domain — ask-lifecycle (TDD over in-memory fakes)
