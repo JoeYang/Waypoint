@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@waypoint/core": "*",
-    "@waypoint/shared": "*"
+    "@waypoint/shared": "*",
+    "pg": "^8.21.0"
   }
 }

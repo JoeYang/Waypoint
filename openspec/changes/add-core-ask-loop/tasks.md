@@ -28,7 +28,7 @@
 
 ## 4. Persistence — Postgres (schema migration is its own commit)
 
-- [ ] 4.1 First migration (schema only — its own commit): `project`, `node`, `ask`, `event`, `dependency` with `version`, unique `(project_id, seq)`, indexes; reversible down step
+- [x] 4.1 First migration (schema only — its own commit): `project`, `node`, `ask`, `event`, `dependency` with `version`, unique `(project_id, seq)`, indexes; reversible down step. Added a no-dep SQL migration runner (`db:migrate` / `db:migrate down`) + bounded pool.
 - [ ] 4.2 Seed the single default project (separate commit from the schema)
 - [ ] 4.3 RED: integration tests for the Postgres repositories against the port contract (same suite as the fakes) → implement repositories
 - [ ] 4.4 Failure-injection tests: Postgres unavailable, pool exhaustion, transaction rollback leaves no partial state → handle gracefully
