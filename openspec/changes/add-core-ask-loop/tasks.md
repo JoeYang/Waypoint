@@ -43,10 +43,10 @@
 
 ## 6. Inbox API — REST + WebSocket (TDD)
 
-- [ ] 6.1 RED: tests for inbox listing ranked by blast radius, ties by wait time → implement REST endpoint
-- [ ] 6.2 RED: tests for answer endpoint (atomic update + event; stale rejected) → implement
-- [ ] 6.3 RED: tests for WebSocket delta push + resume-since-seq → implement (event emitter + per-connection subscription)
-- [ ] 6.4 Failure-injection tests: dropped connection mid-answer, out-of-order frames, reconnect gap → assert no missed/duplicated deltas
+- [x] 6.1 RED: tests for inbox listing ranked by blast radius, ties by wait time → implement REST endpoint. `core.listInbox` (single UoW, blast radius inline to avoid N+1) ranks unresolved asks (OPEN/ASSUMED) blast-radius desc, oldest-parkedAt tiebreak; fastify `GET /v1/projects/:p/inbox`.
+- [x] 6.2 RED: tests for answer endpoint (atomic update + event; stale rejected) → implement. `POST /v1/projects/:p/asks/:a/answer` over `core.answer`; reports the owning node's blocked state + version; 409 on stale, 400 on malformed, 404 unknown; error envelope + `X-Request-ID`, no internals leaked.
+- [x] 6.3 RED: tests for WebSocket delta push + resume-since-seq → implement (event emitter + per-connection subscription). `InboxHub` (snapshot/diff + bounded ring → forward-only resume, resync past retention) + `createNotifyingCore` single post-commit notify seam; `ws` binding on `/v1/projects/:p/stream`.
+- [x] 6.4 Failure-injection tests: dropped connection mid-answer, out-of-order frames, reconnect gap → assert no missed/duplicated deltas. Real-socket integration tests: malformed/out-of-scope frame → 1008 (server survives), dropped-then-resume delivers exactly the missed delta; heartbeat reaps half-open conns, back-pressure → drop-to-resync.
 
 ## 7. Web inbox screen (TDD)
 
