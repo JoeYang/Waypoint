@@ -13,7 +13,7 @@ so the same logic serves Claude Code, Codex, OpenCode, the REST API, and tests.
   server ──▶ core ──▶ shared
 ```
 
-- `shared` — pure types/contracts. Depends on nothing.
+- `shared` — types/contracts (zod schemas + inferred types). Depends only on `zod`.
 - `core` — domain logic. Depends ONLY on `shared`. Reaches persistence through *ports*
   (interfaces it declares), never a concrete DB/driver.
 - `server` — adapters (MCP, REST, WebSocket) + the Postgres repository that *implements*
@@ -27,7 +27,8 @@ so the same logic serves Claude Code, Codex, OpenCode, the REST API, and tests.
 - Cross-package imports go through a package's public entrypoint, never deep paths.
 
 Enforcement stack: this rule → the import-direction PostToolUse hook (warns) →
-`eslint-plugin-boundaries` (fails CI) → code-review checklist (semantic call).
+`@typescript-eslint/no-restricted-imports` per-package config (fails CI) → code-review
+checklist (semantic call).
 
 ## Ports (name the seams)
 

@@ -1,14 +1,14 @@
 ## 1. Monorepo scaffold
 
-- [ ] 1.1 Initialize npm workspaces with packages `shared`, `core`, `server`, `web`; root `package.json` scripts (build/dev/test/e2e/lint/format/db:migrate)
-- [ ] 1.2 Add strict root `tsconfig` (base) + per-package configs; project references
-- [ ] 1.3 Configure ESLint (with `eslint-plugin-boundaries` enforcing `web→shared`, `server→core→shared`, `core ↛ server/web`), Prettier, and Vitest
-- [ ] 1.4 Configure Playwright for `e2e/` and add a CI-less smoke script; verify `npm test` runs green on an empty suite
-- [ ] 1.5 Add `.dockerignore` and a dev `docker-compose.yml` with Postgres only
+- [x] 1.1 Initialize npm workspaces with packages `shared`, `core`, `server`, `web`; root `package.json` scripts (build/dev/test/e2e/lint/format/db:migrate)
+- [x] 1.2 Add strict root `tsconfig` (base) + per-package configs; project references
+- [x] 1.3 Configure ESLint (import-direction layering via `@typescript-eslint/no-restricted-imports` — `eslint-plugin-boundaries` v6 rules are deprecated and misclassify `@waypoint/*` specifiers), Prettier, and Vitest
+- [x] 1.4 Configure Playwright for `e2e/` and add a CI-less smoke script; verify `npm test` runs green on an empty suite
+- [x] 1.5 Add `.dockerignore` and a dev `docker-compose.yml` with Postgres only
 
 ## 2. Shared contracts (interfaces — own commit, before implementation)
 
-- [ ] 2.1 Define zod schemas + inferred types for `Project`, `Node` (kind, status spine), `Ask` (type, state union, required, options), `Event`
+- [x] 2.1 Define zod schemas + inferred types for `Project`, `Node` (kind, status spine), `Ask` (type, state union, required, options), `Event`
 - [ ] 2.2 Define MCP tool arg/result schemas (`get_context`, `create_node`, `park_ask`, `transition`) and REST/WS DTOs
 - [ ] 2.3 Define typed domain errors (`StaleVersion`, `NotFound`, `Validation`) and the repository port interfaces (`NodeRepository`, `AskRepository`, `EventLog`, `Clock`)
 

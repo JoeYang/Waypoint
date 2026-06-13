@@ -23,7 +23,7 @@ unblocked work; the human answers asynchronously. See docs/waypoint-design-v3.ht
 npm-workspaces monorepo. Strict dependency direction — the domain core is transport- and
 harness-neutral.
 
-- `packages/shared/` — types & contracts: node/ask/project/event, MCP tool schemas, REST DTOs. No runtime deps.
+- `packages/shared/` — types & contracts (zod schemas + inferred types): node/ask/project/event, MCP tool schemas, REST DTOs. `zod` is its only runtime dep.
 - `packages/core/`   — domain: hierarchy, ask lifecycle, computed `blocked` + `blast_radius`, optimistic concurrency. Depends ONLY on `shared`; talks to persistence through repository *ports* (interfaces).
 - `packages/server/` — adapters: MCP (Streamable HTTP), REST, WebSocket; Postgres repository implementing core's ports; event emitter + cache. Depends on `core` + `shared`.
 - `packages/web/`    — React/Vite. Two screens: Inbox + Blocking view. Typed API client + WebSocket hook. Depends on `shared`.
