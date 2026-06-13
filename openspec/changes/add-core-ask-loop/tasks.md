@@ -10,7 +10,7 @@
 
 - [x] 2.1 Define zod schemas + inferred types for `Project`, `Node` (kind, status spine), `Ask` (type, state union, required, options), `Event`
 - [x] 2.2 Define MCP tool arg/result schemas (`get_context`, `create_node`, `park_ask`, `transition`) and REST/WS DTOs
-- [ ] 2.3 Define typed domain errors (`StaleVersion`, `NotFound`, `Validation`) and the repository port interfaces (`NodeRepository`, `AskRepository`, `EventLog`, `Clock`)
+- [x] 2.3 Define typed domain errors (`StaleVersion`, `NotFound`, `Validation`, `BackendUnavailable`) and the repository port interfaces (`ProjectRepository`, `NodeRepository`, `AskRepository`, `EventLog`, `Clock`, `IdGenerator`, plus `UnitOfWork` for atomic mutation+event)
 
 ## 3. Core domain — ask-lifecycle (TDD over in-memory fakes)
 
