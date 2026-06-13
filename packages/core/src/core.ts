@@ -1,9 +1,12 @@
 import type {
   Node,
   NodeStatus,
+  Ask,
+  AskOption,
   CreateNodeInput,
   DependencyEdge,
   TransitionInput,
+  ParkAskInput,
 } from "@waypoint/shared";
 import type { Clock, IdGenerator, UnitOfWork } from "./ports.js";
 import { NotFoundError, ValidationError, StaleVersionError } from "./errors.js";
@@ -38,6 +41,7 @@ export interface Core {
   createNode(input: CreateNodeInput): Promise<Node>;
   addDependency(input: AddDependencyInput): Promise<void>;
   transition(input: TransitionInput): Promise<Node>;
+  parkAsk(input: ParkAskInput): Promise<Ask>;
 }
 
 // True if `target` is reachable from `from` by following depends_on edges. Used to
@@ -200,6 +204,54 @@ export function createCore(deps: CoreDeps): Core {
           at: now,
         });
         return updated;
+      });
+    },
+
+    async parkAsk(input) {
+      return uow.run(async (ctx) => {
+        const node = await ctx.nodes.findById(input.projectId, input.nodeId);
+        if (!node) throw new NotFoundError("node", input.nodeId);
+        // Re-checked here even though the boundary schema enforces it: core must hold
+        // its own invariants for non-MCP callers (seeding, future transports).
+        if (input.type === "DECISION" && input.options.length < 2) {
+          throw new ValidationError("a DECISION ask requires at least two options", {
+            nodeId: input.nodeId,
+          });
+        }
+
+        const now = clock.now();
+        const options: AskOption[] = input.options.map((label, i) => ({
+          id: `opt-${i + 1}`,
+          label,
+        }));
+        const ask: Ask = {
+          id: ids.generate(),
+          projectId: input.projectId,
+          nodeId: input.nodeId,
+          type: input.type,
+          state: "OPEN", // proceed-on-assumption is a separate OPEN → ASSUMED step
+          required: input.required,
+          prompt: input.prompt,
+          options,
+          chosenOptionId: null,
+          assumption: null,
+          answerText: null,
+          version: 1,
+          createdAt: now,
+          updatedAt: now,
+        };
+        await ctx.asks.insert(ask);
+        await ctx.events.append({
+          id: ids.generate(),
+          projectId: input.projectId,
+          actor: "agent",
+          verb: "ask.parked",
+          ref: { kind: "ask", id: ask.id },
+          sessionId: input.sessionId ?? null,
+          summary: `parked ${input.type}: ${input.prompt}`,
+          at: now,
+        });
+        return ask;
       });
     },
   };
