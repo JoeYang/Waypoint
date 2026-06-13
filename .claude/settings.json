@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": ["npm *", "npx *", "node *", "git *", "openspec *", "docker *", "psql *"],
+    "deny": ["rm -rf", "cat .env", "cat .env.*", "echo * > .env"]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{
+          "type": "command",
+          "command": "FILE=$(echo $CLAUDE_TOOL_INPUT | jq -r '.file_path // .filePath // empty') && [ -n \"$FILE\" ] && case \"$FILE\" in *.ts|*.tsx|*.js|*.jsx) npx prettier --write \"$FILE\" 2>/dev/null;; esac; exit 0",
+          "timeout": 10000
+        }]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{
+          "type": "command",
+          "command": "FILE=$(echo $CLAUDE_TOOL_INPUT | jq -r '.file_path // .filePath // empty'); case \"$FILE\" in *packages/core/*) grep -nE \"from ['\\\"].*packages/(server|web)\" \"$FILE\" 2>/dev/null && echo 'IMPORT-DIRECTION VIOLATION: core must not import server/web' >&2;; esac; exit 0"
+        }]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{
+          "type": "command",
+          "command": "CMD=$(echo $CLAUDE_TOOL_INPUT | jq -r '.command // empty'); B=$(git branch --show-current 2>/dev/null); case \"$CMD\" in *\"git commit\"*|*\"git push\"*) case \"$B\" in main|master) echo 'Blocked: commit/push on '\"$B\"'. Use a feature branch.' >&2; exit 2;; esac;; esac; exit 0"
+        }]
+      }
+    ],
+    "Stop": [{
+      "hooks": [{
+        "type": "command",
+        "command": "if git diff --quiet HEAD 2>/dev/null && git diff --cached --quiet 2>/dev/null; then exit 0; fi; echo 'Uncommitted changes detected. Review with git diff.' >&2; exit 0"
+      }]
+    }]
+  }
+}
