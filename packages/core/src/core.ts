@@ -3,6 +3,7 @@ import type {
   NodeStatus,
   Ask,
   AskOption,
+  ContextPack,
   CreateNodeInput,
   DependencyEdge,
   TransitionInput,
@@ -60,6 +61,16 @@ export interface AnswerInput {
   sessionId?: string;
 }
 
+// Human-readable resolution of a resolved ask for the context pack (never raw payloads).
+function resolutionText(ask: Ask): string {
+  if (ask.chosenOptionId !== null) {
+    return ask.options.find((o) => o.id === ask.chosenOptionId)?.label ?? ask.chosenOptionId;
+  }
+  return ask.answerText ?? ask.state;
+}
+
+const RESOLVED_STATES = new Set(["ANSWERED", "CONFIRMED", "OVERTURNED"]);
+
 // Loads an ask and enforces the optimistic-concurrency guard before any state change.
 async function requireAsk(
   ctx: RepositoryContext,
@@ -89,6 +100,7 @@ export interface Core {
   // Reads — computed on demand, never stored (a future cache MUST equal these values).
   computeBlocked(projectId: string, nodeId: string): Promise<boolean>;
   blastRadius(projectId: string, nodeId: string): Promise<number>;
+  getContext(projectId: string): Promise<ContextPack>;
 }
 
 // True if `target` is reachable from `from` by following depends_on edges. Used to
@@ -468,6 +480,58 @@ export function createCore(deps: CoreDeps): Core {
       return uow.run(async (ctx) => {
         const edges = await ctx.nodes.listDependencies(projectId);
         return edges.filter((e) => e.dependsOnId === nodeId).length;
+      });
+    },
+
+    async getContext(projectId) {
+      return uow.run(async (ctx) => {
+        const project = await ctx.projects.findById(projectId);
+        if (!project) throw new NotFoundError("project", projectId);
+
+        const [nodes, asks, edges, events] = await Promise.all([
+          ctx.nodes.listByProject(projectId),
+          ctx.asks.listByProject(projectId),
+          ctx.nodes.listDependencies(projectId),
+          ctx.events.listSince(projectId, 0),
+        ]);
+
+        const goal = nodes.find((n) => n.kind === "goal" && n.parentId === null)?.title ?? null;
+        const dependents = (nodeId: string) =>
+          edges.filter((e) => e.dependsOnId === nodeId).length;
+
+        const openAsks = asks
+          .filter((a) => a.state === "OPEN")
+          .map((a) => ({
+            id: a.id,
+            nodeId: a.nodeId,
+            type: a.type,
+            prompt: a.prompt,
+            required: a.required,
+            blastRadius: dependents(a.nodeId),
+          }));
+
+        const recentDecisions = asks
+          .filter((a) => RESOLVED_STATES.has(a.state))
+          .sort((a, b) => b.updatedAt - a.updatedAt)
+          .slice(0, 5)
+          .map((a) => ({
+            askId: a.id,
+            prompt: a.prompt,
+            resolution: resolutionText(a),
+            at: a.updatedAt,
+          }));
+
+        // Most recent activity that carried a session id.
+        const lastSessionId =
+          [...events].reverse().find((e) => e.sessionId !== null)?.sessionId ?? null;
+
+        return {
+          project: { id: project.id, name: project.name },
+          goal,
+          openAsks,
+          recentDecisions,
+          provenance: { lastSessionId },
+        };
       });
     },
   };
