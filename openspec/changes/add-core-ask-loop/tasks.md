@@ -20,7 +20,7 @@
 - [x] 3.4 RED: tests for status spine incl. discard-requires-reason and illegal transitions → implement (version guard introduced here)
 - [x] 3.5 RED: tests for parking asks (decision needs ≥2 options) → implement
 - [x] 3.6 RED: tests for proceed-on-assumption (`ASSUMED → CONFIRMED/OVERTURNED`, overturn emits re-triage event + bumps node) → implement
-- [ ] 3.7 RED: tests for answering an ask (atomic with event append) → implement
+- [x] 3.7 RED: tests for answering an ask (atomic with event append) → implement
 - [ ] 3.8 RED: tests for append-only event log (one sequenced event per mutation, same transaction) → implement
 - [ ] 3.9 RED: tests for optimistic concurrency (stale rejected; overturn-while-DONE race) → implement version guard
 - [ ] 3.10 RED: tests for computed `blocked` + property test "materialized == freshly computed after any mutation"; one event, multi-node recompute → implement recompute function (depends on 3.3/3.8/3.9)

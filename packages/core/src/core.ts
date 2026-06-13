@@ -51,6 +51,15 @@ export interface ResolveAssumptionInput {
   sessionId?: string;
 }
 
+export interface AnswerInput {
+  projectId: string;
+  askId: string;
+  expectedVersion: number;
+  chosenOptionId?: string;
+  answerText?: string;
+  sessionId?: string;
+}
+
 // Loads an ask and enforces the optimistic-concurrency guard before any state change.
 async function requireAsk(
   ctx: RepositoryContext,
@@ -76,6 +85,7 @@ export interface Core {
   assume(input: AssumeInput): Promise<Ask>;
   confirmAssumption(input: ResolveAssumptionInput): Promise<Ask>;
   overturnAssumption(input: ResolveAssumptionInput): Promise<Ask>;
+  answer(input: AnswerInput): Promise<Ask>;
 }
 
 // True if `target` is reachable from `from` by following depends_on edges. Used to
@@ -370,6 +380,57 @@ export function createCore(deps: CoreDeps): Core {
           ref: { kind: "ask", id: ask.id },
           sessionId: input.sessionId ?? null,
           summary: `assumption overturned — node ${ask.nodeId} needs re-triage`,
+          at: now,
+        });
+        return updated;
+      });
+    },
+
+    async answer(input) {
+      return uow.run(async (ctx) => {
+        const ask = await requireAsk(ctx, input.projectId, input.askId, input.expectedVersion);
+        if (ask.state !== "OPEN") {
+          throw new ValidationError(`cannot answer a ${ask.state} ask`, { askId: ask.id });
+        }
+
+        let chosenOptionId: string | null = null;
+        let answerText: string | null = null;
+        if (ask.type === "DECISION") {
+          if (input.chosenOptionId === undefined) {
+            throw new ValidationError("a decision answer must choose an option", { askId: ask.id });
+          }
+          if (!ask.options.some((o) => o.id === input.chosenOptionId)) {
+            throw new ValidationError("chosen option is not on this ask", {
+              askId: ask.id,
+              chosenOptionId: input.chosenOptionId,
+            });
+          }
+          chosenOptionId = input.chosenOptionId;
+        } else {
+          if (input.answerText === undefined) {
+            throw new ValidationError("an answer must include text", { askId: ask.id });
+          }
+          answerText = input.answerText;
+        }
+
+        const now = clock.now();
+        const updated: Ask = {
+          ...ask,
+          state: "ANSWERED",
+          chosenOptionId,
+          answerText,
+          version: ask.version + 1,
+          updatedAt: now,
+        };
+        await ctx.asks.update(updated);
+        await ctx.events.append({
+          id: ids.generate(),
+          projectId: ask.projectId,
+          actor: "human",
+          verb: "ask.answered",
+          ref: { kind: "ask", id: ask.id },
+          sessionId: input.sessionId ?? null,
+          summary: chosenOptionId !== null ? `answered: ${chosenOptionId}` : "answered",
           at: now,
         });
         return updated;
