@@ -9,7 +9,8 @@ import {
 import { createPgBackend } from "../pg-backend.js";
 import { applyMigrations } from "../migrate.js";
 
-const DATABASE_URL = process.env.DATABASE_URL;
+// Separate test database (see pg-backend.integration.test.ts) — never the dogfood db.
+const TEST_DATABASE_URL = process.env.WAYPOINT_TEST_DATABASE_URL;
 const PROJECT = "default";
 
 // Needs no real database — points at a refused port to exercise the unavailable path.
@@ -32,13 +33,13 @@ describe("PgBackend — unreachable database", () => {
   });
 });
 
-const describeDb = DATABASE_URL ? describe : describe.skip;
+const describeDb = TEST_DATABASE_URL ? describe : describe.skip;
 
 describeDb("PgBackend — failure injection against real Postgres", () => {
   let pool: Pool;
 
   beforeAll(async () => {
-    pool = new Pool({ connectionString: DATABASE_URL });
+    pool = new Pool({ connectionString: TEST_DATABASE_URL });
     await applyMigrations(pool);
   });
 
@@ -92,7 +93,7 @@ describeDb("PgBackend — failure injection against real Postgres", () => {
 
   it("degrades gracefully when the connection pool is exhausted", async () => {
     const tinyPool = new Pool({
-      connectionString: DATABASE_URL,
+      connectionString: TEST_DATABASE_URL,
       max: 1,
       connectionTimeoutMillis: 400,
     });

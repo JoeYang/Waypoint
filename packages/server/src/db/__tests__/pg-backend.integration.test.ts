@@ -4,19 +4,20 @@ import { createCore, type Core, StaleVersionError, ValidationError } from "@wayp
 import { createPgBackend } from "../pg-backend.js";
 import { applyMigrations } from "../migrate.js";
 
-const DATABASE_URL = process.env.DATABASE_URL;
+// A SEPARATE database from DATABASE_URL: these tests TRUNCATE between cases, so they must
+// never run against the dogfood/dev database. Set WAYPOINT_TEST_DATABASE_URL to a
+// throwaway test db to run them; unset, the suite is skipped so `npm test` stays green.
+const TEST_DATABASE_URL = process.env.WAYPOINT_TEST_DATABASE_URL;
 const PROJECT = "default";
 
-// Integration tests need a real Postgres. Without DATABASE_URL the suite is skipped so
-// `npm test` stays green everywhere; set it (e.g. the dev docker-compose db) to run them.
-const describeDb = DATABASE_URL ? describe : describe.skip;
+const describeDb = TEST_DATABASE_URL ? describe : describe.skip;
 
 describeDb("PgBackend satisfies the repository port contract", () => {
   let pool: Pool;
   let core: Core;
 
   beforeAll(async () => {
-    pool = new Pool({ connectionString: DATABASE_URL });
+    pool = new Pool({ connectionString: TEST_DATABASE_URL });
     await applyMigrations(pool);
   });
 
