@@ -1,6 +1,21 @@
-import type { Node, CreateNodeInput, DependencyEdge } from "@waypoint/shared";
+import type {
+  Node,
+  NodeStatus,
+  CreateNodeInput,
+  DependencyEdge,
+  TransitionInput,
+} from "@waypoint/shared";
 import type { Clock, IdGenerator, UnitOfWork } from "./ports.js";
-import { NotFoundError, ValidationError } from "./errors.js";
+import { NotFoundError, ValidationError, StaleVersionError } from "./errors.js";
+
+// The status spine. Every legal move is listed; anything else is rejected. DONE and
+// DISCARDED are terminal in this slice.
+const SPINE: Record<NodeStatus, readonly NodeStatus[]> = {
+  DRAFT: ["ACTIVE", "DISCARDED"],
+  ACTIVE: ["DONE", "DISCARDED"],
+  DONE: [],
+  DISCARDED: [],
+};
 
 export interface CoreDeps {
   uow: UnitOfWork;
@@ -22,6 +37,7 @@ export interface AddDependencyInput {
 export interface Core {
   createNode(input: CreateNodeInput): Promise<Node>;
   addDependency(input: AddDependencyInput): Promise<void>;
+  transition(input: TransitionInput): Promise<Node>;
 }
 
 // True if `target` is reachable from `from` by following depends_on edges. Used to
@@ -140,6 +156,50 @@ export function createCore(deps: CoreDeps): Core {
           summary: `depends_on ${input.dependsOnId}`,
           at: clock.now(),
         });
+      });
+    },
+
+    async transition(input) {
+      return uow.run(async (ctx) => {
+        const node = await ctx.nodes.findById(input.projectId, input.nodeId);
+        if (!node) throw new NotFoundError("node", input.nodeId);
+
+        // Concurrency guard before any rule check: a stale caller is rejected outright
+        // and learns the current version, then re-reads (overturn-while-done safety).
+        if (node.version !== input.expectedVersion) {
+          throw new StaleVersionError("node", node.id, input.expectedVersion, node.version);
+        }
+        if (!SPINE[node.status].includes(input.to)) {
+          throw new ValidationError(`illegal transition ${node.status} → ${input.to}`, {
+            from: node.status,
+            to: input.to,
+          });
+        }
+        if (input.to === "DISCARDED" && input.reason === undefined) {
+          throw new ValidationError("discarding a node requires a reason", { nodeId: node.id });
+        }
+
+        const now = clock.now();
+        const updated: Node = {
+          ...node,
+          status: input.to,
+          discardReason: input.to === "DISCARDED" ? (input.reason ?? null) : node.discardReason,
+          sessionId: input.sessionId ?? node.sessionId,
+          version: node.version + 1,
+          updatedAt: now,
+        };
+        await ctx.nodes.update(updated);
+        await ctx.events.append({
+          id: ids.generate(),
+          projectId: node.projectId,
+          actor: "agent",
+          verb: "node.transitioned",
+          ref: { kind: "node", id: node.id },
+          sessionId: updated.sessionId,
+          summary: `${node.status} → ${input.to}`,
+          at: now,
+        });
+        return updated;
       });
     },
   };
