@@ -16,7 +16,7 @@
 
 - [x] 3.1 Write in-memory port fakes for `NodeRepository`, `AskRepository`, `EventLog`, fixed `Clock`
 - [x] 3.2 RED: tests for node hierarchy (skippable levels; reject cross-project parent) → implement
-- [ ] 3.3 RED: tests for `depends_on` edges (acyclic; cross-project rejected; blocked propagation while target not `DONE`) → implement
+- [x] 3.3 RED: tests for `depends_on` edges (acyclic; cross-project rejected) → implement. Blocked-propagation assertion lives in 3.10 with `computeBlocked`.
 - [ ] 3.4 RED: tests for status spine incl. discard-requires-reason and illegal transitions → implement
 - [ ] 3.5 RED: tests for parking asks (decision needs ≥2 options) → implement
 - [ ] 3.6 RED: tests for proceed-on-assumption (`ASSUMED → CONFIRMED/OVERTURNED`, overturn emits re-triage event) → implement
