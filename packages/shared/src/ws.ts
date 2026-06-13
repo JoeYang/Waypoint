@@ -16,10 +16,13 @@ export type WsResume = z.infer<typeof WsResumeSchema>;
 export const WsClientFrameSchema = z.discriminatedUnion("type", [WsResumeSchema]);
 export type WsClientFrame = z.infer<typeof WsClientFrameSchema>;
 
-// Server → client: one delta per underlying event; may upsert/remove several cards.
+// Server → client: a projection of the inbox at a given project `seq`. Carries the cards
+// that changed (upserts) and those that left the queue (removedAskIds). Also used for the
+// initial snapshot on connect — for a project with no events yet that snapshot is empty at
+// `seq: 0`, so seq is non-negative (0 = before any event), not strictly positive.
 export const WsDeltaSchema = z.object({
   type: z.literal("delta"),
-  seq: z.number().int().positive(),
+  seq: z.number().int().nonnegative(),
   upserts: z.array(InboxItemSchema),
   removedAskIds: z.array(z.string().min(1)),
 });
