@@ -14,8 +14,8 @@
 
 ## 3. Core domain — ask-lifecycle (TDD over in-memory fakes)
 
-- [ ] 3.1 Write in-memory port fakes for `NodeRepository`, `AskRepository`, `EventLog`, fixed `Clock`
-- [ ] 3.2 RED: tests for node hierarchy (skippable levels; reject cross-project parent) → implement
+- [x] 3.1 Write in-memory port fakes for `NodeRepository`, `AskRepository`, `EventLog`, fixed `Clock`
+- [x] 3.2 RED: tests for node hierarchy (skippable levels; reject cross-project parent) → implement
 - [ ] 3.3 RED: tests for `depends_on` edges (acyclic; cross-project rejected; blocked propagation while target not `DONE`) → implement
 - [ ] 3.4 RED: tests for status spine incl. discard-requires-reason and illegal transitions → implement
 - [ ] 3.5 RED: tests for parking asks (decision needs ≥2 options) → implement
