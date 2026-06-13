@@ -8,7 +8,7 @@ import type {
   TransitionInput,
   ParkAskInput,
 } from "@waypoint/shared";
-import type { Clock, IdGenerator, UnitOfWork } from "./ports.js";
+import type { Clock, IdGenerator, UnitOfWork, RepositoryContext } from "./ports.js";
 import { NotFoundError, ValidationError, StaleVersionError } from "./errors.js";
 
 // The status spine. Every legal move is listed; anything else is rejected. DONE and
@@ -35,6 +35,37 @@ export interface AddDependencyInput {
   sessionId?: string;
 }
 
+// Proceed-on-assumption + resolution are core use-cases (no MCP tool in this slice).
+export interface AssumeInput {
+  projectId: string;
+  askId: string;
+  assumption: string;
+  expectedVersion: number;
+  sessionId?: string;
+}
+
+export interface ResolveAssumptionInput {
+  projectId: string;
+  askId: string;
+  expectedVersion: number;
+  sessionId?: string;
+}
+
+// Loads an ask and enforces the optimistic-concurrency guard before any state change.
+async function requireAsk(
+  ctx: RepositoryContext,
+  projectId: string,
+  askId: string,
+  expectedVersion: number,
+): Promise<Ask> {
+  const ask = await ctx.asks.findById(projectId, askId);
+  if (!ask) throw new NotFoundError("ask", askId);
+  if (ask.version !== expectedVersion) {
+    throw new StaleVersionError("ask", askId, expectedVersion, ask.version);
+  }
+  return ask;
+}
+
 // The domain use-cases the adapters (MCP, REST) drive. Every mutation runs inside a
 // single UnitOfWork transaction so the row change and its event append commit together.
 export interface Core {
@@ -42,6 +73,9 @@ export interface Core {
   addDependency(input: AddDependencyInput): Promise<void>;
   transition(input: TransitionInput): Promise<Node>;
   parkAsk(input: ParkAskInput): Promise<Ask>;
+  assume(input: AssumeInput): Promise<Ask>;
+  confirmAssumption(input: ResolveAssumptionInput): Promise<Ask>;
+  overturnAssumption(input: ResolveAssumptionInput): Promise<Ask>;
 }
 
 // True if `target` is reachable from `from` by following depends_on edges. Used to
@@ -252,6 +286,93 @@ export function createCore(deps: CoreDeps): Core {
           at: now,
         });
         return ask;
+      });
+    },
+
+    async assume(input) {
+      return uow.run(async (ctx) => {
+        const ask = await requireAsk(ctx, input.projectId, input.askId, input.expectedVersion);
+        if (ask.state !== "OPEN") {
+          throw new ValidationError(`cannot assume a ${ask.state} ask`, { askId: ask.id });
+        }
+        const now = clock.now();
+        const updated: Ask = {
+          ...ask,
+          state: "ASSUMED",
+          assumption: input.assumption,
+          version: ask.version + 1,
+          updatedAt: now,
+        };
+        await ctx.asks.update(updated);
+        await ctx.events.append({
+          id: ids.generate(),
+          projectId: ask.projectId,
+          actor: "agent",
+          verb: "ask.assumed",
+          ref: { kind: "ask", id: ask.id },
+          sessionId: input.sessionId ?? null,
+          summary: `assumed: ${input.assumption}`,
+          at: now,
+        });
+        return updated;
+      });
+    },
+
+    async confirmAssumption(input) {
+      return uow.run(async (ctx) => {
+        const ask = await requireAsk(ctx, input.projectId, input.askId, input.expectedVersion);
+        if (ask.state !== "ASSUMED") {
+          throw new ValidationError(`cannot confirm a ${ask.state} ask`, { askId: ask.id });
+        }
+        const now = clock.now();
+        const updated: Ask = { ...ask, state: "CONFIRMED", version: ask.version + 1, updatedAt: now };
+        await ctx.asks.update(updated);
+        await ctx.events.append({
+          id: ids.generate(),
+          projectId: ask.projectId,
+          actor: "human",
+          verb: "ask.confirmed",
+          ref: { kind: "ask", id: ask.id },
+          sessionId: input.sessionId ?? null,
+          summary: "assumption confirmed",
+          at: now,
+        });
+        return updated;
+      });
+    },
+
+    async overturnAssumption(input) {
+      return uow.run(async (ctx) => {
+        const ask = await requireAsk(ctx, input.projectId, input.askId, input.expectedVersion);
+        if (ask.state !== "ASSUMED") {
+          throw new ValidationError(`cannot overturn a ${ask.state} ask`, { askId: ask.id });
+        }
+        const now = clock.now();
+        const updated: Ask = {
+          ...ask,
+          state: "OVERTURNED",
+          version: ask.version + 1,
+          updatedAt: now,
+        };
+        await ctx.asks.update(updated);
+
+        // Bump the owning node so any in-flight node mutation premised on the assumption
+        // (e.g. a concurrent transition → DONE) is rejected as stale and must re-triage.
+        const node = await ctx.nodes.findById(ask.projectId, ask.nodeId);
+        if (node) {
+          await ctx.nodes.update({ ...node, version: node.version + 1, updatedAt: now });
+        }
+        await ctx.events.append({
+          id: ids.generate(),
+          projectId: ask.projectId,
+          actor: "human",
+          verb: "ask.overturned",
+          ref: { kind: "ask", id: ask.id },
+          sessionId: input.sessionId ?? null,
+          summary: `assumption overturned — node ${ask.nodeId} needs re-triage`,
+          at: now,
+        });
+        return updated;
       });
     },
   };
