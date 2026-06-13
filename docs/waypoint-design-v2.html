@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Waypoint — product design v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fbfaf7; --wash:#f4f1ea; --raised:#ffffff;
+    --ink:#171512; --ink-700:#3a352c; --ink-500:#6b6355; --ink-300:#9c9484;
+    --border:#e7e2d6; --border-strong:#d4cdbd;
+    --accent:#3b4cad; --accent-wash:#eceeffa8;
+    --green:#3f7d57; --red:#b0473a; --amber:#b07d2a; --teal:#2f7d83;
+    --r-2:4px; --r-3:6px;
+    --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px; --sp-7:48px; --sp-8:64px;
+    --serif:"Source Serif 4",Georgia,serif;
+    --sans:"Inter Tight",system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 var(--sp-5)}
+  h1,h2,h3,h4{font-family:var(--serif);font-weight:600;letter-spacing:-0.01em;line-height:1.15}
+  h1{font-size:42px;margin:0 0 var(--sp-3)}
+  h2{font-size:30px;margin:0 0 var(--sp-3)}
+  h3{font-size:21px;margin:0 0 var(--sp-2)}
+  h4{font-size:17px;margin:0 0 var(--sp-2)}
+  p{margin:0 0 var(--sp-4);max-width:72ch}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code,.mono{font-family:var(--mono);font-size:0.88em}
+  .lead{font-family:var(--serif);font-size:21px;line-height:1.45;color:var(--ink-700);max-width:64ch}
+  hr{border:0;border-top:1px solid var(--border);margin:var(--sp-7) 0}
+  small{color:var(--ink-500)}
+
+  header.masthead{border-bottom:1px solid var(--border);background:var(--wash)}
+  .masthead .wrap{padding-top:var(--sp-7);padding-bottom:var(--sp-6)}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:var(--sp-3)}
+  .meta-row{display:flex;gap:var(--sp-5);flex-wrap:wrap;font-size:13px;color:var(--ink-500);margin-top:var(--sp-4)}
+  .meta-row span{display:inline-flex;gap:6px}
+  .meta-row b{color:var(--ink-700);font-weight:600}
+
+  nav.toc{position:sticky;top:0;z-index:20;background:rgba(251,250,247,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);font-size:13px}
+  nav.toc .wrap{display:flex;gap:var(--sp-4);flex-wrap:wrap;padding-top:var(--sp-3);padding-bottom:var(--sp-3)}
+  nav.toc a{color:var(--ink-500);white-space:nowrap}
+  nav.toc a:hover{color:var(--accent);text-decoration:none}
+
+  section{padding:var(--sp-7) 0;border-bottom:1px solid var(--border)}
+  .sec-num{font-family:var(--mono);font-size:13px;color:var(--ink-300);letter-spacing:0.05em}
+
+  .card{background:var(--raised);border:1px solid var(--border);border-radius:var(--r-3);padding:var(--sp-5)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-4)}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-4)}
+  @media(max-width:860px){.grid2,.grid3{grid-template-columns:1fr}}
+
+  .tag{display:inline-block;font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:0.03em;padding:2px 8px;border-radius:var(--r-2);border:1px solid var(--border-strong);color:var(--ink-700);background:var(--wash)}
+  .tag.accent{color:var(--accent);border-color:#c5cbed;background:var(--accent-wash)}
+  .tag.green{color:var(--green);border-color:#bcd6c6;background:#eef5f0}
+  .tag.red{color:var(--red);border-color:#e3c2bc;background:#f8eeec}
+  .tag.amber{color:var(--amber);border-color:#e3d2ac;background:#f8f2e4}
+  .tag.teal{color:var(--teal);border-color:#b6d6d8;background:#e9f3f3}
+  .tag.rec{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  pre.ascii{font-family:var(--mono);font-size:12.5px;line-height:1.45;background:var(--ink);color:#e9e6df;padding:var(--sp-5);border-radius:var(--r-3);overflow-x:auto;margin:0 0 var(--sp-4)}
+  pre.ascii .hi{color:#aeb8f2}
+  pre.ascii .dim{color:#8a857a}
+  pre.ascii .ok{color:#9fd3b0}
+  pre.ascii .warn{color:#e3c98a}
+
+  table{width:100%;border-collapse:collapse;font-size:14px;margin:0 0 var(--sp-4)}
+  th,td{text-align:left;padding:var(--sp-3);border-bottom:1px solid var(--border);vertical-align:top}
+  th{font-family:var(--sans);font-size:12px;letter-spacing:0.04em;text-transform:uppercase;color:var(--ink-500);font-weight:600}
+  td b{font-weight:600}
+  tr:last-child td{border-bottom:0}
+
+  .fig{margin:var(--sp-5) 0}
+  .figcap{font-family:var(--sans);font-size:12px;letter-spacing:0.04em;text-transform:uppercase;color:var(--ink-500);margin-top:var(--sp-2)}
+  .figcap b{color:var(--ink-700)}
+
+  ul.clean{margin:0 0 var(--sp-4);padding-left:1.2em}
+  ul.clean li{margin-bottom:var(--sp-2);max-width:70ch}
+  .pro::before{content:"+ ";color:var(--green);font-weight:700}
+  .con::before{content:"− ";color:var(--red);font-weight:700}
+
+  .callout{border-left:3px solid var(--accent);background:var(--accent-wash);padding:var(--sp-4) var(--sp-5);border-radius:0 var(--r-3) var(--r-3) 0;margin:var(--sp-4) 0}
+  .callout.warn{border-color:var(--amber);background:#f8f2e4}
+  .sidenote{border-left:2px solid var(--border-strong);padding-left:var(--sp-4);color:var(--ink-500);font-style:italic;margin:var(--sp-4) 0}
+
+  /* ---- mockup chrome ---- */
+  .mock{background:var(--raised);border:1px solid var(--border-strong);border-radius:var(--r-3);overflow:hidden;font-size:13px}
+  .mock-top{display:flex;align-items:center;gap:var(--sp-2);padding:8px 12px;background:var(--wash);border-bottom:1px solid var(--border)}
+  .dot{width:10px;height:10px;border-radius:9999px;background:var(--border-strong)}
+  .mock-title{font-family:var(--mono);font-size:11px;color:var(--ink-500);margin-left:var(--sp-2)}
+  .mock-body{padding:var(--sp-4)}
+  .mock-split{display:grid;grid-template-columns:200px 1fr;min-height:300px}
+  .mock-rail{border-right:1px solid var(--border);background:#fcfbf8;padding:var(--sp-3)}
+  .rail-item{padding:6px 8px;border-radius:var(--r-2);color:var(--ink-700);font-size:12.5px;display:flex;justify-content:space-between;align-items:center}
+  .rail-item.active{background:var(--accent-wash);color:var(--accent);font-weight:600}
+  .rail-lbl{font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-300);margin:var(--sp-3) 0 4px}
+  .count{font-family:var(--mono);font-size:11px;background:var(--ink);color:#fff;border-radius:9999px;padding:0 6px;min-width:18px;text-align:center}
+
+  .ask{border:1px solid var(--border);border-radius:var(--r-3);padding:var(--sp-4);margin-bottom:var(--sp-3);background:#fff}
+  .ask.hot{border-color:#c5cbed;box-shadow:0 0 0 3px var(--accent-wash)}
+  .ask.working{border-color:#bcd6c6;background:#fcfdfc}
+  .ask-head{display:flex;justify-content:space-between;gap:var(--sp-3);margin-bottom:6px}
+  .ask-kind{font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-500)}
+  .ask-title{font-family:var(--serif);font-size:16px;font-weight:600;line-height:1.25}
+  .ask-meta{font-size:11px;color:var(--ink-500);margin-top:2px}
+  .ask-body{font-size:13px;color:var(--ink-700);margin:var(--sp-2) 0}
+  .opt{border:1px solid var(--border);border-radius:var(--r-2);padding:8px 10px;margin-bottom:6px;display:flex;gap:8px;align-items:flex-start;font-size:12.5px}
+  .opt.pick{border-color:var(--accent);background:var(--accent-wash)}
+  .opt .radio{width:13px;height:13px;border-radius:9999px;border:1.5px solid var(--ink-300);margin-top:2px;flex:0 0 auto}
+  .opt.pick .radio{border-color:var(--accent);background:var(--accent);box-shadow:inset 0 0 0 2px #fff}
+  .btn{display:inline-block;font-size:12px;font-weight:600;padding:5px 12px;border-radius:var(--r-2);border:1px solid var(--border-strong);background:#fff;color:var(--ink-700);cursor:default}
+  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .btn-row{display:flex;gap:var(--sp-2);margin-top:var(--sp-3);flex-wrap:wrap}
+
+  /* tree */
+  .tree{font-family:var(--mono);font-size:12.5px;line-height:1.9}
+  .tree .row{display:flex;align-items:center;gap:8px;white-space:nowrap}
+  .twig{color:var(--ink-300)}
+  .pill{font-family:var(--sans);font-size:10px;font-weight:600;padding:1px 7px;border-radius:9999px;border:1px solid var(--border-strong)}
+  .pill.sketch{color:var(--ink-500);background:var(--wash)}
+  .pill.shaped{color:var(--amber);background:#f8f2e4;border-color:#e3d2ac}
+  .pill.specced{color:var(--green);background:#eef5f0;border-color:#bcd6c6}
+  .pill.blocked{color:var(--red);background:#f8eeec;border-color:#e3c2bc}
+
+  /* swimlane / kanban */
+  .lanes{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-3)}
+  .lane{background:#fcfbf8;border:1px solid var(--border);border-radius:var(--r-3);padding:var(--sp-3);min-height:160px}
+  .lane h5{margin:0 0 var(--sp-3);font-family:var(--sans);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-500)}
+  .chip{background:#fff;border:1px solid var(--border);border-radius:var(--r-2);padding:8px 10px;margin-bottom:8px;font-size:12px;line-height:1.35}
+  .chip .who{font-size:10px;color:var(--ink-500);margin-top:4px;display:flex;gap:6px;align-items:center}
+  .av{width:14px;height:14px;border-radius:9999px;display:inline-block}
+  .av.h{background:var(--accent)} .av.a{background:var(--teal)}
+
+  /* timeline */
+  .timeline{position:relative;padding:var(--sp-3) 0}
+  .tl-row{display:grid;grid-template-columns:120px 1fr;align-items:center;gap:var(--sp-3);margin-bottom:10px}
+  .tl-lbl{font-size:12px;color:var(--ink-700);text-align:right}
+  .tl-track{position:relative;height:18px;background:var(--wash);border-radius:9999px}
+  .tl-bar{position:absolute;height:18px;border-radius:9999px;background:var(--accent);opacity:.85}
+  .tl-bar.done{background:var(--green)} .tl-bar.blk{background:var(--red);opacity:.5}
+  .tl-bar.ghost{background:transparent;border:1.5px dashed var(--border-strong)}
+
+  /* diff */
+  .diff{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--r-3);overflow:hidden;font-family:var(--mono);font-size:12px}
+  .diff .col{padding:var(--sp-3)}
+  .diff .col+ .col{border-left:1px solid var(--border)}
+  .diff .h{font-family:var(--sans);font-size:11px;letter-spacing:0.04em;text-transform:uppercase;color:var(--ink-500);margin-bottom:8px}
+  .del{background:#f8eeec;color:#7c3329;border-radius:2px}
+  .add{background:#eef5f0;color:#2f5e42;border-radius:2px}
+
+  .thre{border-left:2px solid var(--border-strong);padding-left:var(--sp-4);margin-bottom:var(--sp-3)}
+  .thre .au{font-size:11px;color:var(--ink-500);display:flex;gap:6px;align-items:center;margin-bottom:2px}
+
+  .matrix th{background:var(--wash)}
+  .matrix td.win{background:var(--accent-wash)}
+  .check{color:var(--green);font-weight:700} .cross{color:var(--red)}
+
+  ol.q{counter-reset:q;list-style:none;padding:0;margin:0}
+  ol.q li{counter-increment:q;position:relative;padding-left:46px;margin-bottom:var(--sp-4);max-width:74ch}
+  ol.q li::before{content:"Q" counter(q);position:absolute;left:0;top:0;font-family:var(--mono);font-size:12px;font-weight:600;color:#fff;background:var(--accent);border-radius:var(--r-2);padding:3px 7px}
+  .rec-inline{color:var(--green);font-weight:600}
+
+  footer{padding:var(--sp-7) 0;color:var(--ink-500);font-size:13px}
+  .verdict{font-family:var(--serif);font-size:18px;font-style:italic;color:var(--ink-700);line-height:1.5;border-left:3px solid var(--ink-300);padding-left:var(--sp-4);margin:var(--sp-3) 0}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Product design · revision 2</div>
+    <h1>Waypoint</h1>
+    <p class="lead">A cloud collaboration surface where coding agents and a human work asynchronously — agents park the forks they hit and keep moving; you answer when you're ready; the whole history stays as context for the next session.</p>
+    <div class="meta-row">
+      <span><b>Date</b> 2026-06-13</span>
+      <span><b>Supersedes</b> design v1 (2026-06-12)</span>
+      <span><b>Status</b> for review</span>
+      <span><b>Reviewers folded in</b> independent critic · Steve Jobs persona · multi-harness research</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap">
+    <a href="#changed">00 · what changed</a>
+    <a href="#thesis">01 · the one thing</a>
+    <a href="#reviews">02 · reviews & triage</a>
+    <a href="#substrate">03 · one substrate</a>
+    <a href="#status">04 · status model</a>
+    <a href="#harness">05 · multi-harness</a>
+    <a href="#cloud">06 · cloud</a>
+    <a href="#projects">07 · projects</a>
+    <a href="#inbox">08 · L1 inbox</a>
+    <a href="#map">09 · L2 map / roadmap shots</a>
+    <a href="#artifacts">10 · proposal · review · decision</a>
+    <a href="#track">11 · L3 track</a>
+    <a href="#questions">12 · open questions</a>
+  </div>
+</nav>
+
+<!-- ============ 00 ============ -->
+<section id="changed">
+  <div class="wrap">
+    <div class="sec-num">00</div>
+    <h2>What changed from v1</h2>
+    <p>V1 was a local-first Electron app for Claude Code. Your v2 directives deliberately reverse three of its core recommendations and add three new requirements. None of these are accidental drift — each is a stated decision.</p>
+    <table>
+      <thead><tr><th style="width:22%">Dimension</th><th style="width:34%">v1 recommendation</th><th>v2 direction (yours)</th></tr></thead>
+      <tbody>
+        <tr><td><b>Deployment</b></td><td>Local-first, single machine</td><td><span class="tag accent">reversed</span> Cloud-hosted, not bound to localhost</td></tr>
+        <tr><td><b>UI shell</b></td><td>Electron desktop app</td><td><span class="tag accent">reversed</span> Web app (cloud implies browser)</td></tr>
+        <tr><td><b>Database</b></td><td>SQLite</td><td><span class="tag accent">reversed</span> Postgres (concurrent, multi-project)</td></tr>
+        <tr><td><b>MCP transport</b></td><td>Local stdio</td><td><span class="tag accent">reversed</span> Remote Streamable HTTP</td></tr>
+        <tr><td><b>Harness</b></td><td>Claude Code only</td><td><span class="tag green">new</span> Any MCP harness — Claude Code, Codex, OpenCode</td></tr>
+        <tr><td><b>Scope</b></td><td>Single project</td><td><span class="tag green">new</span> First-class projects, switchable, cross-project inbox</td></tr>
+        <tr><td><b>Framing</b></td><td>Inbox + tree + swimlane (flat)</td><td><span class="tag green">new</span> Three ranked layers over one substrate</td></tr>
+        <tr><td><b>Resume model</b></td><td>context-pack + headless <code>claude -p</code> option</td><td><span class="tag amber">refined</span> context-pack only; resume is interactive (stays in Max plan), never headless</td></tr>
+        <tr><td><b>Auth</b></td><td>n/a (local)</td><td><span class="tag teal">deferred</span> tenant/project boundary designed in, auth itself out of scope for now</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">Carried over unchanged from v1: the <b>kinded-node hierarchy</b> (goal/plan/step/task, skippable), <b>asks as first-class children</b> with the proceed-on-assumption flow, <b>blocked is computed</b>, and the <b>append-only event log</b> as history.</div>
+  </div>
+</section>
+
+<!-- ============ 01 ============ -->
+<section id="thesis">
+  <div class="wrap">
+    <div class="sec-num">01</div>
+    <h2>The one thing — and the three layers</h2>
+    <p>The Jobs review forced the thesis down to a single sentence, and it's the right one:</p>
+    <div class="verdict">An agent hits a fork in the road. Instead of stopping dead or guessing wrong, it parks the question and keeps working on everything still unblocked — and you answer when you're ready.</div>
+    <p>Everything else is in service of that moment. Your three functional layers are not three products — they are <b>three views over one shared substrate</b>, ranked by how close they sit to that core moment:</p>
+
+    <div class="grid3">
+      <div class="card">
+        <span class="tag rec">L1 · the front door</span>
+        <h3 style="margin-top:var(--sp-3)">Inbox</h3>
+        <p style="font-size:14px">For the human: an async queue of what needs you. For the agent: a place to park asks, proposals, and decisions, and to watch blockers clear.</p>
+        <small>= the <b>Asks</b> system</small>
+      </div>
+      <div class="card">
+        <span class="tag">L2 · the evidence</span>
+        <h3 style="margin-top:var(--sp-3)">Map</h3>
+        <p style="font-size:14px">Visualize the plan and progress; defer decisions; zoom roadmap → task; see what's pending and what's blocking — without leaving the decision context.</p>
+        <small>= the <b>node tree</b> + computed blocked / completeness</small>
+      </div>
+      <div class="card">
+        <span class="tag">L3 · the memory</span>
+        <h3 style="margin-top:var(--sp-3)">Track</h3>
+        <p style="font-size:14px">Follow tasks through stages (research → plan → dev → test) and keep the full history — context for both the human and the next agent session.</p>
+        <small>= the <b>phase swimlane</b> + append-only event log</small>
+      </div>
+    </div>
+
+    <div class="callout warn"><b>Triage note on the Jobs review.</b> Jobs argued to delete L2 and L3 and ship only the inbox. You explicitly asked for all three layers and for multiple visualization options, so deletion would contradict a direct instruction. The synthesis I took: <b>rank, don't delete.</b> The inbox is the default surface and the signature interaction; Map and Track are reachable from it but never the front door. And the "multiple shots" are presented as a decision aid with a recommendation each — which answers his real objection, that undecided optionality is a smell.</div>
+  </div>
+</section>
+
+<!-- ============ 02 ============ -->
+<section id="reviews">
+  <div class="wrap">
+    <div class="sec-num">02</div>
+    <h2>Reviews &amp; triage</h2>
+    <p>Per the project workflow, the v2 direction was reviewed by three independent passes before this doc was written. Each suggestion was triaged for relevance, risk, and effort — not blindly applied.</p>
+
+    <table>
+      <thead><tr><th style="width:14%">Source</th><th style="width:40%">Finding</th><th style="width:14%">Verdict</th><th>How it changed v2</th></tr></thead>
+      <tbody>
+        <tr><td><b>Critic</b></td><td>Tables and event-log were both treated as authoritative → replay ambiguity</td><td><span class="tag green">accept</span></td><td>Tables authoritative; event log is append-only audit/history only (§03)</td></tr>
+        <tr><td><b>Critic</b></td><td>No concurrency model for multi-agent + human writes</td><td><span class="tag green">accept</span></td><td>Optimistic concurrency (<code>expected_version</code>) + per-project event sequence (§04)</td></tr>
+        <tr><td><b>Critic</b></td><td>Three writable status axes = combinatorial, illegal combos</td><td><span class="tag green">accept</span></td><td>Two stored axes (spine, phase); completeness + blocked are computed (§04)</td></tr>
+        <tr><td><b>Critic</b></td><td>Computed <code>blocked</code> cascades, over-broadcasts on WebSocket</td><td><span class="tag green">accept</span></td><td>Materialized cache, event-triggered invalidation, delta-only push (§04, §06)</td></tr>
+        <tr><td><b>Critic</b></td><td>Answers go cold; raw history won't fit context window</td><td><span class="tag green">accept</span></td><td><code>get_context</code> compacts/summarizes from day one (§05)</td></tr>
+        <tr><td><b>Critic</b></td><td>Drop kind enum for a free <code>level_hint</code> edge</td><td><span class="tag amber">adapt</span></td><td>Keep the goal/plan/task vocabulary (you value it) but make <code>kind</code> a soft display hint on a self-referential edge, not a rigid ladder (§03)</td></tr>
+        <tr><td><b>Jobs</b></td><td>Inbox is the product; the "agent moves when you answer" moment is the whole thing</td><td><span class="tag green">accept</span></td><td>L1 is the default surface; the live-unblock animation is the signature interaction (§08)</td></tr>
+        <tr><td><b>Jobs</b></td><td>Cut L2 Map, L3 swimlane, and the multiple shots</td><td><span class="tag red">reject</span></td><td>Contradicts your explicit ask. Mitigated instead: rank the layers, recommend one shot each (§01)</td></tr>
+        <tr><td><b>Jobs</b></td><td>Never show the human the word "node" / the taxonomy</td><td><span class="tag green">accept</span></td><td>Schema vocabulary stays server-side; UI shows goals/plans/tasks naturally (§08–11)</td></tr>
+        <tr><td><b>Research</b></td><td>MCP <code>instructions</code> field at init is a portable, harness-agnostic bootstrap</td><td><span class="tag green">accept</span></td><td>Core loop needs no per-harness file — server advertises "call get_context first" (§05)</td></tr>
+        <tr><td><b>Research</b></td><td>Streamable HTTP is current; HTTP+SSE deprecated (spec 2025-03-26)</td><td><span class="tag green">accept</span></td><td>Remote MCP over Streamable HTTP (§06)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 03 ============ -->
+<section id="substrate">
+  <div class="wrap">
+    <div class="sec-num">03</div>
+    <h2>One substrate, three views</h2>
+    <p>The whole product is four tables. The three layers are read-projections (mostly) over them. <b>Tables are authoritative; the event log is an append-only audit trail and history feed — derived from mutations, never a second source of truth.</b> This is the single most important correction from the critic: pick one place where truth lives.</p>
+
+    <div class="fig">
+<pre class="ascii">
+  <span class="hi">project</span>  ───┐ (1:N)
+                 │
+                 ▼
+  <span class="hi">node</span>  ◄──────── self edge: parent_id  (soft hierarchy)
+   ├ id, project_id, parent_id
+   ├ <span class="warn">kind</span>  goal│plan│step│task   <span class="dim">— display hint, levels skippable</span>
+   ├ title, body
+   ├ <span class="warn">status</span>  DRAFT│ACTIVE│DONE│DISCARDED   <span class="dim">— stored spine</span>
+   ├ <span class="warn">phase</span>   RESEARCH│PLAN│DEV│TEST          <span class="dim">— stored, owned by L3</span>
+   ├ version  <span class="dim">— optimistic-concurrency guard</span>
+   └ <span class="dim">completeness, blocked  →  COMPUTED, never written</span>
+                 │ (1:N)
+                 ▼
+  <span class="hi">ask</span>  (the unit of human↔agent exchange — first-class child)
+   ├ id, node_id, project_id
+   ├ <span class="warn">type</span>  QUESTION│PROPOSAL│DECISION
+   ├ state  OPEN│ASSUMED│ANSWERED│CONFIRMED│OVERTURNED│DISCARDED
+   ├ required  bool      <span class="dim">— does an OPEN ask block the node?</span>
+   ├ options[] / assumption / answer
+   └ links[]  <span class="dim">— GitHub PR/MR, commit, external ref</span>
+
+  <span class="hi">event</span>  (append-only · the History — §11)
+   └ project_id, seq, actor(human│agent), verb, node/ask ref, payload, ts
+        <span class="ok">↑ derived from every mutation; replay = audit, not state source</span>
+</pre>
+      <div class="figcap">FIG. 1 — <b>the four tables.</b> L1 reads <code>ask</code>; L2 reads <code>node</code> + computed fields; L3 reads <code>node.phase</code> + <code>event</code>.</div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h4>Why tables-authoritative, not event-sourced</h4>
+        <ul class="clean">
+          <li class="pro">Reads are trivial — no fold/replay to answer "what's blocked right now."</li>
+          <li class="pro">Matches the prior art (the backlog tool's <code>ticket_transitions</code> is an audit log beside authoritative rows).</li>
+          <li class="con">History and current state can drift if a mutation forgets to emit an event → enforce emission in one write path.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>The leak the critic caught</h4>
+        <p style="font-size:14px;margin-bottom:var(--sp-2)">L3 Track is not a pure read-view: the swimlane <i>writes</i> <code>node.phase</code>. So v2 admits it — <code>phase</code> is a stored, writable axis that L3 owns. L1 and L2 stay pure projections. Honesty here prevents a "view that secretly mutates" bug class.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 04 ============ -->
+<section id="status">
+  <div class="wrap">
+    <div class="sec-num">04</div>
+    <h2>Status model — two stored axes, two computed</h2>
+    <p>V1 floated three orthogonal writable dimensions. The critic was right that that is a combinatorial mess no one keeps consistent (DONE + SKETCH should be impossible). V2 collapses to <b>two stored axes</b> and <b>two derived signals</b>.</p>
+
+    <div class="fig">
+<pre class="ascii">
+  STORED ─ spine (lifecycle)            STORED ─ phase (L3 swimlane, tasks only)
+  ┌──────────────────────────┐         ┌────────────────────────────────────┐
+  │ DRAFT ─▶ ACTIVE ─▶ DONE   │         │ RESEARCH ─▶ PLAN ─▶ DEV ─▶ TEST      │
+  │   └──────▶ DISCARDED(why) │         └────────────────────────────────────┘
+  └──────────────────────────┘
+
+  ASK lifecycle (the deferral engine)
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │  OPEN ──answer──▶ ANSWERED                                            │
+  │   │                                                                   │
+  │   └─proceed-on-assumption─▶ ASSUMED ──human confirms──▶ CONFIRMED     │
+  │                                │                                      │
+  │                                └──human overturns──▶ OVERTURNED       │
+  │                                        └─▶ agent re-triages subtree   │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  COMPUTED ─ never stored, derived on write, cached, invalidated by events
+   • blocked(node)      = ∃ OPEN required ask  ∨  unmet dependency edge
+   • completeness(node) = SKETCH │ SHAPED │ SPECCED
+                          ↑ derived from which fields/asks are resolved
+</pre>
+      <div class="figcap">FIG. 2 — <b>spine + phase are written; blocked + completeness are computed.</b> Illegal combinations become unrepresentable.</div>
+    </div>
+
+    <h3>Concurrency — the gap v1 never closed</h3>
+    <p>Multiple agents and a human write the same graph asynchronously. V2 adopts the prior art's pattern and extends it:</p>
+    <ul class="clean">
+      <li><b>Optimistic concurrency.</b> Every mutating MCP tool takes <code>expected_version</code>; a stale write is rejected with the current state so the caller re-reads. Carried directly from the backlog tool's <code>transition(expected_version)</code>.</li>
+      <li><b>Per-project monotonic <code>event.seq</code></b> gives a total order for history replay and lets the UI request "everything since seq N" after a reconnect.</li>
+      <li><b>The overturn race, resolved.</b> Agent transitions a node to DONE on an <code>ASSUMED</code> ask; human overturns. The overturn bumps the node version, so the agent's next write is rejected as stale → it re-reads, sees <code>OVERTURNED</code>, and re-triages rather than corrupting state. This is exactly the scenario the critic flagged as silent.</li>
+    </ul>
+
+    <h3>Blocked, materialized</h3>
+    <p>"Computed" is the semantic source of truth, but recomputing a graph cascade on every read — then pushing it over WebSocket — over-broadcasts. So the derived <code>blocked</code> value is <b>cached on the node and invalidated by the events that can change it</b> (ask opened/answered, dependency edge added/met). The UI receives only the delta for the nodes whose <code>blocked</code> actually flipped.</p>
+  </div>
+</section>
+
+<!-- ============ 05 ============ -->
+<section id="harness">
+  <div class="wrap">
+    <div class="sec-num">05</div>
+    <h2>Multi-harness — MCP is the only hard dependency</h2>
+    <p>The core loop must work the same whether the agent is Claude Code, Codex, or OpenCode. The research pass found the clean seam: the <b>MCP <code>instructions</code> field returned at <code>initialize</code></b> is consumed by all three harnesses, so the server can tell any fresh session what to do with <b>zero per-harness files</b>.</p>
+
+    <div class="fig">
+<pre class="ascii">
+  any harness boots a session
+        │
+        ▼  MCP initialize handshake (Streamable HTTP)
+  ┌───────────────────────────────────────────────────────────┐
+  │  Waypoint server → InitializeResult.instructions:          │
+  │  "You are connected to Waypoint. Call get_context(project) │
+  │   FIRST to load goal, open asks, and recent answers.       │
+  │   Park forks with park_ask instead of guessing."           │
+  └───────────────────────────────────────────────────────────┘
+        │   <span class="ok">↑ portable — Claude Code, Codex, OpenCode all read this</span>
+        ▼
+  agent calls  get_context(project)  ──▶  compacted pack:
+        goal · current node · open asks · recent answers/decisions ·
+        session-id provenance        <span class="dim">(summarized, not raw history)</span>
+        │
+        ▼
+  agent works unblocked tasks; on a fork →  park_ask(...)
+        │
+        ▼
+  human answers in web UI  ──▶  next get_context/sync reflects it
+        │
+        ▼  (full reasoning trace needed?)
+  UI offers  "resume session &lt;id&gt;"  ──▶  claude --resume / codex resume
+        <span class="warn">interactive — stays in Max plan, never headless -p</span>
+</pre>
+      <div class="figcap">FIG. 3 — <b>the harness-agnostic bootstrap.</b> The only thing that varies per harness is one-time registration of the remote URL.</div>
+    </div>
+
+    <table>
+      <thead><tr><th>Harness</th><th>Register remote MCP</th><th>Reinforcement file (optional)</th><th>Session-start hook</th></tr></thead>
+      <tbody>
+        <tr><td><b>Claude Code</b></td><td><code>claude mcp add --transport http waypoint &lt;url&gt;</code></td><td><code>CLAUDE.md</code></td><td><span class="check">yes</span> — <code>SessionStart</code> → <code>additionalContext</code></td></tr>
+        <tr><td><b>Codex CLI</b></td><td><code>~/.codex/config.toml</code> (Streamable HTTP)</td><td><code>AGENTS.md</code></td><td><span class="cross">no</span> — relies on MCP <code>instructions</code></td></tr>
+        <tr><td><b>OpenCode</b></td><td><code>opencode.json</code> → <code>mcp: {type:"remote"}</code></td><td><code>AGENTS.md</code></td><td><span class="cross">no</span> — relies on MCP <code>instructions</code></td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><b>Design rule.</b> Anything the core loop needs goes through MCP tools + the <code>instructions</code> field. The reinforcement files and hooks are <i>belt-and-suspenders</i> for harnesses that support them — never a requirement. This is what keeps Waypoint harness-neutral.</div>
+    <div class="sidenote">Research flagged one unverified point: whether every harness reliably injects the <code>instructions</code> string into the model prompt vs. only logging it. Worth a 30-minute spike against each CLI before we commit the bootstrap to the spec.</div>
+  </div>
+</section>
+
+<!-- ============ 06 ============ -->
+<section id="cloud">
+  <div class="wrap">
+    <div class="sec-num">06</div>
+    <h2>Cloud architecture</h2>
+    <p>Cloud-hosted, browser UI, one backend service. Auth is deferred but the <b>project boundary is the future tenant boundary</b> — every row already carries <code>project_id</code>, so dropping an auth layer in front later is additive, not a migration.</p>
+
+    <div class="fig">
+<pre class="ascii">
+   ┌─────────────┐   Streamable HTTP / MCP    ┌───────────────────────────┐
+   │  agents     │ ─────────────────────────▶ │                           │
+   │ CC·Codex·OC │ ◀───── tool results ─────── │   Waypoint API service    │
+   └─────────────┘                            │  (TypeScript · Node)       │
+                                              │   • MCP endpoint           │
+   ┌─────────────┐    WebSocket (live)        │   • REST/RPC for web UI    │     ┌────────────┐
+   │  web UI     │ ◀═════ blocked/ask deltas ═ │   • event emitter + cache  │ ──▶ │  Postgres  │
+   │ (browser)   │ ─────── REST mutations ───▶ │                           │     │  4 tables  │
+   └─────────────┘                            └───────────────────────────┘     └────────────┘
+                                                      │
+                              <span class="dim">[ later, additive ]  auth / tenant gate  ── keyed on project_id</span>
+</pre>
+      <div class="figcap">FIG. 4 — <b>single service, two protocols.</b> MCP for agents, REST + WebSocket for the browser; one Postgres behind both.</div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h4>Stack — recommended</h4>
+        <table style="margin:0">
+          <tr><td>Backend</td><td><b>TypeScript / Node</b> — one language with the web UI; mature MCP SDK</td></tr>
+          <tr><td>DB</td><td><b>Postgres</b> — concurrent writers, JSONB for ask options/payloads</td></tr>
+          <tr><td>Transport</td><td><b>Streamable HTTP</b> MCP + <b>WebSocket</b> to UI</td></tr>
+          <tr><td>UI</td><td><b>React</b> (carries from backlog tool); axiom style</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h4>Why not Python + the old SSE transport</h4>
+        <ul class="clean">
+          <li class="con">Two languages (Py backend + TS UI) doubles the surface for a one-person tool.</li>
+          <li class="con">HTTP+SSE transport is deprecated as of MCP spec 2025-03-26 — building on it is starting in debt.</li>
+          <li class="pro">TS keeps MCP tool types, REST DTOs, and UI props in one type system.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 07 ============ -->
+<section id="projects">
+  <div class="wrap">
+    <div class="sec-num">07</div>
+    <h2>Projects &amp; the cross-project inbox</h2>
+    <p>A <code>project</code> is the top of every tree and the unit an agent registers against. Agents pass <code>project</code> to <code>get_context</code> / <code>park_ask</code>; the human gets a switcher plus an <b>aggregated inbox</b> that answers the v1 requirement "one notification of everything pending across projects."</p>
+    <ul class="clean">
+      <li><b>Agent side:</b> a project is selected by a config value (e.g. <code>WAYPOINT_PROJECT</code>) or inferred from the working directory's registered mapping, then passed on every tool call.</li>
+      <li><b>Human side:</b> the inbox defaults to <i>all projects</i>, sorted by what's been waiting longest; a project filter narrows it. The map and swimlane are always scoped to one project.</li>
+      <li><b>Tenant-ready:</b> because <code>project_id</code> is on every row, the eventual auth layer gates on project membership with no schema change.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 08 ============ -->
+<section id="inbox">
+  <div class="wrap">
+    <div class="sec-num">08</div>
+    <h2>L1 · Inbox — the front door</h2>
+    <p>This is the product. It opens here. Left rail aggregates across projects; the center is a single stack of cards, newest-needed first; clicking a card's context link drops you into L2 Map at exactly that node. The human never sees the word "node," "spine," or "phase."</p>
+
+    <div class="fig">
+      <div class="mock">
+        <div class="mock-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="mock-title">waypoint · inbox — all projects</span></div>
+        <div class="mock-split">
+          <div class="mock-rail">
+            <div class="rail-lbl">Inbox</div>
+            <div class="rail-item active">All projects <span class="count">7</span></div>
+            <div class="rail-item">Trading core <span class="count">4</span></div>
+            <div class="rail-item">Waypoint <span class="count">2</span></div>
+            <div class="rail-item">Mempalace <span class="count">1</span></div>
+            <div class="rail-lbl">Views</div>
+            <div class="rail-item">Map</div>
+            <div class="rail-item">Track</div>
+            <div class="rail-lbl">Assumed (live)</div>
+            <div class="rail-item">Proceeding <span class="count">3</span></div>
+          </div>
+          <div class="mock-body">
+            <div class="ask hot">
+              <div class="ask-head">
+                <div>
+                  <div class="ask-kind">decision · trading core</div>
+                  <div class="ask-title">Which clock source for the sequencer replay?</div>
+                  <div class="ask-meta">parked 14m ago by agent · blocks 3 tasks · <span style="color:var(--red)">required</span></div>
+                </div>
+                <span class="tag red">blocking</span>
+              </div>
+              <div class="ask-body">Replay determinism needs a single clock trait. The agent has narrowed it to two viable options and is blocked on the rest of the replay harness until you pick.</div>
+              <div class="opt pick"><span class="radio"></span><div><b>A — injected clock trait</b> · deterministic, matches charter; ~1 day to thread through. <span class="rec-inline">agent recommends</span></div></div>
+              <div class="opt"><span class="radio"></span><div><b>B — wall-clock with capture/replay log</b> · faster now, risks nondeterminism under load.</div></div>
+              <div class="btn-row"><span class="btn primary">Pick A &amp; unblock</span><span class="btn">Open map</span><span class="btn">Comment</span></div>
+            </div>
+
+            <div class="ask">
+              <div class="ask-head">
+                <div>
+                  <div class="ask-kind">proposal · waypoint</div>
+                  <div class="ask-title">Use Postgres JSONB for ask options rather than a child table</div>
+                  <div class="ask-meta">parked 1h ago · not blocking — agent proceeded on assumption</div>
+                </div>
+                <span class="tag amber">assumed</span>
+              </div>
+              <div class="ask-body">Agent assumed yes and kept building the ask model. Confirm to lock it, or overturn to trigger a re-triage of the schema work done since.</div>
+              <div class="btn-row"><span class="btn primary">Confirm</span><span class="btn">Overturn</span><span class="btn">See what's affected</span></div>
+            </div>
+
+            <div class="ask working">
+              <div class="ask-head">
+                <div>
+                  <div class="ask-kind">decision · trading core</div>
+                  <div class="ask-title">FIX engine: build vs. vendor — you chose build</div>
+                  <div class="ask-meta">answered 2s ago · agent resumed</div>
+                </div>
+                <span class="tag green">working</span>
+              </div>
+              <div class="ask-body" style="color:var(--green)">↳ agent picked up the answer and moved this back to active. Next parked question sliding up…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="figcap">FIG. 5 — <b>the inbox.</b> One blocking decision (hot), one assumed-and-proceeding proposal, one just-answered card mid-animation.</div>
+    </div>
+
+    <div class="callout"><b>The signature interaction (from the Jobs review).</b> When you answer, the card doesn't just close — it flips to <span class="tag green">working</span> live over the WebSocket as the agent picks the answer up, and the next parked question slides into its place. You feel the agent move. That "I just unblocked a teammate who's already back at work" moment is the reason to open Waypoint at all, and it's the one experience detail v2 spends its polish budget on.</div>
+  </div>
+</section>
+
+<!-- ============ 09 ============ -->
+<section id="map">
+  <div class="wrap">
+    <div class="sec-num">09</div>
+    <h2>L2 · Map — roadmap, three shots</h2>
+    <p>You asked for multiple ways to visualize a project across layers (roadmap → breakdown → progress). Here are three. Per the Jobs critique, I'm not shipping all three undecided — I <b>recommend the outline-tree as the primary surface</b>, with the timeline as a switchable progress overlay. The kanban is shown as the rejected alternative and why.</p>
+
+    <div class="fig">
+      <span class="tag rec">shot 1 — recommended</span>
+      <h4 style="margin-top:var(--sp-3)">Outline tree — completeness &amp; blocked at a glance</h4>
+      <div class="mock"><div class="mock-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="mock-title">waypoint · map — trading core</span></div>
+        <div class="mock-body">
+          <div class="tree">
+            <div class="row"><span class="twig">▾</span> <b>Goal</b>&nbsp; Deterministic low-latency trading core <span class="pill shaped">shaped</span></div>
+            <div class="row"><span class="twig">&nbsp;&nbsp;▾</span> Plan&nbsp; Market-data ingestion <span class="pill specced">specced</span></div>
+            <div class="row"><span class="twig">&nbsp;&nbsp;&nbsp;&nbsp;•</span> Task&nbsp; Multicast receiver <span class="pill specced">specced</span> <span class="tag green" style="font-size:10px">done</span></div>
+            <div class="row"><span class="twig">&nbsp;&nbsp;&nbsp;&nbsp;•</span> Task&nbsp; Sequencer replay <span class="pill blocked">blocked</span> <span class="ask-meta">waiting: clock-source decision</span></div>
+            <div class="row"><span class="twig">&nbsp;&nbsp;▾</span> Plan&nbsp; Order management <span class="pill shaped">shaped</span></div>
+            <div class="row"><span class="twig">&nbsp;&nbsp;&nbsp;&nbsp;•</span> Task&nbsp; FIX gateway <span class="pill sketch">sketch</span></div>
+            <div class="row"><span class="twig">&nbsp;&nbsp;&nbsp;&nbsp;•</span> Step&nbsp; Risk checks inline <span class="pill sketch">sketch</span> <span class="ask-meta">not yet elaborated — deferred</span></div>
+          </div>
+        </div></div>
+      <div class="figcap">FIG. 6 — soft hierarchy; the colored completeness pill is the "how spec'd-out" signal; <span style="color:var(--red)">blocked</span> nodes name what they wait on.</div>
+      <div class="grid2" style="margin-top:var(--sp-3)">
+        <div><ul class="clean"><li class="pro">Mirrors how agents actually think (nesting), skippable levels render naturally.</li><li class="pro">Completeness + blocked legible without a second screen.</li></ul></div>
+        <div><ul class="clean"><li class="con">Weak at communicating <i>time</i> / sequencing — hence the overlay below.</li></ul></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="fig">
+        <span class="tag">shot 2 — overlay</span>
+        <h4 style="margin-top:var(--sp-3)">Timeline / progress</h4>
+        <div class="mock"><div class="mock-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="mock-title">map · timeline</span></div>
+          <div class="mock-body"><div class="timeline">
+            <div class="tl-row"><div class="tl-lbl">Ingestion</div><div class="tl-track"><div class="tl-bar done" style="left:0;width:55%"></div></div></div>
+            <div class="tl-row"><div class="tl-lbl">Replay</div><div class="tl-track"><div class="tl-bar blk" style="left:30%;width:25%"></div></div></div>
+            <div class="tl-row"><div class="tl-lbl">Order mgmt</div><div class="tl-track"><div class="tl-bar" style="left:45%;width:30%"></div></div></div>
+            <div class="tl-row"><div class="tl-lbl">Risk (deferred)</div><div class="tl-track"><div class="tl-bar ghost" style="left:70%;width:25%"></div></div></div>
+          </div></div></div>
+        <div class="figcap">FIG. 7 — green = done, red = blocked, dashed = deferred/unelaborated. Same nodes, time axis.</div>
+      </div>
+      <div class="fig">
+        <span class="tag">shot 3 — rejected</span>
+        <h4 style="margin-top:var(--sp-3)">Phase kanban</h4>
+        <div class="mock"><div class="mock-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="mock-title">map · kanban</span></div>
+          <div class="mock-body"><div class="lanes" style="grid-template-columns:repeat(3,1fr)">
+            <div class="lane"><h5>Sketch</h5><div class="chip">FIX gateway</div><div class="chip">Risk checks</div></div>
+            <div class="lane"><h5>Shaped</h5><div class="chip">Order mgmt</div></div>
+            <div class="lane"><h5>Specced</h5><div class="chip">Ingestion</div><div class="chip">Multicast rx</div></div>
+          </div></div></div>
+        <div class="figcap">FIG. 8 — reads well but duplicates L3's swimlane and hides the tree. Kept as a saved filter, not the primary map.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 10 ============ -->
+<section id="artifacts">
+  <div class="wrap">
+    <div class="sec-num">10</div>
+    <h2>Proposal · design review · design decision — shots</h2>
+    <p>These three are the content <i>inside</i> an ask card when you expand it. Each gets two shots and a recommendation.</p>
+
+    <h3>Proposal — approve / revise</h3>
+    <div class="grid2">
+      <div class="fig">
+        <span class="tag rec">shot A — recommended</span>
+        <div class="mock" style="margin-top:8px"><div class="mock-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="mock-title">proposal · card</span></div>
+          <div class="mock-body">
+            <div class="ask" style="margin:0">
+              <div class="ask-kind">proposal</div>
+              <div class="ask-title">Rename <code>sync()</code> → <code>get_context()</code></div>
+              <div class="ask-body">Clearer intent; matches the bootstrap instruction. <a href="#">▸ see diff (2 files)</a></div>
+              <div class="btn-row"><span class="btn primary">Approve</span><span class="btn">Request revision</span><span class="btn">Discard</span></div>
+            </div>
+          </div></div>
+        <div class="figcap">FIG. 9 — inline card, diff collapsed by default. Fast to clear.</div>
+      </div>
+      <div class="fig">
+        <span class="tag">shot B</span>
+        <div class="mock" style="margin-top:8px"><div class="mock-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="mock-title">proposal · side-by-side</span></div>
+          <div class="mock-body"><div class="diff">
+            <div class="col"><div class="h">current</div><span class="del">sync(project)</span><br>→ returns pack</div>
+            <div class="col"><div class="h">proposed</div><span class="add">get_context(project)</span><br>→ returns pack</div>
+          </div></div></div>
+        <div class="figcap">FIG. 10 — full diff always open. Better for code-heavy proposals, heavier for quick ones.</div>
+      </div>
+    </div>
+    <p><small>Recommendation: <span class="rec-inline">shot A</span> — card with a one-click expand to the shot-B diff. Keeps the inbox fast but the evidence one click away.</small></p>
+
+    <h3 style="margin-top:var(--sp-6)">Design review — structured vs. threaded</h3>
+    <div class="grid2">
+      <div class="fig">
+        <span class="tag rec">shot A — recommended</span>
+        <div class="card" style="margin-top:8px;font-size:13px">
+          <div class="ask-kind">design review</div>
+          <p style="margin:6px 0"><b>Situation.</b> Replay needs one clock source.</p>
+          <p style="margin:6px 0"><b>Options.</b> A injected trait · B wall-clock+log.</p>
+          <p style="margin:6px 0"><b>Recommendation.</b> A — determinism over speed.</p>
+          <p style="margin:0"><b>Consequences.</b> A: +1 day, reversible. B: nondeterminism risk, hard to reverse.</p>
+        </div>
+        <div class="figcap">FIG. 11 — the backlog tool's contract: Situation · Options · Recommendation · Consequences (incl. reversibility). Scannable, decision-ready.</div>
+      </div>
+      <div class="fig">
+        <span class="tag">shot B</span>
+        <div class="card" style="margin-top:8px;font-size:13px">
+          <div class="thre"><div class="au"><span class="av a"></span> agent · 14m</div>Narrowed to trait vs wall-clock.</div>
+          <div class="thre"><div class="au"><span class="av h"></span> you · 9m</div>What's the latency delta?</div>
+          <div class="thre"><div class="au"><span class="av a"></span> agent · 8m</div>~40ns, within budget.</div>
+        </div>
+        <div class="figcap">FIG. 12 — threaded discussion. Good for back-and-forth, poor for at-a-glance decisions.</div>
+      </div>
+    </div>
+    <p><small>Recommendation: <span class="rec-inline">shot A</span> structured as the primary, with a thread attached underneath for clarifying questions — you get a decidable artifact <i>and</i> a place to ask back.</small></p>
+
+    <h3 style="margin-top:var(--sp-6)">Design decision — options matrix → decision record</h3>
+    <div class="grid2">
+      <div class="fig">
+        <span class="tag rec">shot A — before the pick</span>
+        <div class="mock" style="margin-top:8px"><div class="mock-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="mock-title">decision · options matrix</span></div>
+          <div class="mock-body"><table class="matrix" style="margin:0;font-size:12px">
+            <thead><tr><th>Criterion</th><th>A trait</th><th>B wall-clock</th></tr></thead>
+            <tbody>
+              <tr><td>Determinism</td><td class="win check">✓</td><td class="cross">✗</td></tr>
+              <tr><td>Effort</td><td>1 day</td><td class="win">2 h</td></tr>
+              <tr><td>Reversible</td><td class="win check">✓</td><td class="cross">✗</td></tr>
+            </tbody>
+          </table><div class="btn-row"><span class="btn primary">Choose A</span><span class="btn">Choose B</span></div></div></div>
+        <div class="figcap">FIG. 13 — compare on explicit criteria before deciding.</div>
+      </div>
+      <div class="fig">
+        <span class="tag">shot B — after the pick</span>
+        <div class="card" style="margin-top:8px;font-size:13px">
+          <div class="ask-kind">decision record · DEC-014</div>
+          <p style="margin:6px 0"><b>Chosen:</b> A — injected clock trait <span class="tag green" style="font-size:10px">locked</span></p>
+          <p style="margin:6px 0"><b>Rationale:</b> determinism &amp; reversibility outweigh 1-day cost.</p>
+          <p style="margin:0;color:var(--ink-500)"><small>supersedes DEC-009 (wall-clock spike) · decided by you · 2026-06-13</small></p>
+        </div>
+        <div class="figcap">FIG. 14 — the matrix collapses into a durable record; superseded decisions stay in history (archaeology, never edited).</div>
+      </div>
+    </div>
+    <p><small>Recommendation: <span class="rec-inline">both — they're one flow.</span> The matrix is how you decide; the record is what the decision becomes. Supersede-don't-edit keeps the "why we chose this" trail for future agents.</small></p>
+  </div>
+</section>
+
+<!-- ============ 11 ============ -->
+<section id="track">
+  <div class="wrap">
+    <div class="sec-num">11</div>
+    <h2>L3 · Track — swimlane &amp; history</h2>
+    <p>The phase swimlane is the one writable view (it sets <code>node.phase</code>). It's where you watch work move research → plan → dev → test, and it's scoped to one project. Drag-and-drop moves a card across lanes; the move emits an event, which is what feeds the history.</p>
+
+    <div class="fig">
+      <div class="mock"><div class="mock-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="mock-title">waypoint · track — trading core</span></div>
+        <div class="mock-body"><div class="lanes">
+          <div class="lane"><h5>Research</h5>
+            <div class="chip">Risk-check approach<div class="who"><span class="av a"></span> agent</div></div>
+          </div>
+          <div class="lane"><h5>Plan</h5>
+            <div class="chip">FIX gateway<div class="who"><span class="av a"></span> agent · plan in review</div></div>
+          </div>
+          <div class="lane"><h5>Dev</h5>
+            <div class="chip">Sequencer replay <span class="pill blocked" style="font-size:9px">blocked</span><div class="who"><span class="av h"></span> waiting on you</div></div>
+            <div class="chip">Order router<div class="who"><span class="av a"></span> agent</div></div>
+          </div>
+          <div class="lane"><h5>Test</h5>
+            <div class="chip">Multicast receiver<div class="who"><span class="av a"></span> agent · green</div></div>
+          </div>
+        </div></div></div>
+      <div class="figcap">FIG. 15 — swimlane with human/agent ownership dots; a blocked card surfaces its waiting state inline. Drag across a lane to advance the phase.</div>
+    </div>
+
+    <div class="fig">
+<pre class="ascii">
+  HISTORY  (derived from event log · what the next agent session reads back)
+  seq 102  <span class="dim">2026-06-13 14:02</span>  <span class="hi">agent</span>  parked DECISION "clock source" on Replay
+  seq 103  <span class="dim">2026-06-13 14:09</span>  <span class="ok">human</span>  asked latency delta (thread)
+  seq 104  <span class="dim">2026-06-13 14:11</span>  <span class="hi">agent</span>  answered ~40ns
+  seq 105  <span class="dim">2026-06-13 14:16</span>  <span class="ok">human</span>  chose option A → DEC-014, superseded DEC-009
+  seq 106  <span class="dim">2026-06-13 14:16</span>  <span class="hi">agent</span>  Replay DRAFT→ACTIVE, resumed dev
+</pre>
+      <div class="figcap">FIG. 16 — the history feed. This is exactly what <code>get_context</code> compacts and hands the next session, so decisions never have to be re-explained.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 12 ============ -->
+<section id="questions">
+  <div class="wrap">
+    <div class="sec-num">12</div>
+    <h2>Open questions for v2 review</h2>
+    <p>Fewer than v1 — most of v1's questions are now settled. These are the ones v2's reviews surfaced or left genuinely open.</p>
+    <ol class="q">
+      <li><b>Ship order.</b> The critic argued for shipping L1 Inbox alone first, then Map and Track once the model is proven. Do you want a phased build (Inbox → Map → Track), or all three layers in the first cut? <span class="rec-inline">Rec: phased — Inbox first.</span></li>
+      <li><b>Soft hierarchy.</b> Keep <code>kind</code> as a goal/plan/step/task display hint (recommended, keeps your vocabulary), or go fully free-form with just a <code>level_hint</code> as the critic suggested? <span class="rec-inline">Rec: keep kind as a hint.</span></li>
+      <li><b>Phase axis scope.</b> Does the research→plan→dev→test phase apply only to <code>task</code> nodes, or to plans/steps too? <span class="rec-inline">Rec: tasks only — higher levels use spine + completeness.</span></li>
+      <li><b>Assumption autonomy.</b> Should agents be allowed to proceed-on-assumption on <i>any</i> ask, or only on ones marked low-consequence/reversible (mirroring the backlog tool's HIGH/LOW gate)? <span class="rec-inline">Rec: only low-consequence; HIGH always blocks.</span></li>
+      <li><b>Roadmap default.</b> Confirm outline-tree as the primary map with timeline overlay (vs. making timeline the default). <span class="rec-inline">Rec: outline-tree primary.</span></li>
+      <li><b>Bootstrap reliability.</b> Do we spike the MCP <code>instructions</code>-field behavior across all three harnesses before committing the spec (research flagged it unverified)? <span class="rec-inline">Rec: yes — half-day spike.</span></li>
+      <li><b>Project selection.</b> Agent picks project via env var, working-directory mapping, or an explicit <code>select_project</code> tool call? <span class="rec-inline">Rec: dir-mapping with env override.</span></li>
+      <li><b>History compaction owner.</b> Should <code>get_context</code> summarize server-side (deterministic, cheap) or hand raw events to the agent to summarize (flexible, costs tokens)? <span class="rec-inline">Rec: server-side, with a raw-events escape hatch.</span></li>
+      <li><b>GitHub linkage depth.</b> v1 wanted PR/MR links on tasks. For v2: just store the link, or poll GitHub for merged/unmerged state? <span class="rec-inline">Rec: store link now, poll later.</span></li>
+      <li><b>Still "Waypoint"?</b> Name still fits the cloud, multi-harness framing. <span class="rec-inline">Rec: keep it.</span></li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Waypoint — product design v2 · 2026-06-13 · supersedes v1. Reply with the questions you'd answer differently; unanswered ones default to the recommendation. After this review locks, the next step is the implementation spec (interfaces &amp; schema first, per the commit rules).</p>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Waypoint — product design v1</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..900;1,8..60,300..900&family=Inter+Tight:wght@300..800&family=JetBrains+Mono:wght@300..700&display=swap');
+:root{
+  --paper-50:#fbfaf7;--paper-100:#f4f1ea;--paper-200:#e9e3d6;--paper-300:#d6cdbb;
+  --ink-900:#171512;--ink-700:#3a372f;--ink-500:#6b6558;--ink-400:#8b8576;
+  --accent-50:#eef1fb;--accent-100:#dde2f5;--accent-300:#8e9bd6;--accent-500:#3b4cad;--accent-600:#2f3e93;
+  --red-500:#b4463a;--amber-500:#b8841f;--green-600:#3f7a48;--teal-500:#2f7a7a;--violet:#7a3a8f;
+  --bg:var(--paper-50);--bg-raised:#fff;--bg-sunken:var(--paper-100);
+  --fg-1:var(--ink-900);--fg-2:var(--ink-700);--fg-3:var(--ink-500);
+  --border:var(--paper-200);--border-strong:var(--paper-300);
+  --font-serif:"Source Serif 4",Georgia,serif;--font-sans:"Inter Tight",system-ui,sans-serif;--font-mono:"JetBrains Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font-sans);font-size:16px;line-height:1.6;color:var(--fg-1);background:var(--bg);-webkit-font-smoothing:antialiased}
+.container{max-width:1120px;margin:0 auto;padding:48px 32px 96px}
+h1{font-family:var(--font-serif);font-weight:400;font-size:56px;line-height:1.15;letter-spacing:-.02em;margin:0 0 24px}
+h2{font-family:var(--font-serif);font-weight:400;font-size:32px;line-height:1.15;letter-spacing:-.02em;margin:0 0 16px}
+h3{font-family:var(--font-serif);font-weight:500;font-size:26px;line-height:1.35;margin:0 0 12px}
+h4{font-weight:600;font-size:18px;line-height:1.35;margin:0 0 8px}
+p{max-width:68ch;margin:0 0 16px}
+ul,ol{max-width:68ch;margin:0 0 16px;padding-left:24px}
+li{margin-bottom:6px}
+.lead{font-family:var(--font-serif);font-size:21px;line-height:1.35;color:var(--fg-2);font-style:italic}
+.eyebrow{font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-3);margin-bottom:8px}
+code{font-family:var(--font-mono);font-size:.9em;background:var(--bg-sunken);padding:.1em .35em;border-radius:4px;border:1px solid var(--border)}
+pre{font-family:var(--font-mono);font-size:13px;line-height:1.45;background:var(--bg-sunken);padding:16px 24px;border:1px solid var(--border);border-radius:6px;overflow-x:auto}
+pre code{background:transparent;padding:0;border:0}
+blockquote{border-left:2px solid var(--accent-300);padding:4px 24px;margin:24px 0;font-family:var(--font-serif);font-style:italic;color:var(--fg-2);max-width:72ch}
+section{margin-bottom:64px;border-top:1px solid var(--border);padding-top:32px}
+section.no-rule{border-top:0;padding-top:0}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:0 0 16px}
+th{text-align:left;font-weight:600;padding:8px 12px;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.caption{font-size:14px;color:var(--fg-3);margin:8px 0 0}
+.fig-label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-3)}
+.card{background:var(--bg-raised);border:1px solid var(--border);border-radius:6px;padding:24px;margin-bottom:16px}
+.option-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:16px}
+.option-card{background:var(--bg-raised);border:1px solid var(--border);border-radius:6px;padding:20px}
+.option-card.recommended{border:1px solid var(--accent-300);background:var(--accent-50)}
+.option-card h4{margin-top:0}
+.rec-badge{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--accent-500);border-radius:4px;padding:2px 8px;margin-left:8px;vertical-align:middle}
+.tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.04em;border-radius:4px;padding:1px 8px;border:1px solid transparent}
+.tag.sketch{color:var(--red-500);background:#f7e9e7;border-color:#e7c5c0}
+.tag.shaped{color:var(--amber-500);background:#f7efdd;border-color:#e8d6a8}
+.tag.specced{color:var(--green-600);background:#e8f1e9;border-color:#c3dcc7}
+.tag.neutral{color:var(--fg-3);background:var(--bg-sunken);border-color:var(--border)}
+.tag.assumed{color:var(--violet);background:#f1e7f4;border-color:#ddc4e5}
+.tag.blocked{color:#fff;background:var(--red-500)}
+.tag.agent{color:var(--teal-500);background:#e5f0f0;border-color:#bcdcdc}
+.tag.human{color:var(--accent-600);background:var(--accent-50);border-color:var(--accent-100)}
+.verdict{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:2px 8px;white-space:nowrap}
+.verdict.accept{color:#fff;background:var(--green-600)}
+.verdict.adapt{color:#fff;background:var(--amber-500)}
+.verdict.reject{color:#fff;background:var(--ink-500)}
+.verdict.partial{color:#fff;background:var(--teal-500)}
+.pros-cons{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:14px}
+.pros-cons div{background:var(--bg-sunken);border-radius:6px;padding:12px 16px}
+.pros-cons strong{display:block;margin-bottom:4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-3)}
+.pros-cons ul{margin:0;padding-left:18px;max-width:none}
+/* ---- UI mockups ---- */
+.mock{border:1px solid var(--border-strong);border-radius:10px;background:var(--bg-raised);overflow:hidden;font-size:13px;margin:16px 0 8px;box-shadow:0 1px 0 rgba(23,21,18,.04)}
+.mock-titlebar{display:flex;align-items:center;gap:8px;background:var(--bg-sunken);border-bottom:1px solid var(--border);padding:8px 14px;color:var(--fg-3);font-size:12px}
+.dot{width:10px;height:10px;border-radius:9999px;background:var(--paper-300)}
+.mock-toolbar{display:flex;align-items:center;gap:16px;padding:10px 16px;border-bottom:1px solid var(--border);font-weight:500;color:var(--fg-2)}
+.mock-toolbar .active{color:var(--accent-600);border-bottom:2px solid var(--accent-500);padding-bottom:2px}
+.mock-toolbar .right{margin-left:auto;color:var(--fg-3)}
+.pill{display:inline-block;border:1px solid var(--border);border-radius:9999px;padding:1px 10px;font-size:11px;color:var(--fg-3);background:var(--bg-raised)}
+.inbox-item{display:flex;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border);align-items:flex-start}
+.inbox-item.focus{background:var(--accent-50)}
+.blast{min-width:64px;text-align:center;border:1px solid var(--border);border-radius:6px;padding:6px 4px;background:var(--bg-sunken)}
+.blast b{display:block;font-size:18px;line-height:1.1;color:var(--accent-600)}
+.blast span{font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--fg-3)}
+.inbox-body{flex:1}
+.inbox-body .title{font-weight:600;color:var(--fg-1)}
+.inbox-body .meta{color:var(--fg-3);font-size:12px;margin-top:2px}
+.btn{display:inline-block;border:1px solid var(--border-strong);border-radius:6px;padding:4px 12px;font-size:12px;font-weight:500;color:var(--fg-2);background:var(--bg-raised);white-space:nowrap}
+.btn.primary{background:var(--accent-500);border-color:var(--accent-500);color:#fff}
+.btn.choice{border-color:var(--accent-300);color:var(--accent-600)}
+.mock-split{display:grid;grid-template-columns:280px 1fr;min-height:300px}
+.mock-tree{border-right:1px solid var(--border);padding:12px 8px;background:var(--bg-sunken);font-family:var(--font-mono);font-size:12px;line-height:1.9;white-space:pre;overflow-x:auto}
+.mock-pane{padding:16px 20px}
+.lane-grid{display:grid;grid-template-columns:90px repeat(4,1fr);gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;font-size:11px;margin-top:8px}
+.lane-grid .hd{background:var(--bg-sunken);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--fg-2)}
+.lane-grid .cell{padding:6px 8px;border-bottom:1px solid var(--border);border-left:1px solid var(--border);min-height:46px}
+.lane-grid .lane-label{padding:6px 8px;border-bottom:1px solid var(--border);background:var(--bg-sunken);color:var(--fg-3);font-weight:500}
+.minicard{border:1px solid var(--border);border-radius:4px;background:var(--bg-raised);padding:3px 6px;margin-bottom:4px;font-size:11px}
+.minicard .pr{color:var(--teal-500);font-family:var(--font-mono);font-size:10px}
+/* state diagrams */
+.sm{font-family:var(--font-mono);font-size:13px;line-height:1.7;background:var(--bg-sunken);border:1px solid var(--border);border-radius:6px;padding:16px 24px;overflow-x:auto;white-space:pre}
+.sm b{color:var(--accent-600)}
+.sm em{color:var(--violet);font-style:normal}
+.sm i{color:var(--fg-3);font-style:italic}
+.toc{columns:2;gap:32px;font-size:14px;max-width:none}
+.toc li{break-inside:avoid}
+.footer-note{color:var(--fg-3);font-size:13px;border-top:1px solid var(--border);padding-top:16px;margin-top:64px}
+a{color:var(--accent-600);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}
+.q{font-weight:600}
+@media (max-width:760px){.mock-split{grid-template-columns:1fr}.mock-tree{border-right:0;border-bottom:1px solid var(--border)}.toc{columns:1}}
+@media print{body{background:#fff}.container{padding:0}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="no-rule" style="margin-bottom:64px">
+  <div class="eyebrow">Waypoint · product design · v1 · 2026-06-12 · for review</div>
+  <h1>Waypoint</h1>
+  <p class="lead">Agents never wait for you. They lodge the decision, state their assumption, and keep moving — you answer on your own schedule, and the work flows around your silence.</p>
+  <p style="max-width:72ch">This page compiles one day of design research: the product thesis, a critique pass (the "Jobs review") with triage, three state-machine proposals, three UI architectures with sketches, the answer-delivery problem, tech-stack options, and the open questions you need to rule on. Recommended options are marked; everything is up for debate tomorrow.</p>
+  <ol class="toc">
+    <li>Thesis &amp; the core loop</li>
+    <li>The Jobs review &amp; triage</li>
+    <li>Hierarchy — three shapes</li>
+    <li>State model — three proposals</li>
+    <li>The hero flow: proceed on assumption</li>
+    <li>Answer delivery — the hard problem</li>
+    <li>UI architecture — three options + sketches</li>
+    <li>History as agent context</li>
+    <li>GitHub, multi-project, notifications</li>
+    <li>Tech stack options</li>
+    <li>What carries over from the backlog tool</li>
+    <li>Open questions for tomorrow</li>
+  </ol>
+</header>
+
+<!-- ============================================================ -->
+<section>
+  <div class="eyebrow">01</div>
+  <h2>Thesis &amp; the core loop</h2>
+  <p>Every agent workflow today has the same failure mode: the agent hits a judgment call, asks, and stalls. The human context-switches in to unblock a single question, or worse, the session dies and the question dies with it. Waypoint inverts this: <strong>the human is modeled as a slow, asynchronous, high-value dependency</strong> — like a flaky external API you design around, not against.</p>
+  <p>The core loop:</p>
+  <ol>
+    <li><strong>Agent uploads structure.</strong> During brainstorming/planning, the agent lodges the goal, sketches the roadmap, and progressively decomposes it. Nothing needs to be fully mapped — decompose only when you must.</li>
+    <li><strong>Agent lodges asks.</strong> When it hits a judgment call, it files a proposal (approve/revise) or a decision (pick an option), with a recommendation and consequences — then either works on something else that's unblocked, or proceeds on a stated assumption.</li>
+    <li><strong>Human answers in batches.</strong> Open the app, see everything waiting on you ranked by what it unblocks, answer, close the laptop.</li>
+    <li><strong>Agent resumes with context.</strong> The answer plus the full decision history is delivered back into an agent session, which continues — or re-triages if an assumption was overturned.</li>
+  </ol>
+  <p>Secondary product: the byproduct of this loop is a permanent, structured history of <em>how the roadmap evolved and why every key decision was made</em> — which becomes the context pack for every future agent session. The backlog tool in <code>~/projects/tools/backlog</code> proved the approval-gate half of this; Waypoint's new ground is the <em>deferral</em> half.</p>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <div class="eyebrow">02</div>
+  <h2>The Jobs review &amp; triage</h2>
+  <p>As requested, the draft design was put through a Steve Jobs-persona critique. His sharpest paragraphs, verbatim:</p>
+  <blockquote>"It's not a 'hierarchy supervisor.' It's an <strong>inbox for decisions</strong>. […] The best sentence in the draft is '5 things waiting on YOU.' So why is that feature in the bottom dock? You put the soul of the product in the basement."</blockquote>
+  <blockquote>"'Proceed on assumption' [is the love feature]. An agent that says <em>'I assumed Postgres; here's the PR; overrule me and I'll redo it'</em> — and one tap either confirms or automatically re-triages everything downstream — that's the moment someone tells a friend. Confirm should feel like inhaling."</blockquote>
+  <blockquote>"'Agents learn of answers by polling or session-event push.' <em>Or</em> is a cop-out. Claude Code sessions end; they don't sit around polling. Either you solve answer-delivery-into-a-fresh-session-with-full-context — which is the actual hard problem, and the actual moat — or this is a beautiful dashboard of stale state."</blockquote>
+  <p>Each point was triaged rather than blindly applied — several conflict with your explicit requirements:</p>
+  <table>
+    <tr><th>His point</th><th>Verdict</th><th>Reasoning</th></tr>
+    <tr><td>The decision inbox is the product; tree is the appendix. Flip the home screen.</td><td><span class="verdict accept">accept</span></td><td>Compelling, and composable with the tree-first research option — same components, inverted prominence. Presented as UI question Q2 with inbox-first recommended.</td></tr>
+    <tr><td>Five hierarchy levels is three too many; hierarchy should be emergent.</td><td><span class="verdict adapt">adapt</span></td><td>Your 5-level vocabulary stays — but as <em>kinds on one generic node type</em>, not five rigid tables. See §03, option H3. Agents aren't forced to fill all levels.</td></tr>
+    <tr><td>Kill the completeness tag (sketch/shaped/specced) — "process theater."</td><td><span class="verdict partial">partial</span></td><td>You explicitly asked for it. His rot concern is real, so §03 offers a <em>computed</em> variant (derived from open spec-asks) alongside the declared one. Your call — open question Q3.</td></tr>
+    <tr><td>Kill the phase dimension (research→plan→dev→test).</td><td><span class="verdict reject">reject</span></td><td>It powers the swimlane view you asked for, and it's <em>agent-maintained</em> — the rot argument applies to human-maintained metadata, not this.</td></tr>
+    <tr><td>"Proceed on assumption" is the love feature — polish to one keystroke.</td><td><span class="verdict accept">accept</span></td><td>Elevated to the hero flow, §05. It is also the strongest differentiator vs. every existing PM tool.</td></tr>
+    <tr><td>Answer delivery into fresh sessions is the actual hard problem.</td><td><span class="verdict accept">accept</span></td><td>Confirmed by platform research — Claude Code ignores MCP server notifications. Promoted to its own section, §06, with four mechanisms.</td></tr>
+  </table>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <div class="eyebrow">03</div>
+  <h2>Hierarchy — three shapes</h2>
+  <p>Your vocabulary: <code>goal → plan → step → task → (proposal | decision)</code>. The question is whether that's a <em>schema</em> or a <em>vocabulary</em>.</p>
+  <div class="option-grid">
+    <div class="option-card">
+      <h4>H1 — Rigid typed levels</h4>
+      <p style="font-size:14px">Five entity types, five tables, foreign keys enforce the ladder. A task can only live under a step.</p>
+      <div class="pros-cons"><div><strong>Pros</strong><ul><li>Matches your stated mental model exactly</li><li>Per-level UI is trivial to specialize</li></ul></div><div><strong>Cons</strong><ul><li>Agents waste turns debating "is this a step or a task?"</li><li>Small efforts must invent fake plans/steps to hold one task</li><li>Schema migration every time the ladder changes</li></ul></div></div>
+    </div>
+    <div class="option-card">
+      <h4>H2 — Fully emergent nesting</h4>
+      <p style="font-size:14px">One <code>item</code> type, free nesting, no kinds. Hierarchy is whatever the agent builds (the Jobs position).</p>
+      <div class="pros-cons"><div><strong>Pros</strong><ul><li>Zero taxonomy arguments</li><li>Simplest schema, simplest MCP surface</li></ul></div><div><strong>Cons</strong><ul><li>No shared altitude vocabulary between you and the agent</li><li>Roadmap view has nothing reliable to render at "goal level"</li></ul></div></div>
+    </div>
+    <div class="option-card recommended">
+      <h4>H3 — One node type, kinded <span class="rec-badge">recommended</span></h4>
+      <p style="font-size:14px">A single <code>node</code> table with a <code>kind</code> field (goal/plan/step/task). Kind ordering is enforced softly (a task's ancestors must be ≥ step rank) but <strong>levels are skippable</strong> — a goal may directly hold tasks. Asks (proposals/decisions) attach to <em>any</em> node, as children of a different type (§04).</p>
+      <div class="pros-cons"><div><strong>Pros</strong><ul><li>Your vocabulary, the agent's flexibility</li><li>One table, one MCP tool set, one tree component</li><li>Altitude views filter by kind — robust roadmaps</li></ul></div><div><strong>Cons</strong><ul><li>Soft rules need validation logic + good agent prompts</li></ul></div></div>
+    </div>
+  </div>
+  <h4>The completeness dimension</h4>
+  <p>Per your requirement, every node carries a colored spec-completeness tag: <span class="tag sketch">sketch</span> <span class="tag shaped">shaped</span> <span class="tag specced">specced</span> — sketch = title and intent only; shaped = boundaries, approach, and risks named; specced = an agent could start implementing without asking anything new. Two sub-options (open question Q3):</p>
+  <ul>
+    <li><strong>Declared</strong> — the agent sets it when it raises the bar. Simple; risks drifting from reality.</li>
+    <li><strong>Computed</strong> — derived: a node is <em>specced</em> iff it has no open spec-type asks and its required fields are filled; <em>shaped</em> iff decomposed with asks identified. Never lies, but the inference rules need tuning.</li>
+  </ul>
+  <p>Discard-with-reason applies to any node: the reason is stored on the node (Jira's status≠resolution lesson), and all descendants plus assumption-tainted dependents flip to a <code>STALE</code> flag for agent re-triage — the agent proposes keep / rework / discard per affected node rather than the tool auto-deleting work.</p>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <div class="eyebrow">04</div>
+  <h2>State model — three proposals</h2>
+  <p>Research swept Linear, Jira, GitHub Projects, Shape Up, Gerrit/kernel review, and human-in-the-loop patterns in LangGraph and Temporal. The load-bearing findings: Linear models <em>blocked as a relation, not a status</em>; Jira's durable lesson is <em>status ≠ resolution</em>; Gerrit scales with a <em>tiny lifecycle spine + orthogonal labels</em>; Temporal/LangGraph model <em>waiting-on-human as a durable, queryable sub-thread that never freezes sibling work</em>. Three proposals:</p>
+
+  <h3>P1 — Monorail: one machine, waiting-as-state</h3>
+  <div class="sm">DRAFT → READY → IN_PROGRESS ⇄ <b>NEEDS_HUMAN</b> → REVIEW → DONE
+  (any) ──────────────────────────────────────────→ DISCARDED <i>(reason)</i></div>
+  <div class="pros-cons" style="margin-top:8px"><div><strong>Pros</strong><ul><li>Maximally legible; the human inbox is literally one column</li><li>Closest to the existing backlog tool</li></ul></div><div><strong>Cons</strong><ul><li>An item with one open question but three workable subtasks must <em>lie about its state</em> — the exact failure Waypoint exists to fix</li><li>Per-type differences become guard-clause warts</li></ul></div></div>
+
+  <h3 style="margin-top:32px">P2 — Spine + Asks <span class="rec-badge">recommended</span></h3>
+  <p>One tiny lifecycle shared by <em>all</em> node kinds, plus orthogonal dimensions. Deferral is structural, not disciplined.</p>
+  <div class="sm"><i>lifecycle spine (every node):</i>
+  DRAFT → ACTIVE → DONE
+    └───────┴────→ DISCARDED <i>(reason; descendants → STALE)</i>
+
+<i>completeness (every node):</i>   SKETCH → SHAPED → SPECCED
+<i>phase (task nodes; agent-set):</i> RESEARCH → PLAN → DEV → TEST
+
+<i>Ask — first-class child object {kind: PROPOSAL | DECISION}:</i>
+  OPEN ──answer──→ <b>ANSWERED</b> <i>(approved / option chosen / revise+suggestions)</i>
+  OPEN ──agent proceeds──→ <em>ASSUMED</em> ──human──→ <b>CONFIRMED</b> | <em>OVERTURNED</em>
+                                                        └→ tainted nodes → STALE
+
+<i>blocked — COMPUTED, never stored:</i>
+  blocked(n) ⇔ ∃ required Ask OPEN on n  ∨  ∃ unmet dependency edge into n</div>
+  <div class="pros-cons" style="margin-top:8px"><div><strong>Pros</strong><ul><li>"Defer and keep working" is the data model: an OPEN ask blocks only what genuinely requires it</li><li>Human inbox = <code>all OPEN/ASSUMED asks ordered by unblock count</code> — one query</li><li>Steals each system's validated idea: Gerrit's spine, Linear's blocked-relation, Jira's resolution split, Temporal's durable waits</li><li>Assumption flow (§05) falls out naturally</li></ul></div><div><strong>Cons</strong><ul><li>Less glanceable than one status field — UI must render computed blocked-ness well</li><li>More concepts for agents to drive (mitigated by a tight MCP tool design)</li></ul></div></div>
+
+  <h3 style="margin-top:32px">P3 — Schema per type</h3>
+  <div class="sm">proposal:  DRAFT → PROPOSED → APPROVED | REVISE
+decision:  OPEN → OPTIONS_READY → CHOSEN
+task:      RESEARCH → PLAN → DEV → TEST → DONE
+<i>shared terminal contract: DONE | DISCARDED(reason)</i></div>
+  <div class="pros-cons" style="margin-top:8px"><div><strong>Pros</strong><ul><li>Each type maximally precise; Jira-proven approach</li></ul></div><div><strong>Cons</strong><ul><li>N machines to evolve; "what's waiting on me" reimplemented N times</li><li>Cross-type rollups need per-type adapters; config tax grows forever</li></ul></div></div>
+
+  <p style="margin-top:24px"><strong>Recommendation: P2.</strong> It is the only design where the product thesis is enforced by the schema rather than by agent discipline. P1 remains the fallback if P2's UI proves too subtle — they share enough vocabulary that downgrading later is a migration, not a rewrite.</p>
+
+  <h4>The ask contract (carried from the backlog tool)</h4>
+  <p>Every ask keeps the human-review contract that already works in <code>backlog-tickets.md</code>: <strong>Type &amp; Ask → Situation (≤5 lines) → Options (each with consequences) → Recommendation → Consequences (if approved / if rejected or deferred / reversibility)</strong>. One decision per ask. Decisions carry structured options <code>[{key, label, summary}]</code> rendered as buttons. New fields: <code>required</code> (does this block its node?), <code>assumption</code> (what the agent will do if you stay silent), and <code>unblocks</code> (computed blast radius).</p>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <div class="eyebrow">05</div>
+  <h2>The hero flow: proceed on assumption</h2>
+  <p>The single flow to polish until it's one keystroke. The agent never idles; the human never feels guilt-tripped; overturning is safe because blast radius is tracked.</p>
+  <pre>
+agent                         waypoint                       human
+  │  lodge DECISION ask          │                              │
+  │  "DB for service X?"         │                              │
+  │  options: [postgres, sqlite] │                              │
+  │  recommendation: postgres    │                              │
+  │  assumption: postgres ───────▶  ask = ASSUMED               │
+  │                              │  nodes downstream get        │
+  │  keeps building on the       │  tainted-by edge             │
+  │  assumption; links PR #41    │                              │
+  │                              │   ...hours pass...           │
+  │                              │  inbox: "1 assumed decision  │
+  │                              │   — 4 nodes riding on it" ──▶│ opens app
+  │                              │                              │ sees recommendation,
+  │                              │                              │ assumption, PR diff
+  │                              │      ◀── [⏎ confirm] ────────│ one keystroke
+  │  context pack delivered ◀────│  ask = CONFIRMED             │
+  │  (answer + rationale)        │  taint edges dissolve        │
+  │                              │                              │
+  │            — or —            │      ◀── [overturn: sqlite] ─│
+  │  resume w/ re-triage list ◀──│  ask = OVERTURNED            │
+  │  proposes keep/rework/       │  4 tainted nodes → STALE     │
+  │  discard per stale node      │                              │
+  </pre>
+  <p class="caption">Fig. 1 — the assumption lifecycle. Confirm dissolves taint silently; overturn turns downstream work into an explicit re-triage list, never silent deletion.</p>
+  <p>Design rules: confirming is <kbd>⏎</kbd> on the focused inbox card. The assumption is always stated in the ask <em>before</em> the agent proceeds (no retroactive assumptions). Required asks with no safe assumption stay OPEN and genuinely block — "defer unless we must decide" cuts both ways.</p>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <div class="eyebrow">06</div>
+  <h2>Answer delivery — the hard problem</h2>
+  <p>Your question: <em>"is it possible to inform agents via SSE using MCP?"</em> Platform research gives a clear answer: <strong>not today.</strong> The MCP spec supports server→client notifications over SSE/streamable HTTP, but Claude Code currently ignores them — they don't re-invoke the model (tracked and closed as not-planned in <a href="https://github.com/anthropics/claude-code/issues/36665">claude-code#36665</a>). And the deeper truth (the Jobs point): sessions <em>end</em>. The durable primitive can't be "a live session notices" — it must be <strong>"an answer produces a resumable context pack, and some trigger gets an agent to consume it."</strong> Four trigger mechanisms, composable:</p>
+  <table>
+    <tr><th>Mechanism</th><th>How it works</th><th>Maturity</th><th>Limitation</th></tr>
+    <tr><td><strong>Poll between tasks</strong></td><td>Agent calls <code>waypoint.sync()</code> (one MCP tool returning all answers + new STALE flags since last sync) at natural boundaries — task completion, session start.</td><td>Works today, zero infra</td><td>Latency = task length; only while a session lives</td></tr>
+    <tr><td><strong>Channels</strong></td><td>A custom Waypoint channel pushes "ask answered" events into a <em>running</em> session (Claude Code ≥2.1.80, research preview, <code>--channels</code>).</td><td>Research preview</td><td>Session must be alive; preview-stage API</td></tr>
+    <tr><td><strong>Session event push</strong></td><td>Waypoint backend tracks session IDs per ask; on answer, POSTs a <code>user.message</code> event via the Managed Agents Event API — re-invokes the model mid-session.</td><td>Production (managed agents)</td><td>Requires session-ID bookkeeping; managed-agent deployments</td></tr>
+    <tr><td><strong>Fresh-session spawn</strong> <span class="rec-badge" style="background:var(--teal-500)">the moat</span></td><td>On answer (or batch of answers), Waypoint invokes <code>claude -p</code> headless with the <strong>context pack</strong>: the answer, its rationale, the node's decision history, and a resume cursor. Works when nothing is running.</td><td>Works today</td><td>Cold start cost; context pack quality decides everything</td></tr>
+  </table>
+  <p><strong>Recommended architecture:</strong> design everything around the context pack + <code>sync()</code> (mechanisms 1+4 — durable, works today), and treat live push (2/3) as a latency optimization layered on later. This makes the context pack — "everything a fresh agent needs to resume this node" — a first-class API object, which §08 turns into the history product. Open question Q4: whether v1 includes auto-spawn or just makes resume-by-hand trivially easy.</p>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <div class="eyebrow">07</div>
+  <h2>UI architecture — three options + sketches</h2>
+  <p>Research swept Linear (Initiatives→Projects→Issues + the industry's best Inbox), GitHub Projects/Height (views as projections), Jira Advanced Roadmaps (dense nested Gantt), and agent-supervision UIs (Devin's command center, Vibe Kanban). Notable: <em>nobody yet combines altitude navigation with an approvals queue</em> — that's Waypoint's opening.</p>
+
+  <h3>Option A — Zoomable single canvas</h3>
+  <pre>
+[zoom: ▣ goal  ▢ plan  ▢ task]                    ⚠ 3 on YOU
+ ┌─Goal: Auth ───────────┐        ┌─Goal: Billing──┐
+ │ ┌plan A┐ ──▶ ┌plan B┐ │ ─────▶ │  ▣▣▢   agents×2 │
+ │ └──────┘     └─⏸YOU─┘ │        └────────────────┘
+  </pre>
+  <p style="font-size:14px">One infinite canvas; semantic zoom changes altitude; dependencies are edges. <strong>Pros:</strong> dependencies first-class, spatial memory, demos beautifully. <strong>Cons:</strong> heaviest build (canvas perf, auto-layout); poor for dense status scanning; spatial tools historically lose to lists for <em>tracking</em>. Verdict: a beautiful v3, wrong v1.</p>
+
+  <h3>Option B — Altitude tabs with drill-down (the Linear model)</h3>
+  <pre>
+Projects │ Roadmap ▸ Plan: SSO ▸ Steps          [Inbox 4]
+─────────┼──────────┬───────┬───────────┬─────────
+agent    │ Research │ Plan  │ Dev       │ Testing
+claude-1 │          │ #12 ⏸ │ #14 ●     │
+claude-2 │ #18      │       │ #15 PR482 │
+  </pre>
+  <p style="font-size:14px">Separate pages per altitude, joined by drill-down; a global Inbox tab. <strong>Pros:</strong> proven, cheapest, boards fit agent fleets naturally. <strong>Cons:</strong> altitude context evaporates on drill-down; the Inbox is disconnected from the hierarchy — you see <em>that</em> you block something, not <em>what subtree</em> a decision unblocks.</p>
+
+  <h3>Option C — Inbox-first + structure spine <span class="rec-badge">recommended</span></h3>
+  <p style="font-size:14px;max-width:72ch">The research recommended a tree-first spine with an attention dock; the Jobs review argued the inbox <em>is</em> the product. They compose: <strong>the home screen is the decision inbox</strong> (cross-project, ranked by blast radius); selecting an item reveals the tree as the <em>evidence pane</em>, with the blocking path highlighted — you always see exactly what your answer unblocks. The full tree/board/timeline views are one click away as the "structure" surface.</p>
+
+  <div class="mock">
+    <div class="mock-titlebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp; Waypoint</div>
+    <div class="mock-toolbar"><span class="active">Inbox · 5</span><span>Structure</span><span>Agents</span><span class="right">all projects ▾ &nbsp;·&nbsp; <span class="pill">trading-universe</span> <span class="pill">waypoint</span></span></div>
+    <div class="inbox-item focus">
+      <div class="blast"><b>6</b><span>unblocks</span></div>
+      <div class="inbox-body">
+        <div class="title">Decision — message bus for notification service <span class="tag assumed">assumed: kafka</span></div>
+        <div class="meta">trading-universe · plan "Downstream" · lodged 3h ago by claude-2 · PR #482 riding on it</div>
+        <div style="margin-top:8px"><span class="btn choice">⏎ confirm kafka</span> &nbsp;<span class="btn choice">choose redpanda</span> &nbsp;<span class="btn">request changes…</span></div>
+      </div>
+    </div>
+    <div class="inbox-item">
+      <div class="blast"><b>3</b><span>unblocks</span></div>
+      <div class="inbox-body">
+        <div class="title">Proposal — adopt H3 kinded-node hierarchy <span class="tag neutral">open</span></div>
+        <div class="meta">waypoint · goal "Data model" · lodged 1d ago by claude-1</div>
+        <div style="margin-top:8px"><span class="btn primary">approve</span> &nbsp;<span class="btn">request changes…</span> &nbsp;<span class="btn">discard…</span></div>
+      </div>
+    </div>
+    <div class="inbox-item">
+      <div class="blast" style="opacity:.6"><b>1</b><span>unblocks</span></div>
+      <div class="inbox-body">
+        <div class="title">PR #483 merged — task "SSE event stream" awaiting close-out <span class="tag specced">specced</span></div>
+        <div class="meta">waypoint · step "API layer" · claude-1 · review only</div>
+      </div>
+    </div>
+  </div>
+  <p class="caption">Fig. 2 — home screen: the cross-project inbox, ranked by unblock count. The assumed decision renders its one-keystroke confirm first.</p>
+
+  <div class="mock">
+    <div class="mock-titlebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp; Waypoint — structure · trading-universe</div>
+    <div class="mock-split">
+      <div class="mock-tree">▾ ◎ Goal: Downstream feed
+  ▾ ▤ Plan: Notify svc <span class="tag shaped">shaped</span>
+    ▾ ▸ Step: Bus setup <span class="tag blocked">⏸ you</span>
+      · Task: schema  ✓
+      · Task: producer <span class="tag assumed">assumed</span>
+      · <b style="color:var(--accent-600)">? Decision: bus choice</b>
+    ▸ ▸ Step: Consumers <span class="tag sketch">sketch</span>
+  ▸ ▤ Plan: Dashboards
+▸ ◎ Goal: Replay parity</div>
+      <div class="mock-pane">
+        <div class="fig-label">selected · step: bus setup</div>
+        <h4 style="margin-top:4px">Swimlane — in-flight tasks <span class="tag agent">agents: 2</span></h4>
+        <div class="lane-grid">
+          <div class="hd"></div><div class="hd">Research</div><div class="hd">Plan</div><div class="hd">Dev</div><div class="hd">Test</div>
+          <div class="lane-label">claude-1</div><div class="cell"></div><div class="cell"><div class="minicard">consumer spec</div></div><div class="cell"></div><div class="cell"></div>
+          <div class="lane-label">claude-2</div><div class="cell"></div><div class="cell"></div><div class="cell"><div class="minicard">producer <span class="pr">PR #482 ↗</span></div></div><div class="cell"><div class="minicard">schema <span class="pr">PR #479 ✓</span></div></div>
+          <div class="lane-label">you</div><div class="cell"></div><div class="cell"><div class="minicard" style="border-color:var(--accent-300)">? bus choice</div></div><div class="cell"></div><div class="cell"></div>
+        </div>
+        <p class="caption">Dragging a card across lanes fires a real phase transition; dragging to "you" reassigns. Blocking path from the selected ask is highlighted in the tree.</p>
+      </div>
+    </div>
+  </div>
+  <p class="caption">Fig. 3 — the structure surface: persistent tree spine (left) with completeness tags and blocked glyphs; contextual projection (right) — swimlane board for a step, timeline for a goal, detail panel for an ask. Humans appear as a swimlane too, per your assignment requirement.</p>
+
+  <p><strong>Responsiveness:</strong> the UI subscribes to a WebSocket/SSE event stream from the backend — every transition, ask, and comment is an event; no refresh polling (the 15-second refresh in the backlog tool is the anti-pattern to kill). Drag-and-drop everywhere a transition is legal; illegal drops bounce with the reason. <strong>Secondary views</strong>, priority order: agent fleet board (cross-project "what is every agent doing right now"), goal/plan timeline for roadmap conversations, and a per-node dependency mini-graph in the detail pane. A global graph view is explicitly skipped — research verdict: they rot.</p>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <div class="eyebrow">08</div>
+  <h2>History as agent context</h2>
+  <p>Everything is append-only events: node created, decomposed, ask lodged, assumption stated, answered, overturned, discarded-with-reason, PR linked, phase moved. Three products fall out of one log:</p>
+  <ul>
+    <li><strong>Timeline per node</strong> — the human-readable audit trail (the backlog tool already proved this pattern).</li>
+    <li><strong>The context pack</strong> — <code>get_context(node_id)</code> returns a compact, agent-optimized brief: the node's position in the hierarchy, every ancestor decision with chosen option + rationale, active assumptions it's riding on, and open asks in scope. This is what makes a <em>fresh</em> session as informed as the one that lodged the work — the answer-delivery moat (§06) and the "history for agents later" requirement are the same feature.</li>
+    <li><strong>Decision archaeology</strong> — "why did we choose Kafka?" is a query, not a memory. Superseding a decision links old → new, never edits history.</li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <div class="eyebrow">09</div>
+  <h2>GitHub, multi-project, notifications</h2>
+  <ul>
+    <li><strong>PR linking:</strong> tasks carry PR references (agent links them via MCP at DEV phase). Waypoint shows live merge status — a periodic <code>gh</code>/API poll in v1, a webhook later. The structure view thus doubles as "what's merged vs. in flight," your requirement #5. A merged PR nudges (not forces) the task toward TEST/DONE.</li>
+    <li><strong>Projects:</strong> agents register a project over MCP (<code>register_project(name, repo, path)</code>); the human switches projects in the app, and the inbox aggregates across all of them by default — the "overall notification" you asked for. Per-project views are one filter away.</li>
+    <li><strong>Notifications:</strong> OS-level (Electron) notification when a new required ask arrives or an assumption is about to be acted on; configurable quiet hours. The inbox badge is the source of truth; notifications just point at it.</li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <div class="eyebrow">10</div>
+  <h2>Tech stack options</h2>
+  <p>Fixed by your direction: database backend, TypeScript UI, Electron shell, MCP tool surface. Two genuine choices remain:</p>
+  <table>
+    <tr><th></th><th>Option</th><th>For</th><th>Against</th></tr>
+    <tr><td rowspan="2"><strong>Backend<br>(API + MCP)</strong></td><td><strong>TypeScript</strong> (Hono/Fastify + official MCP TS SDK) <span class="rec-badge">recommended</span></td><td>One language across UI/backend/Electron; one toolchain (<code>npm test</code>); types shared end-to-end with the UI; MCP TS SDK is first-party</td><td>Backlog-tool code (Python) is reference, not reused</td></tr>
+    <tr><td><strong>Python</strong> (FastAPI + FastMCP)</td><td>Direct reuse of backlog-tool patterns/code; FastMCP maturity</td><td>Two languages in one product; the multi-language rule would pull toward Bazel — overkill here</td></tr>
+    <tr><td rowspan="2"><strong>Database</strong></td><td><strong>SQLite (embedded, WAL)</strong> <span class="rec-badge">recommended</span></td><td>Zero-ops for a local desktop product; the whole event log is one file you can back up; Electron-friendly; plenty for single-human scale</td><td>A future hosted/multi-user mode means a migration</td></tr>
+    <tr><td><strong>Postgres</strong></td><td>Proven in the backlog tool; LISTEN/NOTIFY for events; no future migration</td><td>A daemon to install/run/upgrade for a desktop app — real adoption friction</td></tr>
+  </table>
+  <p>Shape either way: a single local <strong>service process</strong> owns the DB and exposes (a) HTTP + WebSocket/SSE for the Electron UI, (b) streamable-HTTP MCP for agents — so multiple Claude Code sessions across projects hit one server, which is what makes cross-project aggregation work. The Electron app supervises the service (starts it, shows its health). Worth noting: this also leaves the door open to a plain browser tab and a phone later — the Electron shell is packaging, not architecture.</p>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <div class="eyebrow">11</div>
+  <h2>What carries over from the backlog tool</h2>
+  <table>
+    <tr><th>Keep</th><th>Change</th></tr>
+    <tr><td>The ask contract (Type &amp; Ask / Options / Recommendation / Consequences with reversibility) — it's a genuinely good human-decision format</td><td>Approval gates become <em>asks on nodes</em> — deferral with stated assumptions replaces hard blocking</td></tr>
+    <tr><td>DECISION-with-structured-options vs PROPOSAL split; chosen option recorded immutably</td><td>Flat tickets become the kinded node hierarchy (H3)</td></tr>
+    <tr><td>Append-only transitions, artifact versioning, optimistic concurrency (<code>expected_version</code>)</td><td>15-second UI refresh → event-driven WebSocket/SSE</td></tr>
+    <tr><td>HIGH/LOW consequence instinct (LOW auto-approves, logged)</td><td>Generalized: LOW-consequence asks are born ASSUMED — same mechanism, one less concept</td></tr>
+    <tr><td>MCP server + human UI split; claim/assign mechanics</td><td>Project-local single instance → multi-project registry with one aggregate inbox</td></tr>
+  </table>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <div class="eyebrow">12</div>
+  <h2>Open questions for tomorrow</h2>
+  <ol>
+    <li><span class="q">Hierarchy:</span> H3 (one kinded node type) over rigid H1 — agree? (§03)</li>
+    <li><span class="q">Home screen:</span> inbox-first with tree as evidence pane (the Jobs flip), or tree-first with attention dock (the research original)? (§07)</li>
+    <li><span class="q">Completeness tag:</span> declared by agents or computed from open asks? (§03)</li>
+    <li><span class="q">Resume in v1:</span> context pack + <code>sync()</code> only, or also auto-spawn of headless sessions when answers land? Auto-spawn is the moat but doubles v1 scope. (§06)</li>
+    <li><span class="q">State model:</span> P2 spine+asks — comfortable with computed blocked-ness, or do you want the legible Monorail P1 for v1? (§04)</li>
+    <li><span class="q">Stack:</span> TS backend + SQLite per the recommendation, or Python+Postgres for backlog-tool reuse? (§10)</li>
+    <li><span class="q">Overturn semantics:</span> when an assumption is overturned, agent re-triages STALE nodes and <em>proposes</em> dispositions (recommended) — or should overturning auto-discard descendants?</li>
+    <li><span class="q">Scope guard:</span> is single-human / local-first acceptable for v1 (no auth, no multi-user)? Affects the DB choice.</li>
+    <li><span class="q">Sprints:</span> you mentioned sprints once — are they a real entity, or just a time window over the timeline view? (Recommend: not an entity in v1.)</li>
+    <li><span class="q">Name:</span> Waypoint — keeping it?</li>
+  </ol>
+</section>
+
+<div class="footer-note">
+  Waypoint design v1 · compiled 2026-06-12 · sources: backlog tool (<code>~/projects/tools/backlog</code>), platform research (MCP notifications: claude-code#36665, Channels, Managed Agents Event API), workflow research (Linear, Jira, Shape Up, Gerrit, Temporal, LangGraph), UI research (Linear Inbox, Devin command center, Vibe Kanban), and a Steve Jobs-persona critique pass. Next step after review: lock the open questions, then write the spec.
+</div>
+
+</div>
+</body>
+</html>

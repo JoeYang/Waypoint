@@ -1,0 +1,22 @@
+# dependencies / build output
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# editor / OS
+.DS_Store
+
+# transient tooling artifacts
+.playwright-mcp/
+waypoint-design-full.png
+
+# test / coverage
+coverage/
+playwright-report/
+test-results/
