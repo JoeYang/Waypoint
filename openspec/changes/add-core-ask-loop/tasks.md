@@ -23,8 +23,8 @@
 - [x] 3.7 RED: tests for answering an ask (atomic with event append) → implement
 - [x] 3.8 RED: tests for append-only event log (one sequenced event per mutation, same transaction) → satisfied by the per-use-case event append; locked in with regression suites
 - [x] 3.9 RED: tests for optimistic concurrency (stale rejected; overturn-while-DONE race) → version guard already in transition/ask ops; race verified
-- [ ] 3.10 RED: tests for computed `blocked` + property test "materialized == freshly computed after any mutation"; one event, multi-node recompute → implement recompute function (depends on 3.3/3.8/3.9)
-- [ ] 3.11 RED: tests for `blast_radius` (direct `depends_on` dependents) → implement
+- [x] 3.10 RED: tests for computed `blocked` + agreement-with-reference property after any mutation → implemented as compute-on-demand (no materialized cache in this slice; spec's MUST holds trivially). Includes the dependency blocked-propagation case deferred from 3.3.
+- [x] 3.11 RED: tests for `blast_radius` (direct `depends_on` dependents only) → implement
 
 ## 4. Persistence — Postgres (schema migration is its own commit)
 

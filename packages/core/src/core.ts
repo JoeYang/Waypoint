@@ -86,6 +86,9 @@ export interface Core {
   confirmAssumption(input: ResolveAssumptionInput): Promise<Ask>;
   overturnAssumption(input: ResolveAssumptionInput): Promise<Ask>;
   answer(input: AnswerInput): Promise<Ask>;
+  // Reads — computed on demand, never stored (a future cache MUST equal these values).
+  computeBlocked(projectId: string, nodeId: string): Promise<boolean>;
+  blastRadius(projectId: string, nodeId: string): Promise<number>;
 }
 
 // True if `target` is reachable from `from` by following depends_on edges. Used to
@@ -434,6 +437,37 @@ export function createCore(deps: CoreDeps): Core {
           at: now,
         });
         return updated;
+      });
+    },
+
+    async computeBlocked(projectId, nodeId) {
+      return uow.run(async (ctx) => {
+        const node = await ctx.nodes.findById(projectId, nodeId);
+        if (!node) throw new NotFoundError("node", nodeId);
+
+        // Blocked if there is an OPEN required ask (ASSUMED no longer blocks — the agent
+        // proceeded) …
+        const asks = await ctx.asks.listByProject(projectId);
+        const hasOpenRequired = asks.some(
+          (a) => a.nodeId === nodeId && a.required && a.state === "OPEN",
+        );
+        if (hasOpenRequired) return true;
+
+        // … or any dependency that is not yet DONE.
+        const edges = await ctx.nodes.listDependencies(projectId);
+        const dependencies = edges.filter((e) => e.nodeId === nodeId);
+        if (dependencies.length === 0) return false;
+        const statusById = new Map(
+          (await ctx.nodes.listByProject(projectId)).map((n) => [n.id, n.status]),
+        );
+        return dependencies.some((e) => statusById.get(e.dependsOnId) !== "DONE");
+      });
+    },
+
+    async blastRadius(projectId, nodeId) {
+      return uow.run(async (ctx) => {
+        const edges = await ctx.nodes.listDependencies(projectId);
+        return edges.filter((e) => e.dependsOnId === nodeId).length;
       });
     },
   };
