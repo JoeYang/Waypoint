@@ -9,6 +9,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@waypoint/shared": fromRoot("./packages/shared/src/index.ts"),
+      "@waypoint/core/testing": fromRoot("./packages/core/src/testing/in-memory.ts"),
       "@waypoint/core": fromRoot("./packages/core/src/index.ts"),
       "@waypoint/server": fromRoot("./packages/server/src/index.ts"),
     },

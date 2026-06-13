@@ -37,9 +37,9 @@
 
 - [ ] 5.1 RED: test the Streamable HTTP handshake and tool listing → implement the MCP server transport
 - [ ] 5.2 RED: test the `instructions` field directs callers to `get_context` → implement bootstrap. Spike early against Claude Code; if `instructions` is not surfaced to the model, add a CLAUDE.md/AGENTS.md reinforcement fallback
-- [ ] 5.3 RED: tests for `get_context` (pack contents; unknown-project not-found) → implement
-- [ ] 5.4 RED: tests for `create_node`, `park_ask`, `transition` (legal spine moves + illegal-move rejection), session-provenance recording on mutation, stale `expected_version`, malformed-arg rejection → implement (thin adapters over core)
-- [ ] 5.5 RED: graceful-failure test — backend unavailable returns a typed error with no partial state → implement
+- [x] 5.3 RED: tests for `get_context` (pack contents; unknown-project not-found) → implement
+- [x] 5.4 RED: tests for `create_node`, `park_ask`, `transition` (legal spine moves + illegal-move rejection), session-provenance recording on mutation, stale `expected_version`, malformed-arg rejection → implement (thin adapters over core)
+- [x] 5.5 RED: graceful-failure test — backend unavailable returns a typed error with no partial state → implement
 
 ## 6. Inbox API — REST + WebSocket (TDD)
 

@@ -55,21 +55,26 @@ export const CreateNodeResultSchema = z.object({
 export type CreateNodeResult = z.infer<typeof CreateNodeResultSchema>;
 
 // Options are supplied as labels; core assigns stable option ids. A DECISION needs ≥2.
-export const ParkAskInputSchema = z
-  .object({
-    projectId: z.string().min(1),
-    nodeId: z.string().min(1),
-    type: AskType,
-    prompt: z.string().min(1),
-    required: z.boolean(),
-    options: z.array(z.string().min(1)).default([]),
-    assumption: z.string().min(1).optional(),
-    sessionId: z.string().min(1).optional(),
-  })
-  .refine((v) => v.type !== "DECISION" || v.options.length >= 2, {
+// The raw shape is exported separately so the MCP server can register it as a tool input
+// (refined schemas expose no `.shape`); the ≥2 rule is enforced by the refine and by core.
+export const parkAskInputShape = {
+  projectId: z.string().min(1),
+  nodeId: z.string().min(1),
+  type: AskType,
+  prompt: z.string().min(1),
+  required: z.boolean(),
+  options: z.array(z.string().min(1)).default([]),
+  assumption: z.string().min(1).optional(),
+  sessionId: z.string().min(1).optional(),
+} as const;
+
+export const ParkAskInputSchema = z.object(parkAskInputShape).refine(
+  (v) => v.type !== "DECISION" || v.options.length >= 2,
+  {
     message: "A DECISION ask must carry at least two options",
     path: ["options"],
-  });
+  },
+);
 export type ParkAskInput = z.infer<typeof ParkAskInputSchema>;
 
 export const ParkAskResultSchema = z.object({

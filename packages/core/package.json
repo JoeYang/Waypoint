@@ -7,6 +7,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/in-memory.d.ts",
+      "default": "./dist/testing/in-memory.js"
     }
   },
   "main": "./dist/index.js",
