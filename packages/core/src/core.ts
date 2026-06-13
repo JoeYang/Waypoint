@@ -105,6 +105,7 @@ export interface Core {
   overturnAssumption(input: ResolveAssumptionInput): Promise<Ask>;
   answer(input: AnswerInput): Promise<Ask>;
   // Reads — computed on demand, never stored (a future cache MUST equal these values).
+  getNode(projectId: string, nodeId: string): Promise<Node>;
   computeBlocked(projectId: string, nodeId: string): Promise<boolean>;
   blastRadius(projectId: string, nodeId: string): Promise<number>;
   listInbox(projectId: string): Promise<InboxResponse>;
@@ -462,6 +463,14 @@ export function createCore(deps: CoreDeps): Core {
           at: now,
         });
         return updated;
+      });
+    },
+
+    async getNode(projectId, nodeId) {
+      return uow.run(async (ctx) => {
+        const node = await ctx.nodes.findById(projectId, nodeId);
+        if (!node) throw new NotFoundError("node", nodeId);
+        return node;
       });
     },
 
