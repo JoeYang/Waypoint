@@ -105,4 +105,27 @@ describeDb("PgBackend satisfies the repository port contract", () => {
       core.addDependency({ projectId: PROJECT, nodeId: b.id, dependsOnId: a.id }),
     ).rejects.toBeInstanceOf(ValidationError);
   });
+
+  it("assembles a context pack over Postgres (reads share one connection, no concurrency)", async () => {
+    const goal = await core.createNode({
+      projectId: PROJECT,
+      parentId: null,
+      kind: "goal",
+      title: "Ship MVP",
+    });
+    const ask = await core.parkAsk({
+      projectId: PROJECT,
+      nodeId: goal.id,
+      type: "QUESTION",
+      prompt: "Which region?",
+      required: true,
+      options: [],
+    });
+    await core.answer({ projectId: PROJECT, askId: ask.id, expectedVersion: 1, answerText: "us-east-1" });
+
+    const pack = await core.getContext(PROJECT);
+    expect(pack.goal).toBe("Ship MVP");
+    expect(pack.openAsks).toHaveLength(0);
+    expect(pack.recentDecisions.map((d) => d.resolution)).toContain("us-east-1");
+  });
 });

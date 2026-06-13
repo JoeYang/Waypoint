@@ -488,12 +488,12 @@ export function createCore(deps: CoreDeps): Core {
         const project = await ctx.projects.findById(projectId);
         if (!project) throw new NotFoundError("project", projectId);
 
-        const [nodes, asks, edges, events] = await Promise.all([
-          ctx.nodes.listByProject(projectId),
-          ctx.asks.listByProject(projectId),
-          ctx.nodes.listDependencies(projectId),
-          ctx.events.listSince(projectId, 0),
-        ]);
+        // Sequential, not Promise.all: these share one transaction connection and a single
+        // pg client cannot run concurrent queries (dogfooding surfaced this on real Postgres).
+        const nodes = await ctx.nodes.listByProject(projectId);
+        const asks = await ctx.asks.listByProject(projectId);
+        const edges = await ctx.nodes.listDependencies(projectId);
+        const events = await ctx.events.listSince(projectId, 0);
 
         const goal = nodes.find((n) => n.kind === "goal" && n.parentId === null)?.title ?? null;
         const dependents = (nodeId: string) =>
