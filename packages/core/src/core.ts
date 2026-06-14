@@ -288,9 +288,11 @@ export function createCore(deps: CoreDeps): Core {
         }
 
         const now = clock.now();
-        const options: AskOption[] = input.options.map((label, i) => ({
+        // Normalize the backward-compatible option union (bare label or { label, consequence? }).
+        // Consequence is threaded through in the core-behavior commit; here we take the label.
+        const options: AskOption[] = input.options.map((o, i) => ({
           id: `opt-${i + 1}`,
-          label,
+          label: typeof o === "string" ? o : o.label,
         }));
         const ask: Ask = {
           id: ids.generate(),
@@ -300,7 +302,10 @@ export function createCore(deps: CoreDeps): Core {
           state: "OPEN", // proceed-on-assumption is a separate OPEN → ASSUMED step
           required: input.required,
           prompt: input.prompt,
+          rationale: null, // decision context wired in the core-behavior commit
           options,
+          suggestedAnswers: [],
+          agentLabel: null,
           chosenOptionId: null,
           assumption: null,
           answerText: null,

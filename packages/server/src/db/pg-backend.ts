@@ -105,7 +105,12 @@ const toAsk = (r: AskRow): Ask => ({
   state: r.state as AskState,
   required: r.required,
   prompt: r.prompt,
+  // Decision-context columns land in the schema-migration + persistence commits; default
+  // until then so reads stay total. Consequences ride in the existing options jsonb.
+  rationale: null,
   options: r.options,
+  suggestedAnswers: [],
+  agentLabel: null,
   chosenOptionId: r.chosen_option_id,
   assumption: r.assumption,
   answerText: r.answer_text,
@@ -317,9 +322,16 @@ function isUnavailable(err: unknown): boolean {
   const code = (err as { code?: string }).code;
   return (
     code !== undefined &&
-    ["ECONNREFUSED", "ETIMEDOUT", "ENOTFOUND", "08000", "08003", "08006", "57P01", "57P03"].includes(
-      code,
-    )
+    [
+      "ECONNREFUSED",
+      "ETIMEDOUT",
+      "ENOTFOUND",
+      "08000",
+      "08003",
+      "08006",
+      "57P01",
+      "57P03",
+    ].includes(code)
   );
 }
 
