@@ -1,0 +1,33 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  height: 56px;
+  padding: 0 var(--sp-5);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-raised);
+}
+
+.wordmark {
+  font-family: var(--font-serif);
+  font-size: var(--fs-lg);
+  color: var(--fg-1);
+}
+
+.tagline {
+  font-size: var(--fs-sm);
+  color: var(--fg-3);
+}
+
+.main {
+  width: 100%;
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: var(--sp-6) var(--sp-5);
+}

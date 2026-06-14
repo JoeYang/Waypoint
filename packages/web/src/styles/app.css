@@ -1,0 +1,17 @@
+/* Minimal global reset layered on the Axiom tokens (axiom-tokens.css). The .axiom class
+   on <html> supplies the paper background, ink text, and base font. */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100vh;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+}
