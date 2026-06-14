@@ -53,7 +53,10 @@ interface AskRow {
   state: string;
   required: boolean;
   prompt: string;
+  rationale: string | null;
   options: AskOption[];
+  suggested_answers: string[];
+  agent_label: string | null;
   chosen_option_id: string | null;
   assumption: string | null;
   answer_text: string | null;
@@ -105,12 +108,11 @@ const toAsk = (r: AskRow): Ask => ({
   state: r.state as AskState,
   required: r.required,
   prompt: r.prompt,
-  // Decision-context columns land in the schema-migration + persistence commits; default
-  // until then so reads stay total. Consequences ride in the existing options jsonb.
-  rationale: null,
+  // Decision context (migration 0002). Per-option consequence rides in the options jsonb.
+  rationale: r.rationale,
   options: r.options,
-  suggestedAnswers: [],
-  agentLabel: null,
+  suggestedAnswers: r.suggested_answers,
+  agentLabel: r.agent_label,
   chosenOptionId: r.chosen_option_id,
   assumption: r.assumption,
   answerText: r.answer_text,
@@ -229,9 +231,10 @@ function makeContext(db: Queryable): RepositoryContext {
     },
     insert: async (a) => {
       await db.query(
-        `INSERT INTO ask (id, project_id, node_id, type, state, required, prompt, options,
-           chosen_option_id, assumption, answer_text, version, created_at, updated_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11,$12,$13,$14)`,
+        `INSERT INTO ask (id, project_id, node_id, type, state, required, prompt, rationale,
+           options, suggested_answers, agent_label, chosen_option_id, assumption, answer_text,
+           version, created_at, updated_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11,$12,$13,$14,$15,$16,$17)`,
         [
           a.id,
           a.projectId,
@@ -240,7 +243,10 @@ function makeContext(db: Queryable): RepositoryContext {
           a.state,
           a.required,
           a.prompt,
+          a.rationale,
           JSON.stringify(a.options),
+          JSON.stringify(a.suggestedAnswers),
+          a.agentLabel,
           a.chosenOptionId,
           a.assumption,
           a.answerText,
@@ -252,15 +258,19 @@ function makeContext(db: Queryable): RepositoryContext {
     },
     update: async (a) => {
       await db.query(
-        `UPDATE ask SET state=$3, required=$4, prompt=$5, options=$6::jsonb, chosen_option_id=$7,
-           assumption=$8, answer_text=$9, version=$10, updated_at=$11 WHERE project_id=$1 AND id=$2`,
+        `UPDATE ask SET state=$3, required=$4, prompt=$5, rationale=$6, options=$7::jsonb,
+           suggested_answers=$8::jsonb, agent_label=$9, chosen_option_id=$10, assumption=$11,
+           answer_text=$12, version=$13, updated_at=$14 WHERE project_id=$1 AND id=$2`,
         [
           a.projectId,
           a.id,
           a.state,
           a.required,
           a.prompt,
+          a.rationale,
           JSON.stringify(a.options),
+          JSON.stringify(a.suggestedAnswers),
+          a.agentLabel,
           a.chosenOptionId,
           a.assumption,
           a.answerText,

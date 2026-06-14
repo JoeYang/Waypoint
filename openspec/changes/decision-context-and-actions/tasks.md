@@ -17,7 +17,7 @@
 
 ## 4. Persistence — Postgres
 
-- [ ] 4.1 `pg-backend`: persist + read `ask.rationale`, option consequences, suggested answers; confirm round-trip across transactions. Integration test gated on `WAYPOINT_TEST_DATABASE_URL`.
+- [x] 4.1 `pg-backend`: persist + read `ask.rationale`, option consequences, suggested answers, `agent_label`; confirm round-trip across transactions. Integration test gated on `WAYPOINT_TEST_DATABASE_URL` (verified green against a throwaway `waypoint_test` db).
 
 ## 5. Agent MCP API (TDD)
 

@@ -49,7 +49,12 @@ describeDb("PgBackend satisfies the repository port contract", () => {
 
   it("runs the full park → answer → unblock lifecycle across transactions", async () => {
     const node = await task("T");
-    await core.transition({ projectId: PROJECT, nodeId: node.id, to: "ACTIVE", expectedVersion: 1 });
+    await core.transition({
+      projectId: PROJECT,
+      nodeId: node.id,
+      to: "ACTIVE",
+      expectedVersion: 1,
+    });
     const ask = await core.parkAsk({
       projectId: PROJECT,
       nodeId: node.id,
@@ -71,9 +76,91 @@ describeDb("PgBackend satisfies the repository port contract", () => {
     expect(await core.computeBlocked(PROJECT, node.id)).toBe(false);
   });
 
+  it("round-trips decision context (rationale, per-option consequence, agent label) across transactions", async () => {
+    const node = await task("decide the store");
+    const parked = await core.parkAsk({
+      projectId: PROJECT,
+      nodeId: node.id,
+      type: "DECISION",
+      prompt: "Which store?",
+      required: true,
+      rationale: "retry-safety matters for the queue",
+      options: [
+        { label: "Postgres", consequence: "stable across retries" },
+        { label: "SQLite", consequence: "no concurrency" },
+      ],
+      agentLabel: "checkout-agent",
+      sessionId: "sess-1",
+    });
+
+    // Re-read through a fresh transaction via the read model — the fields must survive the
+    // Postgres round-trip, not just live in the value core returned from the write.
+    const inbox = await core.listInbox(PROJECT);
+    const item = inbox.items.find((i) => i.askId === parked.id);
+    expect(item).toBeDefined();
+    expect(item!.rationale).toBe("retry-safety matters for the queue");
+    expect(item!.options).toEqual([
+      { id: "opt-1", label: "Postgres", consequence: "stable across retries" },
+      { id: "opt-2", label: "SQLite", consequence: "no concurrency" },
+    ]);
+    expect(item!.parkedBy?.agentLabel).toBe("checkout-agent");
+
+    const { rows } = await pool.query("SELECT rationale, agent_label FROM ask WHERE id = $1", [
+      parked.id,
+    ]);
+    expect(rows[0]).toMatchObject({
+      rationale: "retry-safety matters for the queue",
+      agent_label: "checkout-agent",
+    });
+  });
+
+  it("round-trips suggested answers on a QUESTION", async () => {
+    const node = await task("sampling rate?");
+    const parked = await core.parkAsk({
+      projectId: PROJECT,
+      nodeId: node.id,
+      type: "QUESTION",
+      prompt: "What sampling rate?",
+      required: false,
+      options: [],
+      suggestedAnswers: ["100%", "10%"],
+    });
+    const inbox = await core.listInbox(PROJECT);
+    const item = inbox.items.find((i) => i.askId === parked.id);
+    expect(item!.suggestedAnswers).toEqual(["100%", "10%"]);
+  });
+
+  it("persists an adjusted proposal's constraint as the answer text", async () => {
+    const node = await task("replace the poller");
+    const ask = await core.parkAsk({
+      projectId: PROJECT,
+      nodeId: node.id,
+      type: "PROPOSAL",
+      prompt: "Replace the poller with a webhook?",
+      required: true,
+      options: [],
+    });
+    const answered = await core.answer({
+      projectId: PROJECT,
+      askId: ask.id,
+      expectedVersion: 1,
+      proposalVerdict: "adjust",
+      adjustmentNote: "keep the poller for 30d",
+    });
+    expect(answered.answerText).toBe("keep the poller for 30d");
+
+    const { rows } = await pool.query("SELECT answer_text FROM ask WHERE id = $1", [ask.id]);
+    expect(rows[0]).toMatchObject({ answer_text: "keep the poller for 30d" });
+  });
+
   it("assigns a monotonic per-project event seq in the database", async () => {
     const node = await task("T");
-    await core.transition({ projectId: PROJECT, nodeId: node.id, to: "ACTIVE", expectedVersion: 1 });
+    await core.transition({
+      projectId: PROJECT,
+      nodeId: node.id,
+      to: "ACTIVE",
+      expectedVersion: 1,
+    });
     const events = await pool.query<{ seq: string }>(
       "SELECT seq FROM event WHERE project_id = $1 ORDER BY seq",
       [PROJECT],
@@ -83,7 +170,12 @@ describeDb("PgBackend satisfies the repository port contract", () => {
 
   it("enforces optimistic concurrency against the stored version", async () => {
     const node = await task("T");
-    await core.transition({ projectId: PROJECT, nodeId: node.id, to: "ACTIVE", expectedVersion: 1 });
+    await core.transition({
+      projectId: PROJECT,
+      nodeId: node.id,
+      to: "ACTIVE",
+      expectedVersion: 1,
+    });
     await expect(
       core.transition({ projectId: PROJECT, nodeId: node.id, to: "DONE", expectedVersion: 1 }),
     ).rejects.toBeInstanceOf(StaleVersionError);
@@ -122,7 +214,12 @@ describeDb("PgBackend satisfies the repository port contract", () => {
       required: true,
       options: [],
     });
-    await core.answer({ projectId: PROJECT, askId: ask.id, expectedVersion: 1, answerText: "us-east-1" });
+    await core.answer({
+      projectId: PROJECT,
+      askId: ask.id,
+      expectedVersion: 1,
+      answerText: "us-east-1",
+    });
 
     const pack = await core.getContext(PROJECT);
     expect(pack.goal).toBe("Ship MVP");
