@@ -38,6 +38,25 @@ transport- and harness-neutral — the same logic serves MCP, REST, and the web 
 
 `openspec/` holds the specs (source of truth) and change proposals.
 
+## Asks carry their own context
+
+An agent doesn't just ask — it gives the human everything needed to answer in one glance, so
+no context has to be re-derived. `park_ask` carries:
+
+- **`rationale`** — why this needs deciding now.
+- **per-option `consequence`** (DECISION) — what choosing each option commits to, shown beside
+  the option. Options stay backward-compatible: a bare string or a `{ label, consequence }`.
+- **`suggestedAnswers`** (QUESTION) — pick-first answers, so the human clicks instead of types.
+- **`agentLabel`** — human-friendly provenance ("who parked it"); when omitted it resolves to a
+  stable session-derived alias, never the raw session id.
+
+The card also shows the **named work the ask blocks** and the **goal it ladders toward**
+(walked from the node's ancestry). The human answers by intent: a DECISION picks an option; a
+QUESTION takes a suggested answer or free text; a PROPOSAL gets **Approve / Adjust / Reject**,
+where _Adjust_ is an approval that carries a constraint — recorded as one immutable event and
+surfaced back to the agent via `get_context`, so it proceeds under the constraint rather than
+making a fresh round-trip.
+
 ## Develop
 
 Requires **Node ≥ 22**. Postgres runs as a user-owned cluster — no Docker, no sudo.

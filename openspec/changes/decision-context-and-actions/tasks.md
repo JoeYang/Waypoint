@@ -33,5 +33,5 @@
 
 ## 7. Wiring & verification
 
-- [ ] 7.1 Update the demo seed + e2e to supply rationale + per-option consequences + a proposal and a question; manual smoke of a rich card answered with one gesture.
-- [ ] 7.2 `npm test` green (incl. failure paths); `openspec validate decision-context-and-actions --strict`; update README + docs for the richer `park_ask` contract.
+- [x] 7.1 Update the demo seed + e2e to supply rationale + per-option consequences + a proposal and a question; manual smoke of a rich card answered with one gesture. (e2e now covers DECISION+rationale+consequence, PROPOSAL approve, and QUESTION suggested-answer — all answered in one gesture; run serially against the shared default-project stack. All 3 green.)
+- [x] 7.2 `npm test` green (incl. failure paths); `openspec validate decision-context-and-actions --strict`; update README + docs for the richer `park_ask` contract. (193 unit/integration green; spec valid; README documents the enriched ask + intent-matched answers.)
