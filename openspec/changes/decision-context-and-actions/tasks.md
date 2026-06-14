@@ -7,7 +7,7 @@
 
 ## 2. Schema (migration — its own commit)
 
-- [ ] 2.1 Migration `0002_add_ask_context`: nullable `ask.rationale text`; a nullable jsonb for `suggestedAnswers` if not folded into options. Reversible down (drop columns). Per-option consequence rides in the existing `options` jsonb (no DDL).
+- [x] 2.1 Migration `0002_add_ask_context`: nullable `ask.rationale text`; `ask.suggested_answers jsonb NOT NULL DEFAULT '[]'` (mirrors the domain default); nullable `ask.agent_label text`. Reversible down (drop columns). Per-option consequence rides in the existing `options` jsonb (no DDL). Verified up → down → up against the dev db.
 
 ## 3. Core — read model + park (TDD over in-memory fakes)
 
