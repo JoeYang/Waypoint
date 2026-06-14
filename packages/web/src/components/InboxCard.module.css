@@ -1,0 +1,112 @@
+/* Flat card — paper-raised, hairline border, 6px radius, no shadow (Axiom). */
+.card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--r-3);
+  padding: var(--sp-5);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-2);
+}
+
+.node {
+  font-size: var(--fs-sm);
+  color: var(--fg-3);
+}
+
+/* Single restrained accent: the blast-radius badge in indigo wash. */
+.badge {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--tracking-wide);
+  color: var(--fg-accent);
+  background: var(--bg-accent);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--r-2);
+  padding: 0.1em 0.5em;
+  white-space: nowrap;
+}
+
+.prompt {
+  margin: 0 0 var(--sp-4);
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+
+.option {
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  color: var(--fg-1);
+  background: var(--bg-sunken);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-3);
+  padding: var(--sp-2) var(--sp-4);
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease-out);
+}
+.option:hover {
+  background: var(--bg-accent);
+}
+.option:focus-visible {
+  outline: 2px solid var(--accent-500);
+  outline-offset: 2px;
+}
+
+.textForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.textInput {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  color: var(--fg-1);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-3);
+  padding: var(--sp-3);
+  resize: vertical;
+}
+.textInput:focus-visible {
+  outline: 2px solid var(--accent-500);
+  outline-offset: 2px;
+  border-color: var(--border-accent);
+}
+
+.submit {
+  align-self: flex-start;
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--fg-on-accent);
+  background: var(--accent-500);
+  border: 1px solid var(--accent-600);
+  border-radius: var(--r-3);
+  padding: var(--sp-2) var(--sp-5);
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease-out);
+}
+.submit:hover {
+  background: var(--accent-600);
+}
+.submit:focus-visible {
+  outline: 2px solid var(--accent-500);
+  outline-offset: 2px;
+}
+
+.working {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--fg-3);
+  font-style: italic;
+}
