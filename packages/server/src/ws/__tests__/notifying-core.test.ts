@@ -84,6 +84,27 @@ describe("createNotifyingCore — single post-commit notify seam", () => {
     expect(deltas(sub.frames).length).toBe(before); // no broadcast
   });
 
+  it("still returns the mutation result when the live push fails (best-effort notify)", async () => {
+    // The durable event log + resume-since-seq are the source of truth; a failing live push
+    // must never fail the caller's mutation. Inject a hub whose notify always throws.
+    const throwingHub = {
+      notify: async () => {
+        throw new Error("broadcast down");
+      },
+    } as unknown as InboxHub;
+    const resilient = createNotifyingCore(core, throwingHub);
+
+    const node = await resilient.createNode({
+      projectId: PROJECT,
+      parentId: null,
+      kind: "task",
+      title: "T",
+    });
+    // The mutation committed and its result is returned despite the notify failure.
+    expect(node.id).toBeTruthy();
+    expect(await backend.nodes.findById(PROJECT, node.id)).toMatchObject({ id: node.id });
+  });
+
   it("passes reads through unchanged", async () => {
     const node = await notifying.createNode({
       projectId: PROJECT,

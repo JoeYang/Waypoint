@@ -131,6 +131,22 @@ describe("Inbox REST API", () => {
       expect(res.json()).toMatchObject({ error: "VALIDATION" });
     });
 
+    it("400s a syntactically malformed JSON body without leaking internals", async () => {
+      // Broken JSON fails in fastify's body parser before our schema runs — it reaches the
+      // error handler as a raw 4xx, exercising the generic fallback branch. The response
+      // must still use the error envelope and reveal no parser/stack detail.
+      const res = await app.inject({
+        method: "POST",
+        url: `/v1/projects/${PROJECT}/asks/whatever/answer`,
+        headers: { "content-type": "application/json" },
+        payload: "{ not: valid json ",
+      });
+      expect(res.statusCode).toBe(400);
+      expect(res.json()).toMatchObject({ error: "VALIDATION", message: "invalid request" });
+      expect(res.headers["x-request-id"]).toBeTruthy();
+      expect(JSON.stringify(res.json())).not.toMatch(/json|parse|syntax|stack/i);
+    });
+
     it("404s answering an ask that does not exist", async () => {
       const res = await app.inject({
         method: "POST",

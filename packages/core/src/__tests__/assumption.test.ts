@@ -54,7 +54,11 @@ describe("proceed-on-assumption — OPEN → ASSUMED → CONFIRMED/OVERTURNED", 
 
   it("confirms an ASSUMED ask without bumping the node", async () => {
     await core.assume({ projectId: PROJECT, askId, assumption: "Postgres", expectedVersion: 1 });
-    const confirmed = await core.confirmAssumption({ projectId: PROJECT, askId, expectedVersion: 2 });
+    const confirmed = await core.confirmAssumption({
+      projectId: PROJECT,
+      askId,
+      expectedVersion: 2,
+    });
     expect(confirmed.state).toBe("CONFIRMED");
     expect(confirmed.version).toBe(3);
     expect(await backend.nodes.findById(PROJECT, nodeId)).toMatchObject({ version: 1 });
@@ -94,5 +98,13 @@ describe("proceed-on-assumption — OPEN → ASSUMED → CONFIRMED/OVERTURNED", 
     await expect(
       core.assume({ projectId: PROJECT, askId, assumption: "Postgres", expectedVersion: 99 }),
     ).rejects.toBeInstanceOf(StaleVersionError);
+  });
+
+  it("rejects overturning an ask that was never assumed (still OPEN)", async () => {
+    // Overturn is only legal on an ASSUMED ask; on an OPEN one it is an illegal transition,
+    // not a silent no-op — guarding the lifecycle against an out-of-order human action.
+    await expect(
+      core.overturnAssumption({ projectId: PROJECT, askId, expectedVersion: 1 }),
+    ).rejects.toBeInstanceOf(ValidationError);
   });
 });
