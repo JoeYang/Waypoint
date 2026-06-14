@@ -50,10 +50,10 @@
 
 ## 7. Web inbox screen (TDD)
 
-- [ ] 7.1 RED (RTL): Inbox renders ranked cards with "blocks N" badge; loading/error/empty states → implement
-- [ ] 7.2 RED (RTL): `useWaypointStream` hook applies deltas idempotently and re-ranks → implement
-- [ ] 7.3 RED (RTL): answering a card flips it to "working" and the next ask rises → implement
-- [ ] 7.4 Playwright e2e: park an ask via MCP → it appears top of inbox → answer → card flips to working → queue re-ranks
+- [x] 7.1 RED (RTL): Inbox renders ranked cards with "blocks N" badge; loading/error/empty states → implement. InboxCard + InboxList (ranked, blocks-N badge, empty state, labelled answer controls); InboxScreen owns loading / error+retry / list states. Axiom design tokens vendored from the axiom-style skill.
+- [x] 7.2 RED (RTL): `useWaypointStream` hook applies deltas idempotently and re-ranks → implement. Pure reducer (delta fold, seq-guard idempotency, resync reset) + the hook: REST first-paint racing the WS, resume-since-seq across reconnects. Injected fake socket + msw.
+- [x] 7.3 RED (RTL): answering a card flips it to "working" and the next ask rises → implement. Answer marks the card working and POSTs with expected_version; the WS delta removes it for real (server truth, self-healing working set); a rejected answer clears working and surfaces the message.
+- [x] 7.4 Playwright e2e: park an ask via MCP → it appears top of inbox → answer → card flips to working → queue re-ranks. Real browser + MCP client against the live stack; web pinned to a dedicated port (a neighbouring dev server on Vite's default silently shadowed it on the first run).
 
 ## 8. Wiring & verification
 
