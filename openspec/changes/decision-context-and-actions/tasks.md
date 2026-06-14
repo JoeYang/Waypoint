@@ -27,9 +27,9 @@
 
 ## 6. Web — the decision card (TDD, RTL)
 
-- [ ] 6.1 RED: the card renders rationale ("why this is being asked"), per-option consequence beside each option, the named blocked-work list, the goal, and provenance; backward-safe when fields are absent → implement.
-- [ ] 6.2 RED: intent-matched actions — DECISION renders options; PROPOSAL renders Approve / Adjust / Reject with Adjust (only) opening one text field; QUESTION renders suggested answers first with free-text fallback → implement.
-- [ ] 6.3 RED: the card is a self-contained unit (no dependence on the flat-list shell), so slice 2 can re-home it unchanged → assert via isolated render.
+- [x] 6.1 RED: the card renders rationale ("why this is being asked"), per-option consequence beside each option, the named blocked-work list, the goal, and provenance; backward-safe when fields are absent → implement.
+- [x] 6.2 RED: intent-matched actions — DECISION renders options; PROPOSAL renders Approve / Adjust / Reject with Adjust (only) opening one text field; QUESTION renders suggested answers first with free-text fallback → implement.
+- [x] 6.3 RED: the card is a self-contained unit (no dependence on the flat-list shell), so slice 2 can re-home it unchanged → assert via isolated render.
 
 ## 7. Wiring & verification
 
