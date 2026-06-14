@@ -9,7 +9,10 @@ const API_TARGET = process.env.WAYPOINT_HTTP_URL ?? "http://localhost:8849";
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: Number(process.env.WAYPOINT_WEB_PORT ?? "5173"),
+    port: Number(process.env.WAYPOINT_WEB_PORT ?? "5273"),
+    // Fail loudly if the port is taken rather than silently drifting onto another — a
+    // neighbouring dev server on the default port must not be mistaken for this app.
+    strictPort: true,
     proxy: {
       "/v1": { target: API_TARGET, changeOrigin: true, ws: true },
     },
