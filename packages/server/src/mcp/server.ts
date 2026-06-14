@@ -15,7 +15,12 @@ export const WAYPOINT_INSTRUCTIONS = [
   'the project id (use "default") to load the goal, the open asks, and recent decisions.',
   "When you reach a fork that needs a human decision, DO NOT guess: park it with",
   "`park_ask` and keep working on whatever is still unblocked — the human answers",
-  "asynchronously. A DECISION ask must include at least two options.",
+  "asynchronously. Give the human everything needed to answer in one glance: a `rationale`",
+  "(why this needs deciding now), and for a DECISION a `consequence` on each option (what",
+  "choosing it commits to). A DECISION ask must include at least two options; for a QUESTION,",
+  "offer `suggestedAnswers` so the human can pick rather than type. Set an `agentLabel` so",
+  "the human sees who parked it. An adjusted proposal comes back as an approval carrying a",
+  "constraint note in recent decisions — proceed under it, do not re-ask.",
   "Use `create_node` to register work and `transition` to move a node along the spine",
   "DRAFT → ACTIVE → DONE/DISCARDED (pass expected_version). Pass your session id where",
   "available so changes are attributed.",
@@ -80,7 +85,9 @@ export function createWaypointMcpServer(core: Core): McpServer {
     "park_ask",
     {
       description:
-        "Park a decision/question/proposal for a human instead of guessing. A DECISION needs ≥2 options.",
+        "Park a decision/question/proposal for a human instead of guessing. Include a rationale " +
+        "and, for a DECISION (needs ≥2 options), a consequence per option; offer suggestedAnswers " +
+        "for a QUESTION and an agentLabel for provenance.",
       inputSchema: parkAskInputShape,
     },
     async (args) => {

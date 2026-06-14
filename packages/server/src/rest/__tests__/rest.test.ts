@@ -86,6 +86,70 @@ describe("Inbox REST API", () => {
       });
     });
 
+    const proposal = (nodeId: string, prompt: string) =>
+      core.parkAsk({
+        projectId: PROJECT,
+        nodeId,
+        type: "PROPOSAL",
+        prompt,
+        required: true,
+        options: [],
+      });
+
+    it("answers a PROPOSAL with an adjust verdict and echoes the constraint", async () => {
+      const n = await task("node");
+      await core.transition({ projectId: PROJECT, nodeId: n.id, to: "ACTIVE", expectedVersion: 1 });
+      const ask = await proposal(n.id, "Replace the poller with a webhook?");
+
+      const res = await app.inject({
+        method: "POST",
+        url: `/v1/projects/${PROJECT}/asks/${ask.id}/answer`,
+        payload: {
+          expectedVersion: 1,
+          proposalVerdict: "adjust",
+          adjustmentNote: "keep poller 30d",
+        },
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toMatchObject({
+        askId: ask.id,
+        askState: "ANSWERED",
+        proposalVerdict: "adjust",
+        adjustmentNote: "keep poller 30d",
+      });
+      // The constraint is the immutable record on the ask.
+      expect((await backend.asks.findById(PROJECT, ask.id))?.answerText).toBe("keep poller 30d");
+    });
+
+    it("answers a PROPOSAL with an approve verdict", async () => {
+      const n = await task("node");
+      const ask = await proposal(n.id, "Replace the poller with a webhook?");
+
+      const res = await app.inject({
+        method: "POST",
+        url: `/v1/projects/${PROJECT}/asks/${ask.id}/answer`,
+        payload: { expectedVersion: 1, proposalVerdict: "approve" },
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toMatchObject({ askId: ask.id, askState: "ANSWERED" });
+    });
+
+    it("400s an adjust verdict with no constraint note", async () => {
+      const n = await task("node");
+      const ask = await proposal(n.id, "Replace the poller with a webhook?");
+
+      const res = await app.inject({
+        method: "POST",
+        url: `/v1/projects/${PROJECT}/asks/${ask.id}/answer`,
+        payload: { expectedVersion: 1, proposalVerdict: "adjust" },
+      });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.json()).toMatchObject({ error: "VALIDATION" });
+    });
+
     it("409s a stale expected_version without overwriting", async () => {
       const n = await task("node");
       const ask = await decision(n.id, "which db?");

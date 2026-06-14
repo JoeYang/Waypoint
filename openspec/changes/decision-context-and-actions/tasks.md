@@ -21,9 +21,9 @@
 
 ## 5. Agent MCP API (TDD)
 
-- [ ] 5.1 RED: `park_ask` accepts the new fields and rejects malformed shapes → implement (thin adapter over core).
-- [ ] 5.2 Update `WAYPOINT_INSTRUCTIONS`: direct agents to supply a rationale, a consequence per option, suggested answers for questions, and an `agentLabel` — so the human can answer without typing and the story reads naturally. Assert the guidance is advertised.
-- [ ] 5.3 RED: the answer result and `get_context` surface an adjusted proposal's constraint to the agent (so it proceeds under the constraint, not a new round-trip) → implement.
+- [x] 5.1 RED: `park_ask` accepts the new fields and rejects malformed shapes → implement (thin adapter over core).
+- [x] 5.2 Update `WAYPOINT_INSTRUCTIONS`: direct agents to supply a rationale, a consequence per option, suggested answers for questions, and an `agentLabel` — so the human can answer without typing and the story reads naturally. Assert the guidance is advertised.
+- [x] 5.3 RED: the answer result and `get_context` surface an adjusted proposal's constraint to the agent (so it proceeds under the constraint, not a new round-trip) → implement. (REST now threads `proposalVerdict`/`adjustmentNote` into core.answer and echoes them in `AnswerResponse`; `get_context` surfaces the constraint as the decision resolution.)
 
 ## 6. Web — the decision card (TDD, RTL)
 

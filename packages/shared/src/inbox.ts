@@ -58,5 +58,9 @@ export const AnswerResponseSchema = z.object({
   nodeId: z.string().min(1),
   nodeBlocked: z.boolean(),
   nodeVersion: z.number().int().positive(),
+  // For a PROPOSAL, echo the verdict (and the constraint on `adjust`) back so the client
+  // can confirm what was recorded without a refetch. Absent for DECISION/QUESTION answers.
+  proposalVerdict: ProposalVerdict.optional(),
+  adjustmentNote: z.string().min(1).optional(),
 });
 export type AnswerResponse = z.infer<typeof AnswerResponseSchema>;
