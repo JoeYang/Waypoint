@@ -11,9 +11,9 @@
 
 ## 3. Core — read model + park (TDD over in-memory fakes)
 
-- [ ] 3.1 RED: `parkAsk` accepts and persists `rationale`, per-option `consequence`, `suggestedAnswers`; still enforces DECISION≥2 and non-empty labels → implement.
-- [ ] 3.2 RED: the inbox read model enriches each item with named blocked tasks (from `depends_on` edges → titles), the ancestor goal (cycle-guarded `parent_id` walk), and provenance — one transaction, no N+1 → implement.
-- [ ] 3.3 RED: an `agentLabel` is recorded on park; when omitted it resolves to a stable session-derived alias (same session → same alias). An adjusted proposal records one immutable approval event carrying the constraint note → implement.
+- [x] 3.1 RED: `parkAsk` accepts and persists `rationale`, per-option `consequence`, `suggestedAnswers`; still enforces DECISION≥2 and non-empty labels → implement.
+- [x] 3.2 RED: the inbox read model enriches each item with named blocked tasks (from `depends_on` edges → titles), the ancestor goal (cycle-guarded `parent_id` walk), and provenance — one transaction, no N+1 → implement.
+- [x] 3.3 RED: an `agentLabel` is recorded on park; when omitted it resolves to a stable session-derived alias (same session → same alias). An adjusted proposal records one immutable approval event carrying the constraint note → implement.
 
 ## 4. Persistence — Postgres
 
