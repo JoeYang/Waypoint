@@ -57,6 +57,6 @@
 
 ## 8. Wiring & verification
 
-- [ ] 8.1 Compose the full loop locally (server + web + Postgres via docker-compose); manual smoke of the hero flow
-- [ ] 8.2 Run `npm test -- --coverage` (all logical paths) and `npm run e2e`; fix gaps
-- [ ] 8.3 `openspec validate add-core-ask-loop --strict`; update README with build/run instructions
+- [x] 8.1 Compose the full loop locally (server + web + Postgres — user-owned cluster via `npm run db:up`, Docker daemon unavailable in this env); manual smoke of the hero flow across MCP + REST + WS (`park → list → upsert-delta → answer → removal-delta`)
+- [x] 8.2 Run `npm test -- --coverage` (all logical paths) and `npm run e2e`; fix gaps — added failure-path tests (overturn-on-non-ASSUMED guard, best-effort notify swallow, malformed-JSON error envelope). 141 tests + e2e green
+- [x] 8.3 `openspec validate add-core-ask-loop --strict`; write README with build/run instructions
