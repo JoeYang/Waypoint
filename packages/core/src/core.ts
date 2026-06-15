@@ -13,6 +13,13 @@ import type {
   TransitionInput,
   ParkAskInput,
   ProposalVerdict,
+  ProjectProgress,
+  GoalProgress,
+  PlanProgress,
+  TaskProgress,
+  TaskState,
+  PlanState,
+  GoalState,
 } from "@waypoint/shared";
 import type { Clock, IdGenerator, UnitOfWork, RepositoryContext } from "./ports.js";
 import { NotFoundError, ValidationError, StaleVersionError } from "./errors.js";
@@ -154,6 +161,7 @@ export interface Core {
   computeBlocked(projectId: string, nodeId: string): Promise<boolean>;
   blastRadius(projectId: string, nodeId: string): Promise<number>;
   listInbox(projectId: string): Promise<InboxResponse>;
+  listProject(projectId: string): Promise<ProjectProgress>;
   getContext(projectId: string): Promise<ContextPack>;
 }
 
@@ -239,6 +247,33 @@ function buildInboxItem(
       ? { parkedBy: { agentLabel: ask.agentLabel, at: ask.createdAt } }
       : {}),
   };
+}
+
+// Derived task state. Stored status has no FAILED, so `failed` = a DISCARDED node (its
+// discardReason is the why) and `blocked-on-ask` = it has a required OPEN ask.
+function deriveTaskState(node: Node, hasRequiredOpenAsk: boolean): TaskState {
+  if (hasRequiredOpenAsk) return "blocked-on-ask";
+  if (node.status === "DISCARDED") return "failed";
+  if (node.status === "DONE") return "done";
+  return "running";
+}
+
+// A plan: blocked if any task is blocked-on-ask; done if it has tasks and all are closed
+// (done/failed); else active. A childless plan mirrors its own node status.
+function derivePlanState(tasks: TaskProgress[], planStatus: NodeStatus | null): PlanState {
+  if (tasks.length === 0) {
+    return planStatus === "DONE" || planStatus === "DISCARDED" ? "done" : "active";
+  }
+  if (tasks.some((t) => t.state === "blocked-on-ask")) return "blocked";
+  if (tasks.every((t) => t.state === "done" || t.state === "failed")) return "done";
+  return "active";
+}
+
+// A goal: blocked if work exists but none is movable (≥1 blocked-on-ask, 0 running); at-risk
+// if something is blocked while other work still moves; on-track otherwise.
+function deriveGoalState(tasks: TaskProgress[]): GoalState {
+  if (!tasks.some((t) => t.state === "blocked-on-ask")) return "on-track";
+  return tasks.some((t) => t.state === "running") ? "at-risk" : "blocked";
 }
 
 export function createCore(deps: CoreDeps): Core {
@@ -699,6 +734,147 @@ export function createCore(deps: CoreDeps): Core {
           .sort((x, y) => y.blastRadius - x.blastRadius || x.parkedAt - y.parkedAt);
 
         return { projectId, seq, items };
+      });
+    },
+
+    async listProject(projectId) {
+      return uow.run(async (ctx) => {
+        const project = await ctx.projects.findById(projectId);
+        if (!project) throw new NotFoundError("project", projectId);
+
+        // One transaction, sequential reads (a single pg client can't run concurrent queries).
+        const nodes = await ctx.nodes.listByProject(projectId);
+        const asks = await ctx.asks.listByProject(projectId);
+        const edges = await ctx.nodes.listDependencies(projectId);
+        const events = await ctx.events.listSince(projectId, 0);
+
+        const nodeById = new Map(nodes.map((n) => [n.id, n]));
+        const seq = events.length > 0 ? events[events.length - 1]!.seq : 0;
+
+        // Pending asks (OPEN/ASSUMED — the inbox membership) grouped by node, built once.
+        const pendingByNode = new Map<string, Ask[]>();
+        for (const a of asks) {
+          if (!PENDING_STATES.has(a.state)) continue;
+          const list = pendingByNode.get(a.nodeId) ?? [];
+          list.push(a);
+          pendingByNode.set(a.nodeId, list);
+        }
+        const hasRequiredOpenAsk = (nodeId: string) =>
+          asks.some((a) => a.nodeId === nodeId && a.required && a.state === "OPEN");
+
+        // Last event time per node — a plan's "last activity" is the max over it and its tasks.
+        const lastActivity = new Map<string, number>();
+        for (const e of events) {
+          const prev = lastActivity.get(e.ref.id);
+          if (prev === undefined || e.at > prev) lastActivity.set(e.ref.id, e.at);
+        }
+
+        const aliasFor = (n: Node): string | null =>
+          n.sessionId !== null ? stableAliasFromSession(n.sessionId) : null;
+
+        // The step a task sits under: walk from the task up to (not including) its plan.
+        const stepGroupFor = (taskId: string, planId: string): TaskProgress["group"] => {
+          const seen = new Set<string>();
+          let cur = nodeById.get(taskId);
+          cur = cur && cur.parentId !== null ? nodeById.get(cur.parentId) : undefined;
+          while (cur !== undefined && !seen.has(cur.id) && cur.id !== planId) {
+            seen.add(cur.id);
+            if (cur.kind === "step") return { nodeId: cur.id, title: cur.title };
+            cur = cur.parentId !== null ? nodeById.get(cur.parentId) : undefined;
+          }
+          return null;
+        };
+
+        const buildTask = (taskNode: Node, planId: string | null): TaskProgress => ({
+          nodeId: taskNode.id,
+          title: taskNode.title,
+          state: deriveTaskState(taskNode, hasRequiredOpenAsk(taskNode.id)),
+          agentLabel: aliasFor(taskNode),
+          blastRadius: countDependents(edges, taskNode.id),
+          group: planId !== null ? stepGroupFor(taskNode.id, planId) : null,
+          asks: (pendingByNode.get(taskNode.id) ?? []).map((a) =>
+            buildInboxItem(a, taskNode, nodeById, edges),
+          ),
+        });
+
+        // Bucket tasks under their nearest plan ancestor; orphans (no plan) under their goal.
+        const pushTo = (map: Map<string, Node[]>, key: string, n: Node): void => {
+          const list = map.get(key) ?? [];
+          list.push(n);
+          map.set(key, list);
+        };
+
+        const tasksByPlan = new Map<string, Node[]>();
+        const orphanTasksByGoal = new Map<string, Node[]>();
+        for (const n of nodes) {
+          if (n.kind !== "task") continue;
+          const plan = ancestorOfKind(nodeById, n.id, "plan");
+          if (plan !== null && plan.id !== n.id) {
+            pushTo(tasksByPlan, plan.id, n);
+            continue;
+          }
+          const goal = ancestorOfKind(nodeById, n.id, "goal");
+          if (goal !== null && goal.id !== n.id) pushTo(orphanTasksByGoal, goal.id, n);
+          // A task with neither a plan nor a goal ancestor is unplaceable on the spine; skip.
+        }
+
+        const plansByGoal = new Map<string, Node[]>();
+        for (const n of nodes) {
+          if (n.kind !== "plan") continue;
+          const goal = ancestorOfKind(nodeById, n.id, "goal");
+          if (goal !== null && goal.id !== n.id) pushTo(plansByGoal, goal.id, n);
+        }
+
+        const buildPlan = (planNode: Node): PlanProgress => {
+          const tasks = (tasksByPlan.get(planNode.id) ?? []).map((t) => buildTask(t, planNode.id));
+          const activities = [planNode.id, ...tasks.map((t) => t.nodeId)]
+            .map((id) => lastActivity.get(id))
+            .filter((v): v is number => v !== undefined);
+          return {
+            nodeId: planNode.id,
+            title: planNode.title,
+            state: derivePlanState(tasks, planNode.status),
+            agentLabel: aliasFor(planNode),
+            lastActivityAt: activities.length > 0 ? Math.max(...activities) : null,
+            openAskCount: tasks.reduce((sum, t) => sum + t.asks.length, 0),
+            blastRadius: countDependents(edges, planNode.id),
+            tasks,
+          };
+        };
+
+        const buildGoal = (goalNode: Node): GoalProgress => {
+          const plans = (plansByGoal.get(goalNode.id) ?? []).map(buildPlan);
+          const orphans = orphanTasksByGoal.get(goalNode.id) ?? [];
+          if (orphans.length > 0) {
+            // Tasks parented directly by the goal (no plan layer) — surfaced, never dropped.
+            const tasks = orphans.map((t) => buildTask(t, null));
+            plans.push({
+              nodeId: `${goalNode.id}::unplanned`,
+              title: "Unplanned",
+              state: derivePlanState(tasks, null),
+              agentLabel: null,
+              lastActivityAt: null,
+              openAskCount: tasks.reduce((sum, t) => sum + t.asks.length, 0),
+              blastRadius: 0,
+              tasks,
+            });
+          }
+          const allTasks = plans.flatMap((p) => p.tasks);
+          return {
+            nodeId: goalNode.id,
+            title: goalNode.title,
+            state: deriveGoalState(allTasks),
+            plansDone: plans.filter((p) => p.state === "done").length,
+            plansTotal: plans.length,
+            openAskCount: plans.reduce((sum, p) => sum + p.openAskCount, 0),
+            blastRadius: countDependents(edges, goalNode.id),
+            plans,
+          };
+        };
+
+        // No imposed sort: goals/plans/tasks keep creation order (the client weights, not us).
+        const goals = nodes.filter((n) => n.kind === "goal").map(buildGoal);
+        return { projectId, seq, goals };
       });
     },
 
