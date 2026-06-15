@@ -124,7 +124,7 @@ describe("park_ask input — backward-compatible options + context", () => {
 
   it("exposes a raw shape for MCP tool registration", () => {
     // The MCP server registers the tool from the raw shape (refined schemas have no .shape).
-    expect(z.object(parkAskInputShape)).toBeDefined;
+    expect(z.object(parkAskInputShape)).toBeDefined();
     expect(Object.keys(parkAskInputShape)).toContain("rationale");
   });
 });

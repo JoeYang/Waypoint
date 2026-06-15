@@ -37,6 +37,13 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    // Node scripts (plain ESM) — declare the runtime globals they legitimately use.
+    files: ["scripts/**/*.{js,mjs}"],
+    languageOptions: {
+      globals: { process: "readonly", console: "readonly", URL: "readonly" },
+    },
+  },
+  {
     files: ["packages/shared/src/**/*.{ts,tsx}"],
     rules: forbid(
       [CORE, SERVER, WEB],
