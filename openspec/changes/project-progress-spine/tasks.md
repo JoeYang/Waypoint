@@ -28,5 +28,5 @@
 
 ## 6. Wiring & verification
 
-- [ ] 6.1 Make the spine the application home; demote the inbox route to a lens. Update the demo seed to a multi-plan project so the spine is meaningful.
-- [ ] 6.2 `npm test` green; Playwright e2e for the spine + re-home of a card; `openspec validate project-progress-spine --strict`; update README + docs.
+- [x] 6.1 Make the spine the application home; demote the inbox route to a lens. Update the demo seed to a multi-plan project so the spine is meaningful.
+- [x] 6.2 `npm test` green; Playwright e2e for the spine + re-home of a card; `openspec validate project-progress-spine --strict`; update README + docs.

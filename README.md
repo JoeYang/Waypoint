@@ -16,7 +16,7 @@ An npm-workspaces monorepo with a strict, one-way dependency direction. The doma
 transport- and harness-neutral — the same logic serves MCP, REST, and the web UI.
 
 ```
-  web ───▶ shared                 web   — React/Vite inbox UI (typed API client + WS hook)
+  web ───▶ shared                 web   — React/Vite spine + inbox UI (typed client + WS hook)
   server ──▶ core ──▶ shared      server— MCP + REST + WebSocket adapters; Postgres repository
                                   core  — ask lifecycle, computed blocked / blast_radius
                                   shared— zod contracts + inferred types (only runtime dep: zod)
@@ -33,8 +33,10 @@ transport- and harness-neutral — the same logic serves MCP, REST, and the web 
   transactional Postgres repository. One shared `InboxHub` behind a notifying core means every
   committed mutation — whether an agent parks over MCP or a human answers over REST — pushes a
   live delta to connected UIs.
-- **`packages/web`** — the two-screen inbox: cards ranked by blast radius, answered live over
-  the WebSocket with resume-since-seq on reconnect.
+- **`packages/web`** — the project **spine** is the home: the live goal→plan→task tree with
+  per-level state and rolled-up progress, where a decision card appears in place on the task it
+  blocks. The **inbox** is a saved "needs you" lens over the same data at a stable
+  `/projects/:id/inbox` route. Both update live over the WebSocket with resume-since-seq.
 
 `openspec/` holds the specs (source of truth) and change proposals.
 
@@ -56,6 +58,18 @@ QUESTION takes a suggested answer or free text; a PROPOSAL gets **Approve / Adju
 where _Adjust_ is an approval that carries a constraint — recorded as one immutable event and
 surfaced back to the agent via `get_context`, so it proceeds under the constraint rather than
 making a fresh round-trip.
+
+## The project spine
+
+The home screen is the **spine**: the live goal → plan → task tree, so a human returning after
+time away re-acquires context at a glance. Each level reports a derived state — a goal is
+`on-track | at-risk | blocked`, a plan `active | blocked | done`, a task
+`running | blocked-on-ask | done | failed` — with rolled-up progress (plans done, open asks),
+all computed read-time in one transaction from data already stored (no projection, no N+1). A
+decision card appears **in place on the task it blocks**, so you answer in context. Importance
+(blast radius) is shown as visual weight, never by reordering; settled work collapses to the
+live edge. The inbox is a saved "needs you" **lens** over the same data — `GET /v1/projects/:id/progress`
+feeds the spine, and it refetches on the same WebSocket signal that drives the inbox.
 
 ## Develop
 

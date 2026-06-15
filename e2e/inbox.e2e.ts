@@ -100,7 +100,7 @@ test("a parked DECISION shows its rationale + consequences and answers in one cl
       sessionId: "e2e",
     });
 
-    await page.goto("/");
+    await page.goto("/projects/default/inbox");
     const card = cardFor(page, prompt);
     await expect(card.getByRole("heading", { name: prompt })).toBeVisible({ timeout: 15_000 });
     // The enriched context is on the card so the human answers without re-deriving it.
@@ -136,7 +136,7 @@ test("a parked PROPOSAL is approved with one click", async ({ page }) => {
       sessionId: "e2e",
     });
 
-    await page.goto("/");
+    await page.goto("/projects/default/inbox");
     const card = cardFor(page, prompt);
     await expect(card.getByRole("heading", { name: prompt })).toBeVisible({ timeout: 15_000 });
 
@@ -170,7 +170,7 @@ test("a parked QUESTION is answered by clicking a suggested answer", async ({ pa
       sessionId: "e2e",
     });
 
-    await page.goto("/");
+    await page.goto("/projects/default/inbox");
     const card = cardFor(page, prompt);
     await expect(card.getByRole("heading", { name: prompt })).toBeVisible({ timeout: 15_000 });
 
