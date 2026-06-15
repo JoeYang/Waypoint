@@ -7,10 +7,10 @@ Tests query by role/label, not testid; cover empty/edge + a11y paths (frontend.m
 
 ## 1a. Types + fixtures (PR1a — no behavior)
 
-- [ ] 1a.1 Reconcile `axiom-tokens.css` against the handoff `colors_and_type.css`; vendor any missing vars (`:root` only).
-- [ ] 1a.2 Define `wp/types.ts` interfaces (ProjectsData, Project, Stream, Task, Decision, Option, Message, ActivityGroup, Notification) faithful to `WP_DATA`. Use `continuedDescription` (not `continued`); record the prototype→backend mapping in a comment. Model unions as discriminated unions (status, risk, impact.kind, notification.tone, message.who).
-- [ ] 1a.3 Port `wp/fixtures.ts` — typed `WP_DATA` (orbit-api, atlas-web, ledger-svc) exactly as in the prototype.
-- [ ] 1a.4 Test: a fixture-shape consistency check (all three projects satisfy the same shape; required fields present) — the drift guard standing in for zod this phase.
+- [x] 1a.1 Reconcile `axiom-tokens.css` against the handoff `colors_and_type.css` — verified already identical (same palette + every var `waypoint-app.css` uses); no change needed.
+- [x] 1a.2 Define `wp/types.ts` interfaces (ProjectsData, Project, Stream, Task, Decision, Option, Message, ActivityGroup, Notification) faithful to `WP_DATA`. Use `continuedDescription` (not `continued`); record the prototype→backend mapping in a comment. Model unions as discriminated unions (status, risk, impact.kind, notification.tone, message.who).
+- [x] 1a.3 Port `wp/fixtures.ts` — typed `WP_DATA` (orbit-api, atlas-web, ledger-svc) exactly as in the prototype.
+- [x] 1a.4 Test: a fixture-shape consistency check (all three projects satisfy the same shape; required fields present) — the drift guard standing in for zod this phase. 7 tests green.
 
 ## 1b. Source + provider + helpers (PR1b)
 
