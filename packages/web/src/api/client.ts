@@ -1,9 +1,11 @@
 import {
   InboxResponseSchema,
   AnswerResponseSchema,
+  ProjectProgressSchema,
   type AnswerRequest,
   type AnswerResponse,
   type InboxResponse,
+  type ProjectProgress,
 } from "@waypoint/shared";
 
 // A failed REST call, carrying the server's typed envelope code (NOT_FOUND, STALE_VERSION,
@@ -44,6 +46,14 @@ export async function fetchInbox(baseUrl: string, projectId: string): Promise<In
   const res = await fetch(`${project(baseUrl, projectId)}/inbox`);
   if (!res.ok) await fail(res);
   return InboxResponseSchema.parse(await res.json());
+}
+
+// GET the project spine — the goal→plan→task progress tree (slice 2). Refetched when the
+// live inbox WS signal advances; no separate progress feed.
+export async function fetchProgress(baseUrl: string, projectId: string): Promise<ProjectProgress> {
+  const res = await fetch(`${project(baseUrl, projectId)}/progress`);
+  if (!res.ok) await fail(res);
+  return ProjectProgressSchema.parse(await res.json());
 }
 
 // POST a human answer. The caller supplies expected_version from the inbox item so the
