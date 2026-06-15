@@ -1,9 +1,9 @@
 ## 1. Contracts (interfaces — own commit, before implementation)
 
-- [ ] 1.1 Extend shared schemas: `AskOption` gains optional `consequence` (≤280). `AskSchema` gains `rationale: string | null` (≤2000) and, for a QUESTION, optional `suggestedAnswers: string[]`. Update inferred types so the pg mapper can't silently drop them.
-- [ ] 1.2 Extend `park_ask` MCP input: optional `rationale` (capped); `options` accept a backward-compatible union `string | { label, consequence? }` normalized via a zod transform; optional `suggestedAnswers` for QUESTION; optional human-friendly `agentLabel` for provenance. Keep the DECISION≥2 refine on the normalized array.
-- [ ] 1.3 Extend the `InboxItem` DTO: add `rationale`, `blocks: { nodeId, title }[]`, `goalTitle: string | null`, `parkedBy: { agentLabel: string, at: number }` (a stable label, never a raw session id), and `suggestedAnswers`.
-- [ ] 1.4 Define the answer DTO per intent: a discriminated answer (`chosenOptionId` | `proposalVerdict: approve | adjust | reject` with a capped constraint note on `adjust` | `answerText`), validated and capped at the boundary. An `adjust` is an approval carrying the constraint; the answer result echoes it back.
+- [x] 1.1 Extend shared schemas: `AskOption` gains optional `consequence` (≤280). `AskSchema` gains `rationale: string | null` (≤2000) and, for a QUESTION, optional `suggestedAnswers: string[]`. Update inferred types so the pg mapper can't silently drop them.
+- [x] 1.2 Extend `park_ask` MCP input: optional `rationale` (capped); `options` accept a backward-compatible union `string | { label, consequence? }` normalized via a zod transform; optional `suggestedAnswers` for QUESTION; optional human-friendly `agentLabel` for provenance. Keep the DECISION≥2 refine on the normalized array.
+- [x] 1.3 Extend the `InboxItem` DTO: add `rationale`, `blocks: { nodeId, title }[]`, `goalTitle: string | null`, `parkedBy: { agentLabel: string, at: number }` (a stable label, never a raw session id), and `suggestedAnswers`.
+- [x] 1.4 Define the answer DTO per intent: a discriminated answer (`chosenOptionId` | `proposalVerdict: approve | adjust | reject` with a capped constraint note on `adjust` | `answerText`), validated and capped at the boundary. An `adjust` is an approval carrying the constraint; the answer result echoes it back.
 
 ## 2. Schema (migration — its own commit)
 
