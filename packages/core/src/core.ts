@@ -1,5 +1,6 @@
 import type {
   Node,
+  NodeKind,
   NodeStatus,
   Ask,
   AskOption,
@@ -174,6 +175,70 @@ function dependsOnReaches(edges: DependencyEdge[], from: string, target: string)
     for (const next of adjacency.get(cur) ?? []) stack.push(next);
   }
   return false;
+}
+
+// Count of nodes that directly depend on `nodeId` — its blast radius (direct edges only).
+function countDependents(edges: DependencyEdge[], nodeId: string): number {
+  return edges.filter((e) => e.dependsOnId === nodeId).length;
+}
+
+// The named nodes that directly depend on `nodeId`, resolved to { nodeId, title }.
+function namedDependents(
+  edges: DependencyEdge[],
+  nodeById: Map<string, Node>,
+  nodeId: string,
+): { nodeId: string; title: string }[] {
+  return edges
+    .filter((e) => e.dependsOnId === nodeId)
+    .flatMap((e) => {
+      const dependent = nodeById.get(e.nodeId);
+      return dependent ? [{ nodeId: dependent.id, title: dependent.title }] : [];
+    });
+}
+
+// First ancestor of `kind` walking parent_id upward from `startId` (inclusive), cycle-guarded
+// so a corrupt hierarchy terminates. Returns null if no such ancestor exists.
+function ancestorOfKind(nodeById: Map<string, Node>, startId: string, kind: NodeKind): Node | null {
+  const seen = new Set<string>();
+  let cur = nodeById.get(startId);
+  while (cur !== undefined && !seen.has(cur.id)) {
+    seen.add(cur.id);
+    if (cur.kind === kind) return cur;
+    cur = cur.parentId !== null ? nodeById.get(cur.parentId) : undefined;
+  }
+  return null;
+}
+
+// Projects a pending ask + its owning node into the enriched InboxItem the human answers
+// from — shared by the inbox list and the project spine (so a card reads identically in both).
+function buildInboxItem(
+  ask: Ask,
+  node: Node,
+  nodeById: Map<string, Node>,
+  edges: DependencyEdge[],
+): InboxItem {
+  return {
+    askId: ask.id,
+    nodeId: ask.nodeId,
+    nodeTitle: node.title,
+    type: ask.type,
+    state: ask.state,
+    prompt: ask.prompt,
+    required: ask.required,
+    options: ask.options,
+    blastRadius: countDependents(edges, ask.nodeId),
+    parkedAt: ask.createdAt,
+    askVersion: ask.version,
+    nodeVersion: node.version,
+    // Decision context (slice 1) — enrich so the human can answer without re-deriving.
+    rationale: ask.rationale,
+    blocks: namedDependents(edges, nodeById, ask.nodeId),
+    goalTitle: ancestorOfKind(nodeById, ask.nodeId, "goal")?.title ?? null,
+    suggestedAnswers: ask.suggestedAnswers,
+    ...(ask.agentLabel !== null
+      ? { parkedBy: { agentLabel: ask.agentLabel, at: ask.createdAt } }
+      : {}),
+  };
 }
 
 export function createCore(deps: CoreDeps): Core {
@@ -621,28 +686,6 @@ export function createCore(deps: CoreDeps): Core {
         const events = await ctx.events.listSince(projectId, 0);
 
         const nodeById = new Map(nodes.map((n) => [n.id, n]));
-        const dependentsOf = (nodeId: string) =>
-          edges.filter((e) => e.dependsOnId === nodeId).length;
-        // The named work this ask gates: the nodes that depend on it, resolved to titles.
-        const blocksOf = (nodeId: string) =>
-          edges
-            .filter((e) => e.dependsOnId === nodeId)
-            .flatMap((e) => {
-              const dependent = nodeById.get(e.nodeId);
-              return dependent ? [{ nodeId: dependent.id, title: dependent.title }] : [];
-            });
-        // The goal this work ladders toward: walk parent_id upward, cycle-guarded so corrupt
-        // hierarchies terminate, and return the first `goal` ancestor's title (or null).
-        const ancestorGoalTitle = (startId: string): string | null => {
-          const seen = new Set<string>();
-          let cur = nodeById.get(startId);
-          while (cur !== undefined && !seen.has(cur.id)) {
-            seen.add(cur.id);
-            if (cur.kind === "goal") return cur.title;
-            cur = cur.parentId !== null ? nodeById.get(cur.parentId) : undefined;
-          }
-          return null;
-        };
         const seq = events.length > 0 ? events[events.length - 1]!.seq : 0;
 
         const items: InboxItem[] = asks
@@ -650,30 +693,7 @@ export function createCore(deps: CoreDeps): Core {
           .flatMap((a) => {
             const node = nodeById.get(a.nodeId);
             if (!node) return []; // an ask without its node is not surfacable; skip defensively
-            return [
-              {
-                askId: a.id,
-                nodeId: a.nodeId,
-                nodeTitle: node.title,
-                type: a.type,
-                state: a.state,
-                prompt: a.prompt,
-                required: a.required,
-                options: a.options,
-                blastRadius: dependentsOf(a.nodeId),
-                parkedAt: a.createdAt,
-                askVersion: a.version,
-                nodeVersion: node.version,
-                // Decision context (slice 1) — enrich so the human can answer without re-deriving.
-                rationale: a.rationale,
-                blocks: blocksOf(a.nodeId),
-                goalTitle: ancestorGoalTitle(a.nodeId),
-                suggestedAnswers: a.suggestedAnswers,
-                ...(a.agentLabel !== null
-                  ? { parkedBy: { agentLabel: a.agentLabel, at: a.createdAt } }
-                  : {}),
-              },
-            ];
+            return [buildInboxItem(a, node, nodeById, edges)];
           })
           // Rank: most-blocking first; ties broken by who has waited longest.
           .sort((x, y) => y.blastRadius - x.blastRadius || x.parkedAt - y.parkedAt);
