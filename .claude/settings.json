@@ -27,6 +27,9 @@
         "hooks": [{
           "type": "command",
           "command": "CMD=$(echo $CLAUDE_TOOL_INPUT | jq -r '.command // empty'); B=$(git branch --show-current 2>/dev/null); case \"$CMD\" in *\"git commit\"*|*\"git push\"*) case \"$B\" in main|master) echo 'Blocked: commit/push on '\"$B\"'. Use a feature branch.' >&2; exit 2;; esac;; esac; exit 0"
+        }, {
+          "type": "command",
+          "command": "bash \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/commit-size-guard.sh\""
         }]
       }
     ],

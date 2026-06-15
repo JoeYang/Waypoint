@@ -50,6 +50,20 @@ Import direction (enforced): `web → shared`, `server → core → shared`. `co
 - Commit secrets or `.env` files; disable or skip tests.
 - Use headless `claude -p` for the resume flow — resume stays interactive (product decision).
 
+## Commit & PR size
+
+Global ~/.claude/CLAUDE.md sets the commit rules (≤200 target / 400 hard max, single
+logical change; interfaces, refactors, and schema each in their own commit). This project
+adds the PR boundary and its enforcement:
+
+- **One OpenSpec slice = one PR, capped at ~600 code lines** (docs/specs/lockfiles exempt).
+  If a slice's diff would exceed the cap, split it into stacked per-layer PRs
+  (`shared → core → server → web`), each independently reviewable and mergeable. This is the
+  fix for oversized reviews — keep the layers shippable on their own.
+- A `commit-size-guard` hook (`.claude/hooks/commit-size-guard.sh`) counts the staged diff
+  on every `git commit`: it **warns past 200** and **blocks past 400** code lines. Override a
+  justified exception with `WAYPOINT_ALLOW_BIG_COMMIT=1 git commit …`.
+
 ## Rules
 @.claude/rules/architecture.md · testing.md · typescript.md · security.md · design.md ·
 api-design.md · database.md · frontend.md · websocket.md · mcp-server.md · docker.md ·
