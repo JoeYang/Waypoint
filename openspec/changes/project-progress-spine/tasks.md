@@ -17,14 +17,14 @@
 ## 4. REST + WS (TDD)
 
 - [x] 4.1 RED: `GET /v1/projects/:id/progress` returns the spine payload with the error envelope and `X-Request-ID`; unknown project → 404 → implement.
-- [ ] 4.2 RED: a mutation (transition, answer, park) fires the existing inbox WS signal, and the spine refetches `/progress` on it so it updates live — NO new WS frame type → implement.
+- [x] 4.2 RED: a mutation (transition, answer, park) fires the existing inbox WS signal, and the spine refetches `/progress` on it so it updates live — NO new WS frame type → implement.
 
 ## 5. Web — the spine home (TDD, RTL)
 
-- [ ] 5.1 RED: the spine renders a fixed goal header, plan sections with progress, and tasks beneath; asks appear in place on the task they block, using the slice-1 card unchanged → implement.
-- [ ] 5.2 RED: importance is shown as visual weight (not sort order); the tree collapses to the live edge by default and is expandable → implement.
-- [ ] 5.3 RED: completed work dims/settles and only change moves on live deltas; `prefers-reduced-motion` respected → implement. (Motion polish is the LAST sub-step, after the data shape + live refetch land.)
-- [ ] 5.4 RED: the inbox is reachable as a saved lens (filter to "needs you") over the same data, not a separate home, AND remains a stable first-class route (e.g. `/projects/:id/inbox`) so deep-links and tooling built on the V1 inbox keep working → implement.
+- [x] 5.1 RED: the spine renders a fixed goal header, plan sections with progress, and tasks beneath; asks appear in place on the task they block, using the slice-1 card unchanged → implement.
+- [x] 5.2 RED: importance is shown as visual weight (not sort order); the tree collapses to the live edge by default and is expandable → implement.
+- [x] 5.3 RED: completed work dims/settles and only change moves on live deltas; `prefers-reduced-motion` respected → implement. (Motion polish is the LAST sub-step, after the data shape + live refetch land.)
+- [x] 5.4 RED: the inbox is reachable as a saved lens (filter to "needs you") over the same data, not a separate home, AND remains a stable first-class route (e.g. `/projects/:id/inbox`) so deep-links and tooling built on the V1 inbox keep working → implement.
 
 ## 6. Wiring & verification
 
