@@ -31,3 +31,15 @@
   margin: 0 auto;
   padding: var(--sp-6) var(--sp-5);
 }
+
+.nav {
+  margin-left: auto;
+  font-size: var(--fs-sm);
+}
+.nav a {
+  color: var(--fg-accent);
+  text-decoration: none;
+}
+.nav a:hover {
+  text-decoration: underline;
+}

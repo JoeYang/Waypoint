@@ -1,0 +1,149 @@
+/* The project spine — calm and glanceable. Flat, hairline-bordered, no shadows (Axiom). */
+.spine {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+}
+
+.empty {
+  color: var(--fg-3);
+  font-style: italic;
+}
+
+/* A goal: fixed header at the top of its section. */
+.goal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+.goalHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: var(--sp-2);
+}
+.goalTitle {
+  margin: 0;
+}
+.goalMeta,
+.planMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.count,
+.agent {
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
+}
+.agent {
+  color: var(--fg-2);
+}
+
+.plan {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border: 1px solid var(--border);
+  border-radius: var(--r-3);
+  background: var(--bg-raised);
+}
+/* Settled work dims back — only the live edge holds full contrast. */
+.plan[data-state="done"] {
+  opacity: 0.6;
+}
+.planHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+.planTitle {
+  margin: 0;
+  font-size: var(--fs-base);
+}
+
+.tasks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.task {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  transition: opacity var(--dur-2, 200ms) var(--ease-out, ease);
+}
+.task[data-state="done"],
+.task[data-state="failed"] {
+  opacity: 0.55;
+}
+/* Importance as weight: a larger blast radius reads heavier, never reorders the list. */
+.task[data-weight="1"] .taskTitle,
+.task[data-weight="2"] .taskTitle {
+  font-weight: var(--fw-medium);
+}
+.task[data-weight="3"] .taskTitle,
+.task[data-weight="4"] .taskTitle,
+.task[data-weight="5"] .taskTitle {
+  font-weight: var(--fw-bold, 700);
+}
+
+.taskHead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.taskTitle {
+  color: var(--fg-1);
+}
+.group {
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
+}
+
+.badge {
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--fg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-2);
+  padding: 0.05em 0.45em;
+  white-space: nowrap;
+}
+.badge[data-state="blocked"],
+.badge[data-state="blocked-on-ask"] {
+  color: var(--fg-accent);
+  background: var(--bg-accent);
+  border-color: var(--border-accent);
+}
+
+.foldToggle {
+  align-self: flex-start;
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.foldToggle:focus-visible {
+  outline: 2px solid var(--accent-500);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .task {
+    transition: none;
+  }
+}
