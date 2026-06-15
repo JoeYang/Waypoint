@@ -16,7 +16,7 @@
 
 ## 4. REST + WS (TDD)
 
-- [ ] 4.1 RED: `GET /v1/projects/:id/progress` returns the spine payload with the error envelope and `X-Request-ID`; unknown project → 404 → implement.
+- [x] 4.1 RED: `GET /v1/projects/:id/progress` returns the spine payload with the error envelope and `X-Request-ID`; unknown project → 404 → implement.
 - [ ] 4.2 RED: a mutation (transition, answer, park) fires the existing inbox WS signal, and the spine refetches `/progress` on it so it updates live — NO new WS frame type → implement.
 
 ## 5. Web — the spine home (TDD, RTL)

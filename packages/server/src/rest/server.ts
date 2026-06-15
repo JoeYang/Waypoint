@@ -1,5 +1,10 @@
 import Fastify, { type FastifyInstance } from "fastify";
-import { AnswerRequestSchema, type AnswerResponse, type InboxResponse } from "@waypoint/shared";
+import {
+  AnswerRequestSchema,
+  type AnswerResponse,
+  type InboxResponse,
+  type ProjectProgress,
+} from "@waypoint/shared";
 import { type Core, WaypointError, ValidationError, type ErrorCode } from "@waypoint/core";
 
 // Domain error code → HTTP status. The REST adapter holds no domain logic; it only maps
@@ -52,6 +57,13 @@ export function createRestServer(core: Core): FastifyInstance {
   app.get<{ Params: ProjectParams }>("/v1/projects/:projectId/inbox", async (req, reply) => {
     const inbox: InboxResponse = await core.listInbox(req.params.projectId);
     reply.send(inbox);
+  });
+
+  // The project spine (slice 2): the goal→plan→task progress tree. The client reuses the
+  // existing inbox WS signal to know when to refetch this — there is no separate progress feed.
+  app.get<{ Params: ProjectParams }>("/v1/projects/:projectId/progress", async (req, reply) => {
+    const progress: ProjectProgress = await core.listProject(req.params.projectId);
+    reply.send(progress);
   });
 
   app.post<{ Params: AnswerParams }>(

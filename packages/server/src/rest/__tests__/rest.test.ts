@@ -221,4 +221,56 @@ describe("Inbox REST API", () => {
       expect(res.json()).toMatchObject({ error: "NOT_FOUND" });
     });
   });
+
+  describe("GET /v1/projects/:projectId/progress", () => {
+    it("returns the goal→plan→task spine with a tracing header", async () => {
+      const goal = await core.createNode({
+        projectId: PROJECT,
+        parentId: null,
+        kind: "goal",
+        title: "Ship checkout",
+      });
+      const plan = await core.createNode({
+        projectId: PROJECT,
+        parentId: goal.id,
+        kind: "plan",
+        title: "Refunds",
+      });
+      const t = await core.createNode({
+        projectId: PROJECT,
+        parentId: plan.id,
+        kind: "task",
+        title: "cache",
+      });
+      await core.parkAsk({
+        projectId: PROJECT,
+        nodeId: t.id,
+        type: "DECISION",
+        prompt: "which cache?",
+        required: true,
+        options: ["redis", "pg"],
+      });
+
+      const res = await app.inject({ method: "GET", url: `/v1/projects/${PROJECT}/progress` });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.headers["x-request-id"]).toBeTruthy();
+      const body = res.json();
+      expect(body).toMatchObject({ projectId: PROJECT });
+      expect(body.goals[0]).toMatchObject({ title: "Ship checkout", state: "blocked" });
+      expect(body.goals[0].plans[0].tasks[0]).toMatchObject({
+        nodeId: t.id,
+        state: "blocked-on-ask",
+      });
+    });
+
+    it("404s an unknown project with the error envelope, leaking no internals", async () => {
+      const res = await app.inject({ method: "GET", url: "/v1/projects/ghost/progress" });
+      expect(res.statusCode).toBe(404);
+      const body = res.json();
+      expect(body).toMatchObject({ error: "NOT_FOUND" });
+      expect(body.request_id).toBeTruthy();
+      expect(JSON.stringify(body)).not.toMatch(/stack|at Object|\.ts:/i);
+    });
+  });
 });
