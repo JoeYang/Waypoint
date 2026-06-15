@@ -1,7 +1,7 @@
 ## 1. Contracts (interfaces — own commit, before implementation)
 
-- [ ] 1.1 Define the `ProjectProgress` DTO in `shared`: a goal with `state: on-track | at-risk | blocked` + `% plans done` + open-ask count; plans with `state: active | blocked | done`, owning agent, last activity, rolled-up open asks; tasks with `state: running | blocked-on-ask | done | failed`, current agent, and **their open asks in `InboxItem` shape** (so the slice-1 card hydrates from one call). `step` nodes are a kind-aware nested group between plan and task. State definitions are fixed in the proposal's "Decisions settled" section. Infer types from zod.
-- [ ] 1.2 Define the REST DTO for `GET /v1/projects/:id/progress` (the spine payload). **Liveness reuses the existing inbox WS signal** — every commit already calls `hub.notify`; the spine refetches `/progress` on that signal. NO new WS frame type (deferred to slice 3).
+- [x] 1.1 Define the `ProjectProgress` DTO in `shared`: a goal with `state: on-track | at-risk | blocked` + `% plans done` + open-ask count; plans with `state: active | blocked | done`, owning agent, last activity, rolled-up open asks; tasks with `state: running | blocked-on-ask | done | failed`, current agent, and **their open asks in `InboxItem` shape** (so the slice-1 card hydrates from one call). `step` nodes are a kind-aware nested group between plan and task. State definitions are fixed in the proposal's "Decisions settled" section. Infer types from zod.
+- [x] 1.2 Define the REST DTO for `GET /v1/projects/:id/progress` (the spine payload). **Liveness reuses the existing inbox WS signal** — every commit already calls `hub.notify`; the spine refetches `/progress` on that signal. NO new WS frame type (deferred to slice 3).
 
 ## 2. Core — the progress read model (TDD over in-memory fakes)
 
