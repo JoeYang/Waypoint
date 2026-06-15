@@ -14,10 +14,10 @@ Tests query by role/label, not testid; cover empty/edge + a11y paths (frontend.m
 
 ## 1b. Source + provider + helpers (PR1b)
 
-- [ ] 1b.1 RED: `WaypointSource` interface + `mockSource` (getData/resolve/comment) → implement.
-- [ ] 1b.2 RED: `WaypointProvider` — nav `{project,view,decision}` reducer + resolve/comment reducer → implement.
-- [ ] 1b.3 RED: `localStorage` persistence with try/catch fallback (corrupt/unavailable storage → in-memory default; unknown project/decision id → safe view, never blank) → implement.
-- [ ] 1b.4 `wp/icons.tsx` (Lucide subset) + `wp/helpers.ts` (streamProgress, streamBarColor, taskIconName) with unit tests.
+- [x] 1b.1 `WaypointSource` interface + synchronous `mockSource` (getData).
+- [x] 1b.2 Pure nav + resolve/comment reducer (resolve threads the agent resume message + is a no-op once resolved; comment threads you+agent without resolving); wired in `WaypointProvider`.
+- [x] 1b.3 `loadNav`/`saveNav` guard corrupt/absent/throwing storage (→ HOME_NAV); `safeNav` corrects a nav pointing at missing project/decision so the UI never renders blank; provider `resolve` no-ops an unknown id.
+- [x] 1b.4 `wp/icons.tsx` (Icon + WaypointMark) + `wp/helpers.ts` (streamProgress/streamBarColor/taskIconName) with unit tests. 35 wp tests green.
 
 ## 2. App shell (PR2)
 
