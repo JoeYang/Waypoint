@@ -27,8 +27,17 @@ export function Spine({ progress, workingAskIds, onAnswer }: SpineProps): React.
       </p>
     );
   }
+  const openTotal = progress.goals.reduce((sum, g) => sum + g.openAskCount, 0);
   return (
     <div className={styles.spine}>
+      {openTotal > 0 ? (
+        <div className={styles.needsYou} role="note">
+          <span className={styles.needsYouCount}>{openTotal}</span>
+          <span>
+            {openTotal === 1 ? "decision needs" : "decisions need"} you — answer in place below
+          </span>
+        </div>
+      ) : null}
       {progress.goals.map((goal) => (
         <GoalSection
           key={goal.nodeId}
@@ -38,6 +47,16 @@ export function Spine({ progress, workingAskIds, onAnswer }: SpineProps): React.
         />
       ))}
     </div>
+  );
+}
+
+// A thin progress meter — fraction done, shown as a filled bar. Glanceable, not a chart.
+function Meter({ done, total }: { done: number; total: number }): React.JSX.Element {
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  return (
+    <span className={styles.meter} aria-label={`${done} of ${total} done`}>
+      <span className={styles.meterFill} style={{ width: `${pct}%` }} />
+    </span>
   );
 }
 
@@ -59,8 +78,9 @@ function GoalSection({
           <span className={styles.count}>
             {goal.plansDone} / {goal.plansTotal} plans
           </span>
+          <Meter done={goal.plansDone} total={goal.plansTotal} />
           {goal.openAskCount > 0 ? (
-            <span className={styles.count}>{goal.openAskCount} open</span>
+            <span className={styles.openPill}>{goal.openAskCount} open</span>
           ) : null}
         </div>
       </header>
@@ -97,11 +117,12 @@ function PlanSection({
         <h2 className={styles.planTitle}>{plan.title}</h2>
         <div className={styles.planMeta}>
           <StateBadge state={plan.state} />
+          {plan.tasks.length > 0 ? <Meter done={settled.length} total={plan.tasks.length} /> : null}
           {plan.agentLabel !== null ? (
             <span className={styles.agent}>{plan.agentLabel}</span>
           ) : null}
           {plan.openAskCount > 0 ? (
-            <span className={styles.count}>{plan.openAskCount} open</span>
+            <span className={styles.openPill}>{plan.openAskCount} open</span>
           ) : null}
         </div>
       </header>

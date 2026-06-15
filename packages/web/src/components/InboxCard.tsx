@@ -20,12 +20,14 @@ export function InboxCard({ item, working, onAnswer }: InboxCardProps): React.JS
     <article className={styles.card} aria-busy={working} aria-labelledby={promptId}>
       <div className={styles.meta}>
         <span className={styles.node}>{item.nodeTitle}</span>
-        <span
-          className={styles.badge}
-          aria-label={`blocks ${blocks} ${blocks === 1 ? "node" : "nodes"}`}
-        >
-          blocks {blocks}
-        </span>
+        {blocks > 0 ? (
+          <span
+            className={styles.badge}
+            aria-label={`blocks ${blocks} ${blocks === 1 ? "node" : "nodes"}`}
+          >
+            blocks {blocks}
+          </span>
+        ) : null}
       </div>
       <h3 id={promptId} className={styles.prompt}>
         {item.prompt}
