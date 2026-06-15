@@ -15,7 +15,7 @@ import type {
 // not another, or a blocked task points at a missing decision, these tests fail.
 
 const TASK_STATUSES: readonly TaskStatus[] = ["done", "active", "blocked", "queued"];
-const STREAM_STATUSES: readonly StreamStatus[] = ["done", "active", "queued"];
+const STREAM_STATUSES: readonly StreamStatus[] = ["done", "active", "blocked", "queued"];
 const RISKS: readonly Risk[] = ["low", "medium", "high"];
 const WHO: readonly MessageWho[] = ["agent", "you", "system"];
 const TONES: readonly NotificationTone[] = ["warning", "success", "accent"];

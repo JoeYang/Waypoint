@@ -12,7 +12,7 @@
 //   Notification ≈ derived from open asks + events.
 
 export type TaskStatus = "done" | "active" | "blocked" | "queued";
-export type StreamStatus = "done" | "active" | "queued";
+export type StreamStatus = "done" | "active" | "blocked" | "queued";
 export type AgentStatus = "working" | "idle";
 export type Risk = "low" | "medium" | "high";
 export type ImpactKind = "info" | "danger";
