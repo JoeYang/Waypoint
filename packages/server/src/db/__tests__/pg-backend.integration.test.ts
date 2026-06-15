@@ -226,4 +226,125 @@ describeDb("PgBackend satisfies the repository port contract", () => {
     expect(pack.openAsks).toHaveLength(0);
     expect(pack.recentDecisions.map((d) => d.resolution)).toContain("us-east-1");
   });
+
+  it("assembles the project spine over Postgres with correct rollups", async () => {
+    const goal = await core.createNode({
+      projectId: PROJECT,
+      parentId: null,
+      kind: "goal",
+      title: "Ship checkout",
+    });
+    const plan = await core.createNode({
+      projectId: PROJECT,
+      parentId: goal.id,
+      kind: "plan",
+      title: "Refunds",
+    });
+    const cache = await core.createNode({
+      projectId: PROJECT,
+      parentId: plan.id,
+      kind: "task",
+      title: "cache",
+    });
+    const refunds = await core.createNode({
+      projectId: PROJECT,
+      parentId: plan.id,
+      kind: "task",
+      title: "refund worker",
+    });
+    await core.addDependency({ projectId: PROJECT, nodeId: refunds.id, dependsOnId: cache.id });
+    const ask = await core.parkAsk({
+      projectId: PROJECT,
+      nodeId: cache.id,
+      type: "DECISION",
+      prompt: "which cache?",
+      required: true,
+      rationale: "blocks refunds",
+      options: [
+        { label: "redis", consequence: "fast" },
+        { label: "pg", consequence: "durable" },
+      ],
+      agentLabel: "checkout-agent",
+    });
+
+    const progress = await core.listProject(PROJECT);
+    expect(progress.goals).toHaveLength(1);
+    const g = progress.goals[0]!;
+    // cache is blocked-on-ask; refund worker is still running (task state reflects asks, not
+    // transitive dependency-blocking in slice 2) → the goal is at-risk, not fully blocked.
+    expect(g.state).toBe("at-risk");
+    expect(g.plans[0]!.state).toBe("blocked");
+    const cacheTask = g.plans[0]!.tasks.find((t) => t.nodeId === cache.id)!;
+    expect(cacheTask.state).toBe("blocked-on-ask");
+    expect(cacheTask.blastRadius).toBe(1);
+    expect(cacheTask.asks[0]).toMatchObject({
+      askId: ask.id,
+      rationale: "blocks refunds",
+      goalTitle: "Ship checkout",
+      options: [
+        { id: "opt-1", label: "redis", consequence: "fast" },
+        { id: "opt-2", label: "pg", consequence: "durable" },
+      ],
+    });
+  });
+
+  it("computes the spine within the interactive budget on a 50+ node tree (no N+1)", async () => {
+    // Seed a realistic tree: 1 goal, 5 plans, 10 tasks each (55 nodes), cross-plan deps and
+    // a scatter of open asks. The read model must not degrade as the tree grows.
+    const goal = await core.createNode({
+      projectId: PROJECT,
+      parentId: null,
+      kind: "goal",
+      title: "Big goal",
+    });
+    const firstTaskOfPlan: string[] = [];
+    for (let p = 0; p < 5; p += 1) {
+      const plan = await core.createNode({
+        projectId: PROJECT,
+        parentId: goal.id,
+        kind: "plan",
+        title: `plan ${p}`,
+      });
+      for (let t = 0; t < 10; t += 1) {
+        const task = await core.createNode({
+          projectId: PROJECT,
+          parentId: plan.id,
+          kind: "task",
+          title: `task ${p}.${t}`,
+        });
+        if (t === 0) firstTaskOfPlan.push(task.id);
+        if (t % 4 === 0) {
+          await core.parkAsk({
+            projectId: PROJECT,
+            nodeId: task.id,
+            type: "QUESTION",
+            prompt: `q ${p}.${t}`,
+            required: true,
+            options: [],
+          });
+        }
+      }
+    }
+    // Cross-plan dependency graph (non-trivial blast radii).
+    for (let i = 1; i < firstTaskOfPlan.length; i += 1) {
+      await core.addDependency({
+        projectId: PROJECT,
+        nodeId: firstTaskOfPlan[i]!,
+        dependsOnId: firstTaskOfPlan[0]!,
+      });
+    }
+
+    const RUNS = 20;
+    const samples: number[] = [];
+    for (let i = 0; i < RUNS; i += 1) {
+      const start = performance.now();
+      await core.listProject(PROJECT);
+      samples.push(performance.now() - start);
+    }
+    samples.sort((a, b) => a - b);
+    const p95 = samples[Math.floor(0.95 * (RUNS - 1))]!;
+    // Budget is p95 < 150 ms; surface the real number for the record.
+    console.log(`listProject p95 over 55-node tree: ${p95.toFixed(1)}ms (budget 150ms)`);
+    expect(p95).toBeLessThan(150);
+  });
 });

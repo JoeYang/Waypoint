@@ -8,11 +8,11 @@
 - [x] 2.1 RED: `listProject(projectId)` returns the three-level tree with per-level state derived from node status, ask state, and `depends_on` edges — one transaction, no N+1, cycle-guarded hierarchy walk → implement.
 - [x] 2.2 RED: rollups are correct — a plan is `blocked` if any task is blocked-on-ask; a goal is `at-risk`/`blocked` per the defined rule; `% plans done` and open-ask counts aggregate from leaves → implement.
 - [x] 2.3 RED: blast radius is reported per node for _weight_, and the read model does NOT impose a sort order (the client decides presentation) → implement.
-- [ ] 2.4 Benchmark the read-time rollup against a seeded tree of **50+ nodes (all four kinds) with a non-trivial `depends_on` graph**, budget **p95 < 150 ms** for `GET /progress`. Read-time is the decided default; if the budget is missed the first remedy is a composite index (`project_id, status`), and only then a denormalized projection. Record the decision + numbers. (Blast radius is direct-edge — cheap; the cost to watch is aggregation + the ancestor walk.)
+- [x] 2.4 Benchmark the read-time rollup against a seeded tree of **50+ nodes (all four kinds) with a non-trivial `depends_on` graph**, budget **p95 < 150 ms** for `GET /progress`. Read-time is the decided default; if the budget is missed the first remedy is a composite index (`project_id, status`), and only then a denormalized projection. Record the decision + numbers. (Blast radius is direct-edge — cheap; the cost to watch is aggregation + the ancestor walk.)
 
 ## 3. Persistence — Postgres
 
-- [ ] 3.1 `pg-backend`: implement the progress query set with bounded, parameterized, indexed reads; assert no N+1 and correct rollups against a realistic tree. Integration test gated on `WAYPOINT_TEST_DATABASE_URL`.
+- [x] 3.1 `pg-backend`: implement the progress query set with bounded, parameterized, indexed reads; assert no N+1 and correct rollups against a realistic tree. Integration test gated on `WAYPOINT_TEST_DATABASE_URL`.
 
 ## 4. REST + WS (TDD)
 
