@@ -68,6 +68,8 @@ export function createRestServer(core: Core): FastifyInstance {
         expectedVersion: parsed.data.expectedVersion,
         chosenOptionId: parsed.data.chosenOptionId,
         answerText: parsed.data.answerText,
+        proposalVerdict: parsed.data.proposalVerdict,
+        adjustmentNote: parsed.data.adjustmentNote,
       });
       // Report the owning node's resulting state so the client can re-rank without a refetch.
       const node = await core.getNode(projectId, ask.nodeId);
@@ -79,6 +81,13 @@ export function createRestServer(core: Core): FastifyInstance {
         nodeId: ask.nodeId,
         nodeBlocked,
         nodeVersion: node.version,
+        // Echo a proposal verdict (and its constraint) back so the client can confirm it.
+        ...(parsed.data.proposalVerdict !== undefined
+          ? { proposalVerdict: parsed.data.proposalVerdict }
+          : {}),
+        ...(parsed.data.adjustmentNote !== undefined
+          ? { adjustmentNote: parsed.data.adjustmentNote }
+          : {}),
       };
       reply.send(body);
     },

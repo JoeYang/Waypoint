@@ -57,6 +57,40 @@ describe("Waypoint MCP server", () => {
     expect(client.getInstructions()).toContain("get_context");
   });
 
+  it("advertises decision-context guidance (rationale, consequences) in instructions", () => {
+    const instructions = client.getInstructions() ?? "";
+    expect(instructions).toMatch(/rationale/i);
+    expect(instructions).toMatch(/consequence/i);
+  });
+
+  it("parks an ask carrying rationale, per-option consequences, and provenance", async () => {
+    const node = await core.createNode({
+      projectId: PROJECT,
+      parentId: null,
+      kind: "task",
+      title: "T",
+    });
+    const parked = await call("park_ask", {
+      projectId: PROJECT,
+      nodeId: node.id,
+      type: "DECISION",
+      prompt: "Postgres or SQLite?",
+      required: true,
+      rationale: "retry-safety matters for the queue",
+      options: [
+        { label: "Postgres", consequence: "stable across retries" },
+        { label: "SQLite", consequence: "no concurrency" },
+      ],
+      agentLabel: "checkout-agent",
+      sessionId: "sess-1",
+    });
+    const id = bodyOf(parked).id as string;
+    const ask = await backend.asks.findById(PROJECT, id);
+    expect(ask?.rationale).toBe("retry-safety matters for the queue");
+    expect(ask?.options[1]).toMatchObject({ label: "SQLite", consequence: "no concurrency" });
+    expect(ask?.agentLabel).toBe("checkout-agent");
+  });
+
   it("returns a context pack for the project", async () => {
     await core.createNode({ projectId: PROJECT, parentId: null, kind: "goal", title: "Ship MVP" });
     const res = await call("get_context", { projectId: PROJECT });
@@ -108,6 +142,34 @@ describe("Waypoint MCP server", () => {
       expectedVersion: 1,
     });
     expect(bodyOf(moved)).toMatchObject({ status: "ACTIVE", version: 2 });
+  });
+
+  it("surfaces an adjusted proposal's constraint to the agent via get_context", async () => {
+    const node = await core.createNode({
+      projectId: PROJECT,
+      parentId: null,
+      kind: "task",
+      title: "T",
+    });
+    const ask = await core.parkAsk({
+      projectId: PROJECT,
+      nodeId: node.id,
+      type: "PROPOSAL",
+      prompt: "Replace the poller with a webhook?",
+      required: true,
+      options: [],
+    });
+    await core.answer({
+      projectId: PROJECT,
+      askId: ask.id,
+      expectedVersion: 1,
+      proposalVerdict: "adjust",
+      adjustmentNote: "keep the poller for 30d",
+    });
+
+    const res = await call("get_context", { projectId: PROJECT });
+    const pack = bodyOf(res) as { recentDecisions: Array<{ resolution: string }> };
+    expect(pack.recentDecisions.map((d) => d.resolution)).toContain("keep the poller for 30d");
   });
 
   it("rejects an illegal spine move with a validation error", async () => {

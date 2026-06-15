@@ -1,38 +1,48 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
-// The hero loop end-to-end (task 7.4): an agent parks a decision over MCP, the human sees
-// it in the inbox, answers it, and it leaves the queue — driven by the live WebSocket delta.
-// Runs against a running stack (npm run db:up && npm start); Playwright starts the web app.
+// The hero loop end-to-end (task 7): an agent parks a rich ask over MCP — with a rationale
+// and, per intent, per-option consequences / a proposal verdict / suggested answers — the
+// human sees the enriched card, answers it in ONE gesture, and the live WebSocket delta
+// removes it from the queue. Runs against a running stack (npm run db:up && npm start);
+// Playwright starts the web app.
 
 const MCP_URL = process.env.WAYPOINT_MCP_URL ?? "http://localhost:8848/mcp";
 const PROJECT = "default";
 
-test("park via MCP appears in the inbox, then answering removes it live", async ({ page }) => {
-  const stamp = Date.now();
-  const prompt = `E2E — which cache? (${stamp})`;
-  const optYes = `Redis ${stamp}`;
+// These tests share one stack and one live inbox/WS on the `default` project, so they must
+// run serially — parallel workers would race on each other's deltas in the shared queue.
+test.describe.configure({ mode: "serial" });
 
+type ToolResult = { id: string; version: number };
+
+async function connect(): Promise<Client> {
   const mcp = new Client({ name: "e2e", version: "0.0.0" });
   await mcp.connect(new StreamableHTTPClientTransport(new URL(MCP_URL)));
-  const call = async (
-    name: string,
-    args: Record<string, unknown>,
-  ): Promise<{ id: string; version: number }> => {
+  return mcp;
+}
+
+function caller(mcp: Client) {
+  return async (name: string, args: Record<string, unknown>): Promise<ToolResult> => {
     const res = (await mcp.callTool({ name, arguments: args })) as CallToolResult;
     const body = JSON.parse((res.content[0] as { text: string }).text) as Record<string, unknown>;
     if (res.isError) throw new Error(`${name}: ${JSON.stringify(body)}`);
-    return body as { id: string; version: number };
+    return body as ToolResult;
   };
+}
 
-  // Agent: register work, activate it, and park a decision instead of guessing.
+// Register an ACTIVE task to hang an ask on; returns its id (caller discards it on teardown).
+async function activeTask(
+  call: (n: string, a: Record<string, unknown>) => Promise<ToolResult>,
+  title: string,
+): Promise<string> {
   const node = await call("create_node", {
     projectId: PROJECT,
     parentId: null,
     kind: "task",
-    title: `E2E node ${stamp}`,
+    title,
     sessionId: "e2e",
   });
   await call("transition", {
@@ -42,33 +52,133 @@ test("park via MCP appears in the inbox, then answering removes it live", async 
     expectedVersion: node.version,
     sessionId: "e2e",
   });
-  await call("park_ask", {
-    projectId: PROJECT,
-    nodeId: node.id,
-    type: "DECISION",
-    prompt,
-    required: true,
-    options: [optYes, `In-memory ${stamp}`],
-    sessionId: "e2e",
-  });
+  return node.id;
+}
 
-  // Human: open the inbox and find the card.
-  await page.goto("/");
-  const card = page.getByRole("article").filter({ hasText: prompt });
-  await expect(card.getByRole("heading", { name: prompt })).toBeVisible({ timeout: 15_000 });
-
-  // Answer it; the live WebSocket delta removes the card from the queue.
-  await card.getByRole("button", { name: optYes }).click();
-  await expect(page.getByRole("heading", { name: prompt })).toHaveCount(0, { timeout: 15_000 });
-
-  // Tidy up so the dogfood inbox is unaffected by the test run.
+async function discard(
+  call: (n: string, a: Record<string, unknown>) => Promise<ToolResult>,
+  nodeId: string,
+): Promise<void> {
+  // The ask-parked node is at version 2 (created → transitioned); discarding bumps to 3.
   await call("transition", {
     projectId: PROJECT,
-    nodeId: node.id,
+    nodeId,
     to: "DISCARDED",
     reason: "e2e cleanup",
     expectedVersion: 2,
     sessionId: "e2e",
   });
-  await mcp.close();
+}
+
+const cardFor = (page: Page, text: string) => page.getByRole("article").filter({ hasText: text });
+
+test("a parked DECISION shows its rationale + consequences and answers in one click", async ({
+  page,
+}) => {
+  const stamp = Date.now();
+  const prompt = `E2E — which cache? (${stamp})`;
+  const optYes = `Redis ${stamp}`;
+  const rationale = `retry-safety matters (${stamp})`;
+  const durable = `durable across restarts (${stamp})`;
+
+  const mcp = await connect();
+  const call = caller(mcp);
+  try {
+    const nodeId = await activeTask(call, `E2E decision node ${stamp}`);
+    await call("park_ask", {
+      projectId: PROJECT,
+      nodeId,
+      type: "DECISION",
+      prompt,
+      required: true,
+      rationale,
+      options: [
+        { label: optYes, consequence: durable },
+        { label: `In-memory ${stamp}`, consequence: `lost on restart (${stamp})` },
+      ],
+      agentLabel: "e2e-agent",
+      sessionId: "e2e",
+    });
+
+    await page.goto("/");
+    const card = cardFor(page, prompt);
+    await expect(card.getByRole("heading", { name: prompt })).toBeVisible({ timeout: 15_000 });
+    // The enriched context is on the card so the human answers without re-deriving it.
+    await expect(card.getByText(rationale)).toBeVisible();
+    await expect(card.getByText(durable)).toBeVisible();
+
+    await card.getByRole("button", { name: optYes }).click();
+    await expect(page.getByRole("heading", { name: prompt })).toHaveCount(0, { timeout: 15_000 });
+
+    await discard(call, nodeId);
+  } finally {
+    await mcp.close();
+  }
+});
+
+test("a parked PROPOSAL is approved with one click", async ({ page }) => {
+  const stamp = Date.now();
+  const prompt = `E2E — replace the poller with a webhook? (${stamp})`;
+
+  const mcp = await connect();
+  const call = caller(mcp);
+  try {
+    const nodeId = await activeTask(call, `E2E proposal node ${stamp}`);
+    await call("park_ask", {
+      projectId: PROJECT,
+      nodeId,
+      type: "PROPOSAL",
+      prompt,
+      required: true,
+      rationale: `the poller wastes 90% of calls (${stamp})`,
+      options: [],
+      agentLabel: "e2e-agent",
+      sessionId: "e2e",
+    });
+
+    await page.goto("/");
+    const card = cardFor(page, prompt);
+    await expect(card.getByRole("heading", { name: prompt })).toBeVisible({ timeout: 15_000 });
+
+    await card.getByRole("button", { name: /approve/i }).click();
+    await expect(page.getByRole("heading", { name: prompt })).toHaveCount(0, { timeout: 15_000 });
+
+    await discard(call, nodeId);
+  } finally {
+    await mcp.close();
+  }
+});
+
+test("a parked QUESTION is answered by clicking a suggested answer", async ({ page }) => {
+  const stamp = Date.now();
+  const prompt = `E2E — which region? (${stamp})`;
+  const suggestion = `us-east-1 (${stamp})`;
+
+  const mcp = await connect();
+  const call = caller(mcp);
+  try {
+    const nodeId = await activeTask(call, `E2E question node ${stamp}`);
+    await call("park_ask", {
+      projectId: PROJECT,
+      nodeId,
+      type: "QUESTION",
+      prompt,
+      required: true,
+      options: [],
+      suggestedAnswers: [suggestion, `eu-west-1 (${stamp})`],
+      agentLabel: "e2e-agent",
+      sessionId: "e2e",
+    });
+
+    await page.goto("/");
+    const card = cardFor(page, prompt);
+    await expect(card.getByRole("heading", { name: prompt })).toBeVisible({ timeout: 15_000 });
+
+    await card.getByRole("button", { name: suggestion }).click();
+    await expect(page.getByRole("heading", { name: prompt })).toHaveCount(0, { timeout: 15_000 });
+
+    await discard(call, nodeId);
+  } finally {
+    await mcp.close();
+  }
 });

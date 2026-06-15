@@ -11,6 +11,7 @@ import type {
   InboxResponse,
   TransitionInput,
   ParkAskInput,
+  ProposalVerdict,
 } from "@waypoint/shared";
 import type { Clock, IdGenerator, UnitOfWork, RepositoryContext } from "./ports.js";
 import { NotFoundError, ValidationError, StaleVersionError } from "./errors.js";
@@ -59,9 +60,52 @@ export interface AnswerInput {
   projectId: string;
   askId: string;
   expectedVersion: number;
-  chosenOptionId?: string;
-  answerText?: string;
+  chosenOptionId?: string; // DECISION
+  answerText?: string; // QUESTION
+  proposalVerdict?: ProposalVerdict; // PROPOSAL: approve | adjust | reject
+  adjustmentNote?: string; // only meaningful (and required) with an `adjust` verdict
   sessionId?: string;
+}
+
+// A stable, human-friendly alias derived deterministically from a session id, so the same
+// session always reads as the same "who" in the story without ever exposing the raw id.
+// Pure (no clock/random) — same input always yields the same label.
+const ALIAS_ADJECTIVES = [
+  "swift",
+  "calm",
+  "bright",
+  "bold",
+  "keen",
+  "wise",
+  "brave",
+  "quiet",
+  "sharp",
+  "deft",
+] as const;
+const ALIAS_NOUNS = [
+  "otter",
+  "falcon",
+  "maple",
+  "harbor",
+  "cedar",
+  "comet",
+  "river",
+  "lark",
+  "ember",
+  "fox",
+] as const;
+function stableAliasFromSession(sessionId: string): string {
+  // FNV-1a 32-bit hash → deterministic index into the friendly name pools.
+  let h = 0x811c9dc5;
+  for (let i = 0; i < sessionId.length; i++) {
+    h ^= sessionId.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  const u = h >>> 0;
+  const adj = ALIAS_ADJECTIVES[u % ALIAS_ADJECTIVES.length] ?? "agent";
+  const noun =
+    ALIAS_NOUNS[Math.floor(u / ALIAS_ADJECTIVES.length) % ALIAS_NOUNS.length] ?? "session";
+  return `${adj}-${noun}`;
 }
 
 // Human-readable resolution of a resolved ask for the context pack (never raw payloads).
@@ -288,10 +332,21 @@ export function createCore(deps: CoreDeps): Core {
         }
 
         const now = clock.now();
-        const options: AskOption[] = input.options.map((label, i) => ({
-          id: `opt-${i + 1}`,
-          label,
-        }));
+        // Normalize the backward-compatible option union (bare label or { label, consequence? }),
+        // carrying the consequence through. A bare-string option gets no `consequence` key at all
+        // (exactOptionalPropertyTypes), so it round-trips identically to the pre-slice-1 shape.
+        const options: AskOption[] = input.options.map((o, i) => {
+          const id = `opt-${i + 1}`;
+          if (typeof o === "string") return { id, label: o };
+          return o.consequence !== undefined
+            ? { id, label: o.label, consequence: o.consequence }
+            : { id, label: o.label };
+        });
+        // Provenance: an explicit label wins; otherwise derive a stable alias from the session
+        // so the story reads naturally without leaking the raw session id. Null if neither given.
+        const agentLabel =
+          input.agentLabel ??
+          (input.sessionId !== undefined ? stableAliasFromSession(input.sessionId) : null);
         const ask: Ask = {
           id: ids.generate(),
           projectId: input.projectId,
@@ -300,7 +355,10 @@ export function createCore(deps: CoreDeps): Core {
           state: "OPEN", // proceed-on-assumption is a separate OPEN → ASSUMED step
           required: input.required,
           prompt: input.prompt,
+          rationale: input.rationale ?? null,
           options,
+          suggestedAnswers: input.suggestedAnswers ?? [],
+          agentLabel,
           chosenOptionId: null,
           assumption: null,
           answerText: null,
@@ -424,22 +482,66 @@ export function createCore(deps: CoreDeps): Core {
 
         let chosenOptionId: string | null = null;
         let answerText: string | null = null;
-        if (ask.type === "DECISION") {
-          if (input.chosenOptionId === undefined) {
-            throw new ValidationError("a decision answer must choose an option", { askId: ask.id });
+        let summary = "answered";
+        switch (ask.type) {
+          case "DECISION": {
+            if (input.chosenOptionId === undefined) {
+              throw new ValidationError("a decision answer must choose an option", {
+                askId: ask.id,
+              });
+            }
+            if (!ask.options.some((o) => o.id === input.chosenOptionId)) {
+              throw new ValidationError("chosen option is not on this ask", {
+                askId: ask.id,
+                chosenOptionId: input.chosenOptionId,
+              });
+            }
+            chosenOptionId = input.chosenOptionId;
+            summary = `answered: ${chosenOptionId}`;
+            break;
           }
-          if (!ask.options.some((o) => o.id === input.chosenOptionId)) {
-            throw new ValidationError("chosen option is not on this ask", {
-              askId: ask.id,
-              chosenOptionId: input.chosenOptionId,
-            });
+          case "PROPOSAL": {
+            // A proposal is resolved by a verdict. `adjust` is an approval that carries a
+            // constraint — the agent proceeds under it, not a fresh round-trip (the note is
+            // the immutable record). approve/reject carry no note.
+            if (input.proposalVerdict === undefined) {
+              throw new ValidationError("a proposal answer must carry a verdict", {
+                askId: ask.id,
+              });
+            }
+            if (input.proposalVerdict === "adjust") {
+              if (input.adjustmentNote === undefined) {
+                throw new ValidationError("an adjusted proposal must carry a constraint note", {
+                  askId: ask.id,
+                });
+              }
+              answerText = input.adjustmentNote;
+              summary = `approved with constraint: ${input.adjustmentNote}`;
+            } else {
+              if (input.adjustmentNote !== undefined) {
+                throw new ValidationError(
+                  "a constraint note is only valid with an adjust verdict",
+                  {
+                    askId: ask.id,
+                    verdict: input.proposalVerdict,
+                  },
+                );
+              }
+              summary = input.proposalVerdict === "approve" ? "approved" : "rejected";
+            }
+            break;
           }
-          chosenOptionId = input.chosenOptionId;
-        } else {
-          if (input.answerText === undefined) {
-            throw new ValidationError("an answer must include text", { askId: ask.id });
+          case "QUESTION": {
+            if (input.answerText === undefined) {
+              throw new ValidationError("an answer must include text", { askId: ask.id });
+            }
+            answerText = input.answerText;
+            break;
           }
-          answerText = input.answerText;
+          default: {
+            const _exhaustive: never = ask.type;
+            throw new ValidationError("unknown ask type", { askId: ask.id, type: _exhaustive });
+          }
         }
 
         const now = clock.now();
@@ -459,7 +561,7 @@ export function createCore(deps: CoreDeps): Core {
           verb: "ask.answered",
           ref: { kind: "ask", id: ask.id },
           sessionId: input.sessionId ?? null,
-          summary: chosenOptionId !== null ? `answered: ${chosenOptionId}` : "answered",
+          summary,
           at: now,
         });
         return updated;
@@ -521,6 +623,26 @@ export function createCore(deps: CoreDeps): Core {
         const nodeById = new Map(nodes.map((n) => [n.id, n]));
         const dependentsOf = (nodeId: string) =>
           edges.filter((e) => e.dependsOnId === nodeId).length;
+        // The named work this ask gates: the nodes that depend on it, resolved to titles.
+        const blocksOf = (nodeId: string) =>
+          edges
+            .filter((e) => e.dependsOnId === nodeId)
+            .flatMap((e) => {
+              const dependent = nodeById.get(e.nodeId);
+              return dependent ? [{ nodeId: dependent.id, title: dependent.title }] : [];
+            });
+        // The goal this work ladders toward: walk parent_id upward, cycle-guarded so corrupt
+        // hierarchies terminate, and return the first `goal` ancestor's title (or null).
+        const ancestorGoalTitle = (startId: string): string | null => {
+          const seen = new Set<string>();
+          let cur = nodeById.get(startId);
+          while (cur !== undefined && !seen.has(cur.id)) {
+            seen.add(cur.id);
+            if (cur.kind === "goal") return cur.title;
+            cur = cur.parentId !== null ? nodeById.get(cur.parentId) : undefined;
+          }
+          return null;
+        };
         const seq = events.length > 0 ? events[events.length - 1]!.seq : 0;
 
         const items: InboxItem[] = asks
@@ -542,6 +664,14 @@ export function createCore(deps: CoreDeps): Core {
                 parkedAt: a.createdAt,
                 askVersion: a.version,
                 nodeVersion: node.version,
+                // Decision context (slice 1) — enrich so the human can answer without re-deriving.
+                rationale: a.rationale,
+                blocks: blocksOf(a.nodeId),
+                goalTitle: ancestorGoalTitle(a.nodeId),
+                suggestedAnswers: a.suggestedAnswers,
+                ...(a.agentLabel !== null
+                  ? { parkedBy: { agentLabel: a.agentLabel, at: a.createdAt } }
+                  : {}),
               },
             ];
           })
