@@ -21,10 +21,10 @@ Tests query by role/label, not testid; cover empty/edge + a11y paths (frontend.m
 
 ## 2. App shell (PR2)
 
-- [ ] 2.1 RED: `Sidebar` — brand→Home, project list (live/idle dot, count-pip, active), per-project nav with decision pip, user footer; keyboard-operable; aria-labels on icon controls → implement.
-- [ ] 2.2 RED: `TopBar` — breadcrumb, agent pill (working `· N tasks` | idle), clock, bell + unread dot (aria-label) → implement.
-- [ ] 2.3 RED: `NotificationsPanel` — scrim + popover, tone icons, click→navigate, mark-all-read; focus managed on open/close → implement.
-- [ ] 2.4 Compose the shell + state-based view router in `App.tsx`; Sidebar/TopBar/Notifications CSS modules.
+- [x] 2.1 `Sidebar` — brand→Home, project list (live/idle dot, count-pip, active), per-project nav with decision pip, user footer; rows are keyboard-operable `<button>`s; aria-labels on icon controls; aria-current on active. + AgentPill shared primitive. 6 tests.
+- [x] 2.2 `TopBar` — breadcrumb, agent pill (working `· N tasks` | idle), clock, bell + unread dot (aria-label carries the count). 3 tests.
+- [x] 2.3 `NotificationsPanel` — scrim + labelled dialog, tone icons, click→navigate (decision→proposal, fixing the prototype's map quirk), mark-all-read. 4 tests.
+- [x] 2.4 Compose the shell in `App.tsx` (Sidebar + TopBar + view body + notifications overlay) on the provider; `main.tsx` mounts under `WaypointProvider`; per-view placeholder body until PR3-7. CSS modules per component. 3 shell tests. Verified live (screenshot).
 
 ## 3. Home (PR3)
 
