@@ -17,7 +17,9 @@ export const WAYPOINT_INSTRUCTIONS = [
   "`park_ask` and keep working on whatever is still unblocked — the human answers",
   "asynchronously. Give the human everything needed to answer in one glance: a `rationale`",
   "(why this needs deciding now), and for a DECISION a `consequence` on each option (what",
-  "choosing it commits to). A DECISION ask must include at least two options; for a QUESTION,",
+  "choosing it commits to). Declare your own judgement of the `risk` (low|medium|high) and",
+  "whether it is `reversible`, so the human can triage at a glance. A DECISION ask must include",
+  "at least two options; for a QUESTION,",
   "offer `suggestedAnswers` so the human can pick rather than type. Set an `agentLabel` so",
   "the human sees who parked it. An adjusted proposal comes back as an approval carrying a",
   "constraint note in recent decisions — proceed under it, do not re-ask.",
@@ -86,7 +88,8 @@ export function createWaypointMcpServer(core: Core): McpServer {
     {
       description:
         "Park a decision/question/proposal for a human instead of guessing. Include a rationale " +
-        "and, for a DECISION (needs ≥2 options), a consequence per option; offer suggestedAnswers " +
+        "and, for a DECISION (needs ≥2 options), a consequence per option; declare risk " +
+        "(low|medium|high) and whether it is reversible; offer suggestedAnswers " +
         "for a QUESTION and an agentLabel for provenance.",
       inputSchema: parkAskInputShape,
     },

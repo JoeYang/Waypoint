@@ -63,6 +63,53 @@ describe("Waypoint MCP server", () => {
     expect(instructions).toMatch(/consequence/i);
   });
 
+  it("directs agents to declare risk and reversibility in instructions", () => {
+    const instructions = client.getInstructions() ?? "";
+    expect(instructions).toMatch(/risk/i);
+    expect(instructions).toMatch(/reversible/i);
+  });
+
+  it("parks an ask carrying the agent's declared risk and reversibility", async () => {
+    const node = await core.createNode({
+      projectId: PROJECT,
+      parentId: null,
+      kind: "task",
+      title: "T",
+    });
+    const parked = await call("park_ask", {
+      projectId: PROJECT,
+      nodeId: node.id,
+      type: "DECISION",
+      prompt: "Drop the legacy table?",
+      required: true,
+      options: ["Drop", "Keep"],
+      risk: "high",
+      reversible: false,
+    });
+    const ask = await backend.asks.findById(PROJECT, bodyOf(parked).id as string);
+    expect(ask?.risk).toBe("high");
+    expect(ask?.reversible).toBe(false);
+  });
+
+  it("rejects a park_ask with an invalid risk at the boundary", async () => {
+    const node = await core.createNode({
+      projectId: PROJECT,
+      parentId: null,
+      kind: "task",
+      title: "T",
+    });
+    const res = await call("park_ask", {
+      projectId: PROJECT,
+      nodeId: node.id,
+      type: "QUESTION",
+      prompt: "Which?",
+      required: true,
+      options: [],
+      risk: "critical",
+    });
+    expect(res.isError).toBe(true);
+  });
+
   it("parks an ask carrying rationale, per-option consequences, and provenance", async () => {
     const node = await core.createNode({
       projectId: PROJECT,
