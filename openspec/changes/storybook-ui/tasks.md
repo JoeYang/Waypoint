@@ -52,9 +52,9 @@ Tests query by role/label, not testid; cover empty/edge + a11y paths (frontend.m
 
 ## 6b. Thread + interactions (PR6b)
 
-- [ ] 6b.1 RED: `Thread` — messages (agent/you/system), composer (`⌘↩` send, disabled-empty, aria) → implement.
-- [ ] 6b.2 RED: resolve appends agent "Applied…/Resuming…" and flips state everywhere; comment appends you+agent reply without resolving; already-resolved is a no-op → implement.
-- [ ] 6b.3 Thread CSS module.
+- [x] 6b.1 RED: `Thread` — messages (agent/you/system), composer (`⌘↩` send, disabled-empty, aria) → implement. Body is a labelled `role="log"`.
+- [x] 6b.2 RED: resolve appends agent "Applied…/Resuming…" and flips state everywhere; comment appends you+agent reply without resolving; already-resolved is a no-op (reducer) → implement. 5 tests; verified live.
+- [x] 6b.3 Thread CSS module; proposal converted to the two-column grid.
 
 ## 7. Activity + Settings (PR7)
 
