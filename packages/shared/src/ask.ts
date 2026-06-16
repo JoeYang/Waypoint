@@ -4,6 +4,13 @@ export const ASK_TYPES = ["QUESTION", "PROPOSAL", "DECISION"] as const;
 export const AskType = z.enum(ASK_TYPES);
 export type AskType = z.infer<typeof AskType>;
 
+// The agent's own judgement of how risky a decision is and whether it can be undone, supplied at
+// park time so the human surface shows real signal rather than a UI heuristic. Both default at the
+// boundary when omitted (medium / reversible), so older callers stay valid.
+export const RISK_LEVELS = ["low", "medium", "high"] as const;
+export const Risk = z.enum(RISK_LEVELS);
+export type Risk = z.infer<typeof Risk>;
+
 // Two flows share one state field:
 //   OPEN → ANSWERED                     (human answers directly)
 //   OPEN → ASSUMED → CONFIRMED|OVERTURNED  (agent proceeds; human ratifies/overturns)

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { NodeKind, NodeStatus } from "./node.js";
-import { AskType } from "./ask.js";
+import { AskType, Risk } from "./ask.js";
 
 // Argument and result schemas for the MCP tools an agent uses to drive the loop.
 // Every tool argument is validated against these at the boundary before domain logic
@@ -75,6 +75,8 @@ export const parkAskInputShape = {
   prompt: z.string().min(1),
   required: z.boolean(),
   rationale: z.string().max(2000).optional(), // why this needs deciding now
+  risk: Risk.optional(), // agent's risk judgement (default medium at the boundary)
+  reversible: z.boolean().optional(), // can the decision be undone (default true at the boundary)
   options: z.array(ParkAskOptionInput).default([]),
   suggestedAnswers: z.array(z.string().min(1)).optional(), // QUESTION: pick-first answers
   agentLabel: z.string().min(1).max(80).optional(), // human-friendly provenance for the story
