@@ -40,9 +40,9 @@ Tests query by role/label, not testid; cover empty/edge + a11y paths (frontend.m
 
 ## 5. Decision inbox (PR5)
 
-- [ ] 5.1 RED: queue rows (risk icon, title, risk/rev/stream badges, "Agent recommends X. {first sentence}.", parked time, blocking badge) → implement.
-- [ ] 5.2 RED: filter chips typed `"all" | "blocking" | "non-blocking"` (discriminated union — **fixes the prototype's `"non"` filter bug**) + "agent still working on N tasks" line → implement.
-- [ ] 5.3 Empty states: nothing-waiting vs no-match-in-filter; inbox CSS module.
+- [x] 5.1 RED: queue rows (risk icon, title, risk/rev/stream badges, "Agent recommends X. {first sentence}.", parked time, blocking badge) → implement. + shared RiskBadge/RevBadge primitives. Rows are keyboard-operable `<button>`s in a labelled list.
+- [x] 5.2 RED: filter chips typed `"all" | "blocking" | "non-blocking"` (discriminated union — **fixes the prototype's `"non"` filter bug**) + "agent still working on N tasks" line → implement. Also fixes the `.qico.med`→`medium` swatch bug.
+- [x] 5.3 Empty states: nothing-waiting vs no-match-in-filter; inbox CSS module. 8 tests; verified live (screenshot, both empty states).
 
 ## 6a. Proposal detail (PR6a — static + selection)
 

@@ -1,0 +1,168 @@
+/* Decision inbox: filter chips, queue rows, empty states (ported from waypoint-app.css). */
+.empty {
+  color: var(--fg-3);
+  font-style: italic;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+}
+.chip {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 13px;
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  background: var(--bg-raised);
+  color: var(--fg-2);
+  cursor: pointer;
+  transition: background var(--dur-1);
+}
+.chip:hover {
+  background: var(--paper-100);
+}
+.chip.active {
+  background: var(--ink-900);
+  color: #fff;
+  border-color: var(--ink-900);
+}
+
+.intro {
+  font-size: 14px;
+  color: var(--fg-2);
+  margin-top: -8px;
+  margin-bottom: 20px;
+}
+
+.qlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.qrow {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 17px 20px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-2),
+    box-shadow var(--dur-2);
+}
+.qrow:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-2);
+}
+.qico {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.qico svg {
+  width: 19px;
+  height: 19px;
+}
+.qico.low {
+  background: #e2f0f0;
+  color: var(--teal-500);
+}
+.qico.medium {
+  background: #fbf2dd;
+  color: var(--amber-500);
+}
+.qico.high {
+  background: #f9e6e3;
+  color: var(--red-500);
+}
+.qbody {
+  flex: 1;
+  min-width: 0;
+}
+.qtitle {
+  display: block;
+  font-size: 17px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.qbadges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.qdesc {
+  display: block;
+  font-size: 13px;
+  color: var(--fg-3);
+  line-height: 1.5;
+}
+.qdesc strong {
+  color: var(--fg-1);
+}
+.qside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 9px;
+  flex-shrink: 0;
+}
+.qtime {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--fg-4);
+  white-space: nowrap;
+}
+.review {
+  font-size: 13px;
+  color: var(--fg-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 80px 20px;
+}
+.emptyState .ei {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: var(--paper-100);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.emptyState .ei svg {
+  width: 30px;
+  height: 30px;
+  color: var(--green-600);
+}
+.emptyState h3 {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 400;
+  margin: 0 0 8px;
+}
+.emptyState p {
+  color: var(--fg-3);
+  font-size: 15px;
+  margin: 0 auto;
+  max-width: 420px;
+}
