@@ -46,9 +46,9 @@ Tests query by role/label, not testid; cover empty/edge + a11y paths (frontend.m
 
 ## 6a. Proposal detail (PR6a — static + selection)
 
-- [ ] 6a.1 RED: proposal — badges, question, meta, "why this came up", option cards (pros/cons, recommends tag, radio select state), defer callout (info/danger) → implement.
-- [ ] 6a.2 RED: actions — Approve recommendation / Apply {override} / reversible hint vs typed-confirmation badge; resolved banner → implement.
-- [ ] 6a.3 Proposal CSS module.
+- [x] 6a.1 RED: proposal — badges, question, meta, "why this came up", option cards (pros/cons, recommends tag, radio select state), defer callout (info/danger) → implement. Options are an accessible radiogroup; reuses RiskBadge/RevBadge.
+- [x] 6a.2 RED: actions — Approve recommendation / Apply {override} / reversible hint vs typed-confirmation badge; resolved banner → implement. 6 tests; verified live (screenshot + resolve flow).
+- [x] 6a.3 Proposal CSS module (two-column grid deferred to 6b with the thread).
 
 ## 6b. Thread + interactions (PR6b)
 
