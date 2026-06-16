@@ -34,9 +34,9 @@ Tests query by role/label, not testid; cover empty/edge + a11y paths (frontend.m
 
 ## 4. Project map (PR4)
 
-- [ ] 4.1 RED: `TaskNode` states (done/active/blocked/queued), "you are here" tag, "Decision parked", future-dashed connectors → implement.
-- [ ] 4.2 RED: stream `lane`s with progress + horizontal track; blocked node is a `<button>`→proposal; resolved blocked → "resolved → resuming" → implement.
-- [ ] 4.3 Map CSS module; legend.
+- [x] 4.1 RED: `TaskNode` states (done/active/blocked/queued), "you are here" tag, "Decision parked", future-dashed connectors → implement. 7 tests.
+- [x] 4.2 RED: stream `lane`s with progress + horizontal track; blocked node is a `<button>`→proposal; resolved blocked → "resolved → resuming"; never-blank empty state → implement. 5 tests; verified live (screenshot + click-through).
+- [x] 4.3 Map CSS module; legend (done/active/blocked/queued swatches).
 
 ## 5. Decision inbox (PR5)
 
