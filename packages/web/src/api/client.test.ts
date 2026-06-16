@@ -31,6 +31,8 @@ const inbox: InboxResponse = {
       parkedAt: 1000,
       askVersion: 1,
       nodeVersion: 1,
+      risk: "medium",
+      reversible: true,
     },
   ],
 };

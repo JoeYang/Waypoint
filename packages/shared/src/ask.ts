@@ -36,6 +36,8 @@ export const AskSchema = z.object({
   required: z.boolean(), // only required+OPEN asks contribute to a node's `blocked`
   prompt: z.string().min(1),
   rationale: z.string().max(2000).nullable(), // why the agent needs this decided now
+  risk: Risk, // agent-declared risk; defaulted (medium) at the park boundary
+  reversible: z.boolean(), // agent-declared reversibility; defaulted (true) at the park boundary
   options: z.array(AskOptionSchema), // empty unless DECISION; ≥2 enforced at the boundary
   suggestedAnswers: z.array(z.string().min(1)), // QUESTION: pick-first answers; [] otherwise
   agentLabel: z.string().min(1).nullable(), // stable human-friendly provenance for the story

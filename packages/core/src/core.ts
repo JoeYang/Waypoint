@@ -238,6 +238,8 @@ function buildInboxItem(
     parkedAt: ask.createdAt,
     askVersion: ask.version,
     nodeVersion: node.version,
+    risk: ask.risk,
+    reversible: ask.reversible,
     // Decision context (slice 1) — enrich so the human can answer without re-deriving.
     rationale: ask.rationale,
     blocks: namedDependents(edges, nodeById, ask.nodeId),
@@ -456,6 +458,8 @@ export function createCore(deps: CoreDeps): Core {
           required: input.required,
           prompt: input.prompt,
           rationale: input.rationale ?? null,
+          risk: input.risk ?? "medium", // agent-declared; default when omitted
+          reversible: input.reversible ?? true, // most decisions are reversible
           options,
           suggestedAnswers: input.suggestedAnswers ?? [],
           agentLabel,

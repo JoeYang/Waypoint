@@ -5,6 +5,7 @@ import type {
   AskType,
   AskState,
   AskOption,
+  Risk,
   Actor,
   EventVerb,
   Project,
@@ -54,6 +55,8 @@ interface AskRow {
   required: boolean;
   prompt: string;
   rationale: string | null;
+  risk: string;
+  reversible: boolean;
   options: AskOption[];
   suggested_answers: string[];
   agent_label: string | null;
@@ -110,6 +113,9 @@ const toAsk = (r: AskRow): Ask => ({
   prompt: r.prompt,
   // Decision context (migration 0002). Per-option consequence rides in the options jsonb.
   rationale: r.rationale,
+  // Agent-supplied risk + reversibility (migration 0003).
+  risk: r.risk as Risk,
+  reversible: r.reversible,
   options: r.options,
   suggestedAnswers: r.suggested_answers,
   agentLabel: r.agent_label,
@@ -233,8 +239,8 @@ function makeContext(db: Queryable): RepositoryContext {
       await db.query(
         `INSERT INTO ask (id, project_id, node_id, type, state, required, prompt, rationale,
            options, suggested_answers, agent_label, chosen_option_id, assumption, answer_text,
-           version, created_at, updated_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11,$12,$13,$14,$15,$16,$17)`,
+           version, created_at, updated_at, risk, reversible)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
         [
           a.id,
           a.projectId,
@@ -253,6 +259,8 @@ function makeContext(db: Queryable): RepositoryContext {
           a.version,
           a.createdAt,
           a.updatedAt,
+          a.risk,
+          a.reversible,
         ],
       );
     },

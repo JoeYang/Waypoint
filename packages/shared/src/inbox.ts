@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AskType, AskState, AskOptionSchema } from "./ask.js";
+import { AskType, AskState, AskOptionSchema, Risk } from "./ask.js";
 
 // One ranked inbox card. `blastRadius` is the count of nodes directly gated by this
 // ask — rendered as "blocks N". Versions are echoed for optimistic-concurrency answers.
@@ -16,6 +16,8 @@ export const InboxItemSchema = z.object({
   parkedAt: z.number().int().nonnegative(), // ask.createdAt; wait-time tiebreak
   askVersion: z.number().int().positive(),
   nodeVersion: z.number().int().positive(),
+  risk: Risk, // agent-declared risk (defaulted at park time, so always present)
+  reversible: z.boolean(), // agent-declared reversibility (defaulted at park time)
   // Decision context (slice 1). Optional so older asks / absent context degrade gracefully.
   rationale: z.string().nullable().optional(), // why this is being asked
   blocks: z.array(z.object({ nodeId: z.string().min(1), title: z.string().min(1) })).optional(),
