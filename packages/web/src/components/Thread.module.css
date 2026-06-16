@@ -1,0 +1,174 @@
+/* Discussion thread + composer, ported from waypoint-app.css .thread/.msg/.compose-box. */
+.thread {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 220px);
+}
+.threadH {
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.threadH svg {
+  width: 16px;
+  height: 16px;
+  color: var(--fg-3);
+}
+.threadBody {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.msg {
+  display: flex;
+  gap: 11px;
+}
+.av {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  font-size: 12px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #fff;
+  font-family: var(--font-sans);
+}
+.av.agent {
+  background: var(--ink-900);
+}
+.av.you {
+  background: var(--accent-600);
+}
+.av.system {
+  background: transparent;
+  color: var(--fg-4);
+}
+.mc {
+  flex: 1;
+  min-width: 0;
+}
+.mtop {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.who {
+  font-size: 13px;
+  font-weight: 600;
+}
+.mt {
+  font-size: 11px;
+  color: var(--fg-4);
+  font-family: var(--font-mono);
+}
+.mbody {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--fg-2);
+}
+.msg.agent .mbody {
+  background: var(--paper-100);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.msg.system .mbody {
+  font-style: italic;
+  color: var(--fg-3);
+}
+
+.threadCompose {
+  border-top: 1px solid var(--border);
+  padding: 12px 14px;
+}
+.composeBox {
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+  overflow: hidden;
+}
+.textarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  padding: 11px 13px;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--fg-1);
+  background: var(--bg-raised);
+  min-height: 56px;
+}
+.composeBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--border);
+  background: var(--paper-50);
+}
+.hint {
+  font-size: 11px;
+  color: var(--fg-4);
+  font-family: var(--font-mono);
+}
+.sp {
+  flex: 1;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 9px 16px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  line-height: 1.1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background var(--dur-1),
+    transform var(--dur-1);
+}
+.btn:active {
+  transform: scale(0.98);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn svg {
+  width: 16px;
+  height: 16px;
+}
+.primary {
+  background: var(--accent-600);
+  color: #fff;
+}
+.primary:hover:not(:disabled) {
+  background: var(--accent-700);
+}
+.sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
