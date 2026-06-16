@@ -1,0 +1,60 @@
+/* Shared view chrome — eyebrow + page heading + view-head row. Imported by the screens so
+   the heading scale is defined once. `.hPage` is scoped under :global(.axiom) so it beats the
+   design system's `.axiom h1` element rule (the specificity trap the prototype hit). */
+.eyebrowSm {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--fg-4);
+}
+:global(.axiom) .hPage {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  margin: 0;
+  text-wrap: balance;
+}
+.viewHead {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+.vhTitle {
+  flex-shrink: 0;
+}
+.vhSpacer {
+  flex: 1;
+  min-width: 40px;
+}
+
+/* Per-screen content container (each screen owns its width; map uses the wide variant). */
+.viewInner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 36px 40px 80px;
+}
+.viewInnerWide {
+  max-width: 1380px;
+}
+
+/* Transform-only entrance so a static render always shows content. */
+.fadeIn {
+  animation: fadeIn var(--dur-3) var(--ease-out) both;
+}
+@keyframes fadeIn {
+  from {
+    transform: translateY(8px);
+  }
+  to {
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fadeIn {
+    animation: none;
+  }
+}

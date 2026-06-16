@@ -3,7 +3,9 @@ import { useWaypoint } from "./wp/WaypointProvider.js";
 import { Sidebar } from "./components/Sidebar.js";
 import { TopBar } from "./components/TopBar.js";
 import { NotificationsPanel } from "./components/NotificationsPanel.js";
+import { Home } from "./components/Home.js";
 import type { View } from "./wp/state.js";
+import t from "./components/typography.module.css";
 import styles from "./App.module.css";
 
 const VIEW_LABEL: Record<View, string> = {
@@ -15,11 +17,13 @@ const VIEW_LABEL: Record<View, string> = {
   settings: "Settings",
 };
 
-// Placeholder body until PR3–7 fill in the real screens (Home/Map/Inbox/Proposal/Activity/Settings).
+// Routes the current view to its screen. Home is live; the rest are placeholders until
+// their slices (PR4–7) land.
 function ViewBody(): JSX.Element {
   const { nav } = useWaypoint();
+  if (nav.view === "home") return <Home />;
   return (
-    <div className={styles.viewInner}>
+    <div className={t.viewInner}>
       <p className={styles.placeholder}>{VIEW_LABEL[nav.view]} — coming in a later slice.</p>
     </div>
   );
