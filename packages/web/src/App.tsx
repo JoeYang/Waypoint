@@ -1,49 +1,46 @@
-import { InboxScreen } from "./components/InboxScreen.js";
-import { SpineScreen } from "./components/SpineScreen.js";
-import type { WaypointStreamOptions } from "./inbox/useWaypointStream.js";
+import { useState, type JSX } from "react";
+import { useWaypoint } from "./wp/WaypointProvider.js";
+import { Sidebar } from "./components/Sidebar.js";
+import { TopBar } from "./components/TopBar.js";
+import { NotificationsPanel } from "./components/NotificationsPanel.js";
+import type { View } from "./wp/state.js";
 import styles from "./App.module.css";
 
-interface AppProps {
-  projectId?: string;
-  baseUrl?: string;
-  streamOptions?: WaypointStreamOptions; // injected in tests; defaults to the live transport
-  route?: string; // injected in tests; defaults to window.location.pathname
+const VIEW_LABEL: Record<View, string> = {
+  home: "All projects",
+  map: "Project map",
+  inbox: "Decisions",
+  proposal: "Decision",
+  activity: "Activity",
+  settings: "Settings",
+};
+
+// Placeholder body until PR3–7 fill in the real screens (Home/Map/Inbox/Proposal/Activity/Settings).
+function ViewBody(): JSX.Element {
+  const { nav } = useWaypoint();
+  return (
+    <div className={styles.viewInner}>
+      <p className={styles.placeholder}>{VIEW_LABEL[nav.view]} — coming in a later slice.</p>
+    </div>
+  );
 }
 
-// Is this the inbox lens route? The inbox stays a stable first-class path so V1 deep-links
-// and tooling keep working; everything else is the project spine (the home).
-function isInboxLens(path: string): boolean {
-  return /\/inbox\/?$/.test(path);
-}
+// The persistent app shell: sidebar + (top bar / scrolling view), with the notifications
+// popover overlaid. The mobile companion overlay is wired here and lands in PR8.
+export function App(): JSX.Element {
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [, setMobileOpen] = useState(false);
 
-// App chrome + the two surfaces. The project SPINE is the home (goal→plan→task, where things
-// stand); the inbox is a saved "needs you" LENS over the same data, reachable from the spine
-// at /projects/:id/inbox. Transport is injectable so tests stay hermetic.
-export function App({
-  projectId = "default",
-  baseUrl = "",
-  streamOptions,
-  route,
-}: AppProps = {}): React.JSX.Element {
-  const path = route ?? (typeof window !== "undefined" ? window.location.pathname : "/");
-  const lens = isInboxLens(path);
-  const inboxHref = `/projects/${encodeURIComponent(projectId)}/inbox`;
   return (
     <div className={styles.app}>
-      <header className={styles.header}>
-        <span className={styles.wordmark}>Waypoint</span>
-        <nav className={styles.nav}>
-          {lens ? <a href="/">Project</a> : <a href={inboxHref}>Needs you</a>}
-        </nav>
-      </header>
-      <main className={styles.main}>
-        <h1>{lens ? "Inbox" : "Project"}</h1>
-        {lens ? (
-          <InboxScreen projectId={projectId} baseUrl={baseUrl} streamOptions={streamOptions} />
-        ) : (
-          <SpineScreen projectId={projectId} baseUrl={baseUrl} streamOptions={streamOptions} />
-        )}
-      </main>
+      <Sidebar onOpenMobile={() => setMobileOpen(true)} />
+      <div className={styles.main}>
+        <TopBar onBell={() => setNotifOpen((o) => !o)} />
+        <div className={styles.view}>
+          <ViewBody />
+        </div>
+      </div>
+      {notifOpen ? <NotificationsPanel onClose={() => setNotifOpen(false)} /> : null}
     </div>
   );
 }

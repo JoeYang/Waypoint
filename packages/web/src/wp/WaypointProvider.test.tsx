@@ -1,0 +1,117 @@
+// @vitest-environment jsdom
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { render, screen, act, cleanup } from "@testing-library/react";
+import "@testing-library/jest-dom/vitest";
+import { WaypointProvider, useWaypoint } from "./WaypointProvider.js";
+import { NAV_KEY } from "./state.js";
+
+afterEach(cleanup);
+
+// A probe component that surfaces context state and exposes the actions as buttons.
+function Probe(): React.JSX.Element {
+  const wp = useWaypoint();
+  return (
+    <div>
+      <span data-testid="view">{wp.nav.view}</span>
+      <span data-testid="project">{wp.nav.project ?? "none"}</span>
+      <span data-testid="decision">{wp.nav.decision ?? "none"}</span>
+      <span data-testid="resolved">{wp.resolved["d1"]?.option ?? "no"}</span>
+      <span data-testid="thread">{(wp.threads["d1"] ?? []).map((m) => m.who).join(",")}</span>
+      <button onClick={() => wp.navigate({ project: "orbit-api", view: "inbox" })}>nav</button>
+      <button onClick={() => wp.openDecision("d1")}>open</button>
+      <button onClick={() => wp.resolve("d1", "Drizzle")}>resolve</button>
+      <button onClick={() => wp.comment("d1", "hi")}>comment</button>
+      <button onClick={() => wp.goHome()}>home</button>
+    </div>
+  );
+}
+
+const click = (name: string) => act(() => screen.getByRole("button", { name }).click());
+
+describe("WaypointProvider", () => {
+  beforeEach(() => localStorage.clear());
+
+  it("starts at home with no project", () => {
+    render(
+      <WaypointProvider>
+        <Probe />
+      </WaypointProvider>,
+    );
+    expect(screen.getByTestId("view")).toHaveTextContent("home");
+    expect(screen.getByTestId("project")).toHaveTextContent("none");
+  });
+
+  it("navigates and opens a decision through the bound actions", () => {
+    render(
+      <WaypointProvider>
+        <Probe />
+      </WaypointProvider>,
+    );
+    click("nav");
+    expect(screen.getByTestId("view")).toHaveTextContent("inbox");
+    click("open");
+    expect(screen.getByTestId("view")).toHaveTextContent("proposal");
+    expect(screen.getByTestId("decision")).toHaveTextContent("d1");
+  });
+
+  it("resolve looks up blocksTask from data and threads the agent message", () => {
+    render(
+      <WaypointProvider>
+        <Probe />
+      </WaypointProvider>,
+    );
+    click("resolve");
+    expect(screen.getByTestId("resolved")).toHaveTextContent("Drizzle");
+    expect(screen.getByTestId("thread")).toHaveTextContent("agent");
+  });
+
+  it("comment threads you then agent", () => {
+    render(
+      <WaypointProvider>
+        <Probe />
+      </WaypointProvider>,
+    );
+    click("comment");
+    expect(screen.getByTestId("thread")).toHaveTextContent("you,agent");
+  });
+
+  it("persists nav to localStorage and restores it on remount", () => {
+    const { unmount } = render(
+      <WaypointProvider>
+        <Probe />
+      </WaypointProvider>,
+    );
+    click("nav");
+    expect(JSON.parse(localStorage.getItem(NAV_KEY) as string)).toMatchObject({
+      project: "orbit-api",
+      view: "inbox",
+    });
+    unmount();
+    render(
+      <WaypointProvider>
+        <Probe />
+      </WaypointProvider>,
+    );
+    expect(screen.getByTestId("view")).toHaveTextContent("inbox");
+    expect(screen.getByTestId("project")).toHaveTextContent("orbit-api");
+  });
+
+  it("starts at home when stored nav is corrupt", () => {
+    localStorage.setItem(NAV_KEY, "{garbage");
+    render(
+      <WaypointProvider>
+        <Probe />
+      </WaypointProvider>,
+    );
+    expect(screen.getByTestId("view")).toHaveTextContent("home");
+  });
+
+  it("useWaypoint throws outside a provider", () => {
+    const Bare = () => {
+      useWaypoint();
+      return null;
+    };
+    // Silence React's error boundary console noise for the expected throw.
+    expect(() => render(<Bare />)).toThrow(/within a WaypointProvider/);
+  });
+});

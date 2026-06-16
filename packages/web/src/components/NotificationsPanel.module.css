@@ -1,0 +1,112 @@
+/* Notifications popover + scrim (ported from .notif-panel / .notif / .overlay-scrim). */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+.panel {
+  position: absolute;
+  top: 56px;
+  right: 18px;
+  width: 380px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-3);
+  z-index: 50;
+  overflow: hidden;
+  animation: pop var(--dur-2) var(--ease-out) both;
+}
+@keyframes pop {
+  from {
+    transform: scale(0.985);
+  }
+  to {
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation: none;
+  }
+}
+.head {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.title {
+  font-family: var(--font-serif);
+  font-size: 17px;
+}
+.markRead {
+  appearance: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--fg-2);
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 7px;
+}
+.markRead:hover {
+  background: var(--paper-100);
+  color: var(--fg-1);
+}
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 420px;
+  overflow-y: auto;
+}
+.notif {
+  display: flex;
+  gap: 12px;
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background var(--dur-1);
+  width: 100%;
+  appearance: none;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  text-align: left;
+}
+.notif:hover {
+  background: var(--paper-50);
+}
+.unread {
+  background: var(--accent-50);
+}
+.unread:hover {
+  background: #e6ebfa;
+}
+.ni {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ntx {
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+.ntm {
+  font-size: 11px;
+  color: var(--fg-4);
+  font-family: var(--font-mono);
+  margin-top: 3px;
+}

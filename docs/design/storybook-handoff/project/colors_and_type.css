@@ -1,0 +1,367 @@
+/* ============================================================
+   AXIOM DESIGN SYSTEM — Colors & Type
+   ------------------------------------------------------------
+   A minimalist, academic system for interactive learning.
+   Light mode primary; dark mode via [data-theme="dark"].
+   ============================================================ */
+
+/* --- Fonts -------------------------------------------------- */
+/* Substitutions flagged to user:
+   - Display/serif:  Source Serif 4 (Google Fonts)
+   - Body/sans:      Inter Tight (Google Fonts)  — replace if you have a licensed preference
+   - Mono:           JetBrains Mono (Google Fonts)
+*/
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..900;1,8..60,300..900&family=Inter+Tight:wght@300..800&family=JetBrains+Mono:wght@300..700&display=swap');
+
+:root {
+  /* ---- Raw palette (warm paper + cool technical) ---------- */
+  --paper-50:  #fbfaf7;  /* page bg */
+  --paper-100: #f4f1ea;  /* card bg, subtle wash */
+  --paper-200: #e9e3d6;  /* borders, dividers */
+  --paper-300: #d6cdbb;  /* muted borders */
+
+  --ink-900: #171512;    /* primary text */
+  --ink-700: #3a372f;    /* secondary text */
+  --ink-500: #6b6558;    /* tertiary / captions */
+  --ink-400: #8b8576;    /* disabled / subtle */
+  --ink-300: #b4ae9f;    /* placeholders */
+
+  --slate-50:  #f4f6f8;
+  --slate-100: #e6eaef;
+  --slate-200: #cdd5de;
+  --slate-500: #5b6874;
+  --slate-700: #2f3945;
+  --slate-900: #111821;
+
+  /* Single technical accent — indigo/ink-blue */
+  --accent-50:  #eef1fb;
+  --accent-100: #dde2f5;
+  --accent-300: #8e9bd6;
+  --accent-500: #3b4cad;   /* primary accent */
+  --accent-600: #2f3e93;
+  --accent-700: #25316f;
+
+  /* Semantic hues (muted, academic — never neon) */
+  --red-500:    #b4463a;   /* error, deletion */
+  --amber-500:  #b8841f;   /* warning, caution */
+  --green-600:  #3f7a48;   /* success, correct */
+  --teal-500:   #2f7a7a;   /* info / secondary highlight */
+
+  /* Syntax-highlighting palette (calm, Solarized-adjacent) */
+  --syn-bg:       #fbfaf7;
+  --syn-text:     #171512;
+  --syn-comment:  #8b8576;
+  --syn-keyword:  #7a3a8f;   /* muted violet */
+  --syn-string:   #3f7a48;   /* muted green */
+  --syn-number:   #b8841f;   /* amber */
+  --syn-function: #2f3e93;   /* accent blue */
+  --syn-type:     #2f7a7a;   /* teal */
+  --syn-punct:    #6b6558;
+
+  /* ---- Semantic color tokens ------------------------------ */
+  --bg:          var(--paper-50);
+  --bg-raised:   #ffffff;
+  --bg-sunken:   var(--paper-100);
+  --bg-code:     var(--paper-100);
+  --bg-accent:   var(--accent-50);
+
+  --fg:          var(--ink-900);
+  --fg-1:        var(--ink-900);   /* primary text */
+  --fg-2:        var(--ink-700);   /* secondary */
+  --fg-3:        var(--ink-500);   /* tertiary / meta */
+  --fg-4:        var(--ink-400);   /* disabled */
+  --fg-accent:   var(--accent-600);
+  --fg-on-accent:#ffffff;
+
+  --border:       var(--paper-200);
+  --border-strong:var(--paper-300);
+  --border-accent:var(--accent-300);
+
+  --link:         var(--accent-600);
+  --link-hover:   var(--accent-700);
+
+  --success: var(--green-600);
+  --warning: var(--amber-500);
+  --danger:  var(--red-500);
+  --info:    var(--teal-500);
+
+  /* Diagram / data-viz palette (for charts, memory layouts, graphs) */
+  --viz-1: #3b4cad;  /* accent blue */
+  --viz-2: #b8841f;  /* amber */
+  --viz-3: #3f7a48;  /* green */
+  --viz-4: #b4463a;  /* red */
+  --viz-5: #2f7a7a;  /* teal */
+  --viz-6: #7a3a8f;  /* violet */
+  --viz-7: #6b6558;  /* warm gray */
+  --viz-grid: var(--paper-200);
+  --viz-axis: var(--ink-500);
+
+  /* ---- Typography scale ----------------------------------- */
+  --font-serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --font-sans:  "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-mono:  "JetBrains Mono", "SF Mono", "Menlo", ui-monospace, monospace;
+
+  /* Scale (modular, 1.2 ratio, anchored at 16px) */
+  --fs-xs:   12px;
+  --fs-sm:   14px;
+  --fs-base: 16px;
+  --fs-md:   18px;
+  --fs-lg:   21px;
+  --fs-xl:   26px;
+  --fs-2xl:  32px;
+  --fs-3xl:  42px;
+  --fs-4xl:  56px;
+  --fs-5xl:  72px;
+
+  --lh-tight: 1.15;
+  --lh-snug:  1.35;
+  --lh-body:  1.6;
+  --lh-loose: 1.8;
+
+  --fw-light:  300;
+  --fw-regular:400;
+  --fw-medium: 500;
+  --fw-semi:   600;
+  --fw-bold:   700;
+
+  --tracking-tight:  -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.04em;
+  --tracking-caps:   0.08em;
+
+  /* ---- Spacing (4px base) --------------------------------- */
+  --sp-0:  0;
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  24px;
+  --sp-6:  32px;
+  --sp-7:  48px;
+  --sp-8:  64px;
+  --sp-9:  96px;
+  --sp-10: 128px;
+
+  /* ---- Radii --------------------------------------------- */
+  --r-0: 0;
+  --r-1: 2px;
+  --r-2: 4px;
+  --r-3: 6px;
+  --r-4: 10px;
+  --r-full: 9999px;
+
+  /* ---- Elevation (restrained, not floaty) ----------------- */
+  --shadow-0: none;
+  --shadow-1: 0 1px 0 rgba(23, 21, 18, 0.04), 0 1px 2px rgba(23, 21, 18, 0.04);
+  --shadow-2: 0 2px 4px rgba(23, 21, 18, 0.05), 0 1px 2px rgba(23, 21, 18, 0.04);
+  --shadow-3: 0 8px 24px rgba(23, 21, 18, 0.08), 0 2px 6px rgba(23, 21, 18, 0.04);
+  --shadow-inset: inset 0 0 0 1px var(--border);
+
+  /* ---- Motion --------------------------------------------- */
+  --ease-out:    cubic-bezier(0.2, 0.6, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 320ms;
+  --dur-4: 500ms;
+
+  /* ---- Layout --------------------------------------------- */
+  --measure:     68ch;       /* ideal reading width */
+  --measure-wide:88ch;
+  --container:   1120px;
+}
+
+/* ---- Dark mode (cool slate) --------------------------------- */
+[data-theme="dark"] {
+  --bg:          #0f1216;
+  --bg-raised:   #161a20;
+  --bg-sunken:   #0a0c10;
+  --bg-code:     #161a20;
+  --bg-accent:   #1a2036;
+
+  --fg-1: #ecebe6;
+  --fg-2: #c2bfb5;
+  --fg-3: #8f8b7f;
+  --fg-4: #5f5c54;
+  --fg:   var(--fg-1);
+  --fg-accent: #94a2e3;
+
+  --border:        #23272e;
+  --border-strong: #2f343c;
+  --border-accent: #3b4cad;
+
+  --link:       #94a2e3;
+  --link-hover: #b6c0ee;
+
+  --syn-bg:       #161a20;
+  --syn-text:     #ecebe6;
+  --syn-comment:  #6b6558;
+  --syn-keyword:  #c79bd5;
+  --syn-string:   #8fc093;
+  --syn-number:   #e4b562;
+  --syn-function: #94a2e3;
+  --syn-type:     #7cc0c0;
+}
+
+/* ============================================================
+   Semantic element styles — opt-in by adding class `axiom`
+   to a root element, or apply globally by removing the scope.
+   ============================================================ */
+
+.axiom {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  line-height: var(--lh-body);
+  color: var(--fg-1);
+  background: var(--bg);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.axiom h1, .axiom .h1 {
+  font-family: var(--font-serif);
+  font-weight: var(--fw-regular);
+  font-size: var(--fs-4xl);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg-1);
+  margin: 0 0 var(--sp-5);
+}
+
+.axiom h2, .axiom .h2 {
+  font-family: var(--font-serif);
+  font-weight: var(--fw-regular);
+  font-size: var(--fs-2xl);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg-1);
+  margin: 0 0 var(--sp-4);
+}
+
+.axiom h3, .axiom .h3 {
+  font-family: var(--font-serif);
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-xl);
+  line-height: var(--lh-snug);
+  color: var(--fg-1);
+  margin: 0 0 var(--sp-3);
+}
+
+.axiom h4, .axiom .h4 {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-semi);
+  font-size: var(--fs-md);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-normal);
+  color: var(--fg-1);
+  margin: 0 0 var(--sp-2);
+}
+
+.axiom .eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.axiom p, .axiom .p {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  line-height: var(--lh-body);
+  color: var(--fg-1);
+  max-width: var(--measure);
+  margin: 0 0 var(--sp-4);
+}
+
+.axiom .lead {
+  font-family: var(--font-serif);
+  font-size: var(--fs-lg);
+  line-height: var(--lh-snug);
+  color: var(--fg-2);
+  font-style: italic;
+}
+
+.axiom .caption, .axiom figcaption {
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-snug);
+  color: var(--fg-3);
+}
+
+.axiom small, .axiom .small {
+  font-size: var(--fs-sm);
+  color: var(--fg-3);
+}
+
+.axiom code, .axiom .code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--bg-code);
+  padding: 0.1em 0.35em;
+  border-radius: var(--r-2);
+  color: var(--fg-1);
+  border: 1px solid var(--border);
+}
+
+.axiom pre {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-snug);
+  background: var(--syn-bg);
+  color: var(--syn-text);
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid var(--border);
+  border-radius: var(--r-3);
+  overflow-x: auto;
+}
+.axiom pre code {
+  background: transparent;
+  padding: 0;
+  border: 0;
+  font-size: inherit;
+}
+
+.axiom a {
+  color: var(--link);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  transition: color var(--dur-1) var(--ease-out);
+}
+.axiom a:hover { color: var(--link-hover); }
+
+.axiom blockquote {
+  border-left: 2px solid var(--border-accent);
+  padding: var(--sp-1) var(--sp-5);
+  margin: var(--sp-5) 0;
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--fg-2);
+}
+
+.axiom kbd {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  padding: 0.1em 0.5em;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--r-2);
+  background: var(--bg-raised);
+  color: var(--fg-2);
+}
+
+/* Math / equations placeholder — pairs well with KaTeX */
+.axiom .math {
+  font-family: var(--font-serif);
+  font-style: italic;
+}
+
+/* Utility helpers (used sparingly in the system) */
+.axiom .mono  { font-family: var(--font-mono); }
+.axiom .serif { font-family: var(--font-serif); }
+.axiom .sans  { font-family: var(--font-sans); }
+.axiom .muted { color: var(--fg-3); }
+.axiom .hairline { border-top: 1px solid var(--border); }

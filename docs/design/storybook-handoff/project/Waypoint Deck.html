@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Waypoint · Product walkthrough</title>
+<link rel="stylesheet" href="colors_and_type.css"/>
+<link rel="stylesheet" href="waypoint-deck.css"/>
+<style>
+  /* Entrance reveals — opacity is ALWAYS 1 so any static renderer
+     (html-to-image, print, PDF/PPTX export) shows full content; only a
+     subtle upward slide animates, and only on the active slide. */
+  .slide .reveal { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: no-preference) {
+    .slide:not([data-deck-active]) .reveal { transform: translateY(16px); }
+    .slide[data-deck-active] .reveal { transition: transform 0.5s var(--ease-out); transform: none; }
+    .slide[data-deck-active] .r2 { transition-delay: 0.06s; }
+    .slide[data-deck-active] .r3 { transition-delay: 0.12s; }
+    .slide[data-deck-active] .r4 { transition-delay: 0.18s; }
+    .slide[data-deck-active] .r5 { transition-delay: 0.24s; }
+  }
+</style>
+</head>
+<body class="axiom">
+
+<deck-stage width="1920" height="1080">
+
+  <!-- ============================================================ 01 · TITLE -->
+  <section class="slide is-title" data-label="Title">
+    <div class="page-num">01 / 20</div>
+    <div class="stack" style="height:100%; justify-content:center;">
+      <div class="reveal" style="display:flex; align-items:center; gap:18px; margin-bottom:54px;">
+        <svg viewBox="0 0 48 48" fill="none" style="width:54px;height:54px;"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="#171512" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="5" fill="#3b4cad"/></svg>
+        <span style="font-family:var(--font-serif); font-size:46px; letter-spacing:-0.02em;">Waypoint</span>
+      </div>
+      <div class="eyebrow reveal r2">Product walkthrough</div>
+      <h1 class="title reveal r2">An interactive plane<br/>between human and agents.</h1>
+      <p class="lead reveal r3" style="max-width:1180px;">Coding agents can run for hours. Waypoint lets them park decisions instead of stalling on them — and gives you a live map of where the work actually is.</p>
+    </div>
+    <div class="foot"><span>For developers · 2026</span><span>Waypoint</span></div>
+  </section>
+
+  <!-- ============================================================ 02 · SECTION 1 -->
+  <section class="slide is-section" data-label="Section · The problem">
+    <div class="rail"><svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4" fill="#3b4cad"/></svg>waypoint</div>
+    <div class="page-num">02 / 20</div>
+    <div class="stack" style="height:100%; justify-content:center;">
+      <div class="divider-num reveal">§ 01</div>
+      <h2 class="divider-title reveal r2">The problem</h2>
+      <p class="divider-sub reveal r3">Long-running agents changed how we code — but the way they ask for input hasn't kept up. Two frictions show up on every multi-hour run.</p>
+    </div>
+  </section>
+
+  <!-- ============================================================ 03 · SETUP / STAT -->
+  <section class="slide" data-label="Agents run for hours">
+    <div class="rail"><svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4" fill="#3b4cad"/></svg>waypoint</div>
+    <div class="page-num">03 / 20</div>
+    <div class="slide-head reveal">
+      <div class="eyebrow">The shift</div>
+      <h2 class="heading">Agents now run for hours, not minutes.</h2>
+    </div>
+    <div class="fill stack" style="justify-content:center; gap:54px;">
+      <div class="reveal r2" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:40px; max-width:1480px;">
+        <div class="stack" style="gap:10px;">
+          <div style="font-family:var(--font-serif); font-size:96px; line-height:1; letter-spacing:-0.03em;">6<span style="font-size:46px; color:var(--fg-3);"> hrs</span></div>
+          <div class="small-text">A single agent session can now plan, build, and test for a full afternoon — unattended.</div>
+        </div>
+        <div class="stack" style="gap:10px;">
+          <div style="font-family:var(--font-serif); font-size:96px; line-height:1; letter-spacing:-0.03em;">40<span style="font-size:46px; color:var(--fg-3);">+</span></div>
+          <div class="small-text">Discrete tasks in a plan, spread across files, services, and dependencies.</div>
+        </div>
+        <div class="stack" style="gap:10px;">
+          <div style="font-family:var(--font-serif); font-size:96px; line-height:1; letter-spacing:-0.03em; color:var(--accent-600);">1</div>
+          <div class="small-text">Decision it can't make on its own is enough to stop the entire run cold.</div>
+        </div>
+      </div>
+      <p class="body-text reveal r3" style="max-width:1300px;">The work scaled up. The interaction model didn't — an agent still pauses the whole session and waits in the terminal the moment it needs you.</p>
+    </div>
+    <div class="foot"><span>§ 01 · The problem</span><span>03 / 20</span></div>
+  </section>
+
+  <!-- ============================================================ 04 · PROBLEM 1 -->
+  <section class="slide" data-label="One question stalls the run">
+    <div class="rail"><svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4" fill="#3b4cad"/></svg>waypoint</div>
+    <div class="page-num">04 / 20</div>
+    <div class="slide-head reveal">
+      <div class="eyebrow">Problem one · Blocking</div>
+      <h2 class="heading">One unanswered question stalls the whole run.</h2>
+    </div>
+    <div class="fill stack" style="justify-content:center; gap:30px; max-width:1320px;">
+      <p class="body-text reveal r2">The agent reaches a fork it isn't allowed to decide — which database, whether to delete a file, how to handle an edge case — and it does the only thing the terminal lets it do: <strong>it stops and waits for you.</strong></p>
+      <p class="body-text reveal r3">Everything queued behind that question waits too, even the dozens of tasks that have nothing to do with it. A three-hour run becomes a three-hour run plus however long it took you to glance at your terminal.</p>
+    </div>
+    <div class="foot"><span>§ 01 · The problem</span><span>04 / 20</span></div>
+  </section>
+
+  <!-- ============================================================ 05 · BLOCKED TUI FIGURE -->
+  <section class="slide is-wash" data-label="A single approval freezes the queue">
+    <div class="rail"><svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4" fill="#3b4cad"/></svg>waypoint</div>
+    <div class="page-num">05 / 20</div>
+    <div class="slide-head reveal">
+      <div class="eyebrow">Today, in the terminal</div>
+      <h2 class="heading">A single approval freezes the tasks behind it.</h2>
+    </div>
+    <div class="fill reveal r2" style="display:grid; grid-template-columns:1.45fr 1fr; gap:40px; min-height:0;">
+      <!-- terminal -->
+      <div class="tui">
+        <div class="tui-bar">
+          <span class="tui-dot" style="background:#e05c4a;"></span><span class="tui-dot" style="background:#e0a93a;"></span><span class="tui-dot" style="background:#5aa86a;"></span>
+          <span class="tui-title">orbit-api — agent session</span>
+        </div>
+        <div class="tui-body">
+          <div><span class="ok">✓</span> <span class="dim">scaffolded project, configured tooling</span></div>
+          <div><span class="ok">✓</span> <span class="dim">implemented auth middleware (8 files)</span></div>
+          <div style="margin-top:6px;"><span class="acc">▸</span> building data layer…</div>
+          <div style="margin-top:18px;" class="tui-prompt">The data layer needs an ORM. Which should I use?</div>
+          <div style="margin-top:2px;" class="dim">&nbsp;&nbsp;1) Prisma&nbsp;&nbsp;&nbsp;2) Drizzle&nbsp;&nbsp;&nbsp;3) Knex</div>
+          <div style="margin-top:10px;" class="tui-prompt">&gt; <span class="tui-cursor"></span></div>
+          <div class="tui-wait"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> waiting for input — 1h 47m elapsed</div>
+        </div>
+      </div>
+      <!-- idle queue -->
+      <div class="stack" style="gap:14px; min-height:0;">
+        <div class="small-text" style="color:var(--fg-3); font-family:var(--font-mono); font-size:15px; letter-spacing:0.04em;">19 tasks queued — none blocked by this question</div>
+        <div class="idle-q">
+          <div class="idle-row"><svg class="il-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/></svg><span class="il-t">Write seed-data scripts</span><span class="il-tag">idle</span></div>
+          <div class="idle-row"><svg class="il-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/></svg><span class="il-t">Add request validation layer</span><span class="il-tag">idle</span></div>
+          <div class="idle-row"><svg class="il-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/></svg><span class="il-t">Scaffold the dashboard routes</span><span class="il-tag">idle</span></div>
+          <div class="idle-row"><svg class="il-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/></svg><span class="il-t">Set up the test harness</span><span class="il-tag">idle</span></div>
+          <div class="idle-row"><svg class="il-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/></svg><span class="il-t">Write the OpenAPI spec</span><span class="il-tag">idle</span></div>
+        </div>
+        <p class="small-text" style="color:var(--red-500); margin-top:4px;">All idle — held behind one prompt the agent could have set aside.</p>
+      </div>
+    </div>
+    <div class="foot"><span>§ 01 · The problem</span><span>05 / 20</span></div>
+  </section>
+
+  <!-- ============================================================ 06 · PROBLEM 2 -->
+  <section class="slide" data-label="Re-entering rebuilds context">
+    <div class="rail"><svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4" fill="#3b4cad"/></svg>waypoint</div>
+    <div class="page-num">06 / 20</div>
+    <div class="slide-head reveal">
+      <div class="eyebrow">Problem two · Context</div>
+      <h2 class="heading">Re-entering a session means<br/>rebuilding context.</h2>
+    </div>
+    <div class="fill" style="display:grid; grid-template-columns:1.1fr 1fr; gap:64px; align-items:center;">
+      <div class="stack reveal r2" style="gap:30px; max-width:680px;">
+        <p class="body-text">You step away, the agent keeps going, and when you come back the only record of what happened is a wall of scrollback. Where did it land? What did it decide while you were gone? What is it doing <em>right now</em>?</p>
+        <p class="body-text">Answering those questions takes minutes of reading every time — and that re-entry cost is what makes it hard to jump in and out of a long session.</p>
+      </div>
+      <!-- scrollback fade -->
+      <div class="reveal r3" style="position:relative; height:540px; border:1px solid var(--border); border-radius:10px; background:#14130f; overflow:hidden;">
+        <div style="font-family:var(--font-mono); font-size:14px; line-height:1.7; color:#6b6558; padding:24px 26px;">
+          <div>[14:02] edited src/db/schema.ts</div>
+          <div>[14:02] ran migration 0007_add_index</div>
+          <div>[14:05] edited src/api/users.ts</div>
+          <div>[14:05] edited src/api/users.ts</div>
+          <div>[14:09] ✓ 142 tests passed</div>
+          <div>[14:11] refactored repository layer</div>
+          <div>[14:14] edited src/api/sessions.ts</div>
+          <div>[14:14] added rate-limit guard</div>
+          <div>[14:18] edited src/db/seed.ts</div>
+          <div>[14:18] ran migration 0008_merge_users</div>
+          <div>[14:22] edited src/api/users.ts</div>
+          <div>[14:25] ✓ 151 tests passed</div>
+          <div>[14:27] edited src/config/env.ts</div>
+          <div>[14:31] edited src/api/sessions.ts</div>
+        </div>
+        <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(20,19,15,0) 30%, rgba(20,19,15,0.96) 92%);"></div>
+        <div style="position:absolute; left:26px; bottom:30px; white-space:nowrap; font-family:var(--font-serif); font-style:italic; font-size:26px; color:#d8d3c6;">…so, where was I?</div>
+      </div>
+    </div>
+    <div class="foot"><span>§ 01 · The problem</span><span>06 / 20</span></div>
+  </section>
+
+  <!-- ============================================================ 07 · SECTION 2 -->
+  <section class="slide is-section" data-label="Section · The idea">
+    <div class="rail"><svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4" fill="#3b4cad"/></svg>waypoint</div>
+    <div class="page-num">07 / 20</div>
+    <div class="stack" style="height:100%; justify-content:center;">
+      <div class="divider-num reveal">§ 02</div>
+      <h2 class="divider-title reveal r2">The idea</h2>
+      <p class="divider-sub reveal r3">Put a thin, shared surface between you and the agent — one that holds decisions and reflects the plan, so neither side has to wait on the other.</p>
+    </div>
+  </section>
+
+  <!-- ============================================================ 08 · PLANE DIAGRAM -->
+  <section class="slide" data-label="Waypoint sits between you and the agent">
+    <div class="rail"><svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4" fill="#3b4cad"/></svg>waypoint</div>
+    <div class="page-num">08 / 20</div>
+    <div class="slide-head reveal">
+      <div class="eyebrow">The model</div>
+      <h2 class="heading">Waypoint sits between you and the agent.</h2>
+    </div>
+    <div class="fill reveal r2">
+      <div class="plane">
+        <div class="plane-col">
+          <div class="plane-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
+          <div class="plane-name">You</div>
+          <div class="plane-sub">Reviewing on your own time, from anywhere — phone, tab, whenever you surface.</div>
+        </div>
+        <div class="plane-col mid">
+          <div class="plane-ico mid"><svg viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="5" fill="#fff"/></svg></div>
+          <div class="plane-name">Waypoint</div>
+          <div class="plane-flow">
+            <div class="flow-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg> decisions &amp; status, surfaced up</div>
+            <div class="flow-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg> direction &amp; approvals, sent down</div>
+          </div>
+        </div>
+        <div class="plane-col">
+          <div class="plane-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div>
+          <div class="plane-name">The agent</div>
+          <div class="plane-sub">Working continuously — parking what it can't decide and moving to the next unblocked task.</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>§ 02 · The idea</span><span>08 / 20</span></div>
+  </section>
+
+  <!-- ============================================================ 09 · TWO MOVES -->
+  <section class="slide is-wash" data-label="Two moves">
+    <div class="rail"><svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4" fill="#3b4cad"/></svg>waypoint</div>
+    <div class="page-num">09 / 20</div>
+    <div class="slide-head reveal">
+      <div class="eyebrow">How it works</div>
+      <h2 class="heading">Two moves: park the decision, map the work.</h2>
+    </div>
+    <div class="fill reveal r2">
+      <div class="moves">
+        <div class="move">
+          <div class="move-num">01</div>
+          <div class="move-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>
+          <h3 class="move-title">Park the decision</h3>
+          <p class="move-desc">Instead of blocking in the terminal, the agent writes the decision to Waypoint — question, options, its recommendation — and <strong>keeps working on everything not blocked by it.</strong></p>
+        </div>
+        <div class="move">
+          <div class="move-num">02</div>
+          <div class="move-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></div>
+          <h3 class="move-title">Map the work</h3>
+          <p class="move-desc">Every task, its status, and a live "you are here" marker render as a plan you can read in seconds — so <strong>jumping back in never means scrolling the logs.</strong></p>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>§ 02 · The idea</span><span>09 / 20</span></div>
+  </section>
+
+  <!-- ============================================================ 10 · SECTION 3 -->
+  <section class="slide is-section" data-label="Section · Track where the work is">
+    <div class="rail"><svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4" fill="#3b4cad"/></svg>waypoint</div>
+    <div class="page-num">10 / 20</div>
+    <div class="stack" style="height:100%; justify-content:center;">
+      <div class="divider-num reveal">§ 03</div>
+      <h2 class="divider-title reveal r2">Track where<br/>the work is</h2>
+      <p class="divider-sub reveal r3">The project map turns a run into something you can read at a glance — status per task, and exactly where the agent is right now.</p>
+    </div>
+  </section>
+
+  <!-- ============================================================ 11 · PROJECT MAP HERO -->
+  <section class="slide is-wash" data-label="The project map">
+    <div class="rail"><svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4" fill="#3b4cad"/></svg>waypoint</div>
+    <div class="page-num">11 / 20</div>
+    <div class="slide-head reveal" style="margin-bottom:24px;">
+      <div class="eyebrow">The project map</div>
+      <h2 class="heading" style="font-size:48px;">The whole plan, one screen.</h2>
+    </div>
+    <div class="fill reveal r2">
+      <div class="app">
+        <div class="app-topbar">
+          <div class="app-brand"><svg viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="#171512" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4.5" fill="#3b4cad"/></svg>Waypoint</div>
+          <div class="app-crumb"><span class="sep">/</span><span class="here">orbit-api</span></div>
+          <div class="spacer"></div>
+          <div class="status-pill"><span class="live"></span>Agent working <span class="mono">· 6 tasks</span></div>
+          <div class="avatar">JY</div>
+        </div>
+        <div class="app-body">
+          <div class="app-sidebar">
+            <div class="side-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>Map</div>
+            <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Decisions<span class="count">3</span></div>
+            <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Activity</div>
+            <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Files</div>
+            <div style="flex:1;"></div>
+            <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</div>
+          </div>
+          <div class="app-main">
+            <div class="main-head">
+              <h3>Project map</h3>
+              <span class="sub">· 5 phases · 41 tasks</span>
+              <div class="spacer"></div>
+              <div class="legend">
+                <span class="li"><span class="sw done"></span>Done</span>
+                <span class="li"><span class="sw active"></span>In progress</span>
+                <span class="li"><span class="sw blocked"></span>Decision parked</span>
+                <span class="li"><span class="sw queued"></span>Queued</span>
+              </div>
+            </div>
+            <div class="app-canvas">
+              <div class="roadmap">
+                <!-- phase headers -->
+                <div style="display:grid; grid-template-columns:repeat(5,1fr);">
+                  <div class="rm-phase"><div class="ph-label">Phase 01</div><div class="ph-name">Scaffold</div><div class="ph-status">Done</div></div>
+                  <div class="rm-phase"><div class="ph-label">Phase 02</div><div class="ph-name">Auth</div><div class="ph-status">Done</div></div>
+                  <div class="rm-phase active"><div class="ph-label">Phase 03</div><div class="ph-name">Data layer</div><div class="ph-status">In progress</div></div>
+                  <div class="rm-phase"><div class="ph-label">Phase 04</div><div class="ph-name">API routes</div><div class="ph-status">Queued</div></div>
+                  <div class="rm-phase"><div class="ph-label">Phase 05</div><div class="ph-name">Dashboard</div><div class="ph-status">Queued</div></div>
+                </div>
+                <!-- spine -->
+                <div class="rm-spine">
+                  <div class="seg done" style="left:10%; width:40%;"></div>
+                  <div class="seg future" style="left:50%; width:40%;"></div>
+                  <div class="marker done" style="left:10%;"></div>
+                  <div class="marker done" style="left:30%;"></div>
+                  <div class="marker active" style="left:50%;"><div class="you-here">You are here</div></div>
+                  <div class="marker future" style="left:70%;"></div>
+                  <div class="marker future" style="left:90%;"></div>
+                </div>
+                <!-- node columns -->
+                <div style="display:grid; grid-template-columns:repeat(5,1fr); align-items:start;">
+                  <div class="rm-phase">
+                    <div class="node done"><div class="nt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>Repo &amp; tooling</div></div>
+                    <div class="node done"><div class="nt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>CI pipeline</div></div>
+                  </div>
+                  <div class="rm-phase">
+                    <div class="node done"><div class="nt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>Auth middleware</div></div>
+                    <div class="node done"><div class="nt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>Token rotation</div></div>
+                  </div>
+                  <div class="rm-phase active">
+                    <div class="node done"><div class="nt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>Schema migration</div></div>
+                    <div class="node blocked"><div class="nt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M12 2l10 10-10 10L2 12z"/><path d="M12 8v4"/><circle cx="12" cy="16" r="0.6" fill="currentColor" stroke="none"/></svg>Choose ORM</div><div class="node-badge"><span class="badge warning">Decision parked</span></div></div>
+                    <div class="node active"><div class="nt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg>Seed scripts</div><div class="nm">agent · editing now</div></div>
+                  </div>
+                  <div class="rm-phase">
+                    <div class="node queued"><div class="nt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/></svg>Resource routes</div></div>
+                    <div class="node queued"><div class="nt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/></svg>Validation layer</div></div>
+                  </div>
+                  <div class="rm-phase">
+                    <div class="node queued"><div class="nt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/></svg>Dashboard shell</div></div>
+                    <div class="node queued"><div class="nt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/></svg>Charts</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>§ 03 · Track where the work is</span><span>11 / 20</span></div>
+  </section>
+
+  <!-- ============================================================ 12 · NODE ANNOTATION -->
+  <section class="slide" data-label="Every node carries its status">
+    <div class="rail"><svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4" fill="#3b4cad"/></svg>waypoint</div>
+    <div class="page-num">12 / 20</div>
+    <div class="slide-head reveal">
+      <div class="eyebrow">Reading the map</div>
+      <h2 class="heading">Every node shows its status — and where you left off.</h2>
+    </div>
+    <div class="fill" style="display:grid; grid-template-columns:1fr 0.92fr; gap:64px; align-items:center;">
+      <!-- enlarged node samples -->
+      <div class="reveal r2 stack" style="gap:18px; max-width:560px;">
+        <div class="node done" style="margin:0;"><div class="nt" style="font-size:20px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>Schema migration</div><div class="nm" style="font-size:14px;">finished 14:02 · 3 files · 142 tests green</div></div>
+        <div class="node active" style="margin:0;"><div class="nt" style="font-size:20px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:20px;height:20px;"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg>Seed scripts</div><div class="nm" style="font-size:14px;">agent editing src/db/seed.ts — now</div></div>
+        <div class="node blocked" style="margin:0;"><div class="nt" style="font-size:20px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" style="width:20px;height:20px;"><path d="M12 2l10 10-10 10L2 12z"/><path d="M12 8v4"/><circle cx="12" cy="16" r="0.6" fill="currentColor" stroke="none"/></svg>Choose ORM</div><div class="node-badge"><span class="badge warning">Decision parked · 12m ago</span></div></div>
+        <div class="node queued" style="margin:0;"><div class="nt" style="font-size:20px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:20px;height:20px;"><circle cx="12" cy="12" r="9"/></svg>Resource routes</div><div class="nm" style="font-size:14px;">queued · waits on the data layer</div></div>
+      </div>
+      <div class="reveal r3 stack gap-m" style="max-width:560px;">
+        <p class="body-text">Each node states its own status plainly — finished, running, parked on a decision, or waiting on something upstream.</p>
+        <p class="body-text">The <strong class="accent-ink">you-are-here</strong> marker rides the active task, so re-entry is a single glance: you see what's done, what's live, and what's waiting on <em>you</em> — without reading one line of log.</p>
+      </div>
+    </div>
+    <div class="foot"><span>§ 03 · Track where the work is</span><span>12 / 20</span></div>
+  </section>
+
+  <!-- ============================================================ 13 · MAP VARIATIONS -->
+  <section class="slide is-wash" data-label="Two ways to read the plan">
+    <div class="rail"><svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4" fill="#3b4cad"/></svg>waypoint</div>
+    <div class="page-num">13 / 20</div>
+    <div class="slide-head reveal" style="margin-bottom:24px;">
+      <div class="eyebrow">Exploration · The map</div>
+      <h2 class="heading" style="font-size:48px;">Two ways to read the plan.</h2>
+    </div>
+    <div class="fill reveal r2">
+      <div class="var-grid">
+        <!-- A: flow -->
+        <div class="var-col">
+          <div class="var-head"><div class="var-tag">A</div><div><div class="var-name">Flow</div><div class="var-desc">Phases left to right — best for seeing momentum.</div></div></div>
+          <div class="var-frame" style="padding:28px;">
+            <div class="roadmap">
+              <div style="display:grid; grid-template-columns:repeat(4,1fr);">
+                <div class="rm-phase"><div class="ph-name" style="font-size:17px;">Auth</div><div class="ph-status" style="margin-bottom:12px;">Done</div></div>
+                <div class="rm-phase active"><div class="ph-name" style="font-size:17px;">Data layer</div><div class="ph-status" style="margin-bottom:12px;">In progress</div></div>
+                <div class="rm-phase"><div class="ph-name" style="font-size:17px;">API</div><div class="ph-status" style="margin-bottom:12px;">Queued</div></div>
+                <div class="rm-phase"><div class="ph-name" style="font-size:17px;">Dashboard</div><div class="ph-status" style="margin-bottom:12px;">Queued</div></div>
+              </div>
+              <div class="rm-spine" style="margin-bottom:44px;">
+                <div class="seg done" style="left:12.5%; width:25%;"></div>
+                <div class="seg future" style="left:37.5%; width:50%;"></div>
+                <div class="marker done" style="left:12.5%;"></div>
+                <div class="marker active" style="left:37.5%;"><div class="you-here">Here</div></div>
+                <div class="marker future" style="left:62.5%;"></div>
+                <div class="marker future" style="left:87.5%;"></div>
+              </div>
+              <div style="display:grid; grid-template-columns:repeat(4,1fr); align-items:start;">
+                <div class="rm-phase"><div class="node done"><div class="nt" style="font-size:13px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>Middleware</div></div></div>
+                <div class="rm-phase active">
+                  <div class="node blocked"><div class="nt" style="font-size:13px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" style="width:14px;height:14px;"><path d="M12 2l10 10-10 10L2 12z"/><path d="M12 8v4"/></svg>Choose ORM</div></div>
+                  <div class="node active"><div class="nt" style="font-size:13px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:14px;height:14px;"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg>Seed scripts</div></div>
+                </div>
+                <div class="rm-phase"><div class="node queued"><div class="nt" style="font-size:13px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:14px;height:14px;"><circle cx="12" cy="12" r="9"/></svg>Routes</div></div></div>
+                <div class="rm-phase"><div class="node queued"><div class="nt" style="font-size:13px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:14px;height:14px;"><circle cx="12" cy="12" r="9"/></svg>Shell</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- B: outline -->
+        <div class="var-col">
+          <div class="var-head"><div class="var-tag">B</div><div><div class="var-name">Outline</div><div class="var-desc">Nested checklist — best for scanning detail.</div></div></div>
+          <div class="var-frame" style="padding:24px 28px;">
+            <div class="outline">
+              <div class="ol-row phase done"><div class="ol-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg></div><div class="ol-main"><div class="ol-phase-title">Auth</div><div class="ol-meta">2 / 2 done</div></div></div>
+              <div class="ol-row phase active"><div class="ol-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg></div><div class="ol-main"><div class="ol-phase-title">Data layer</div><div class="ol-meta">1 / 3 · in progress</div></div></div>
+              <div class="ol-row indent done"><div class="ol-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg></div><div class="ol-main"><div class="ol-title">Schema migration</div></div></div>
+              <div class="ol-row indent blocked"><div class="ol-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M12 2l10 10-10 10L2 12z"/><path d="M12 8v4"/></svg></div><div class="ol-main"><div class="ol-title">Choose ORM</div><div class="ol-meta">decision parked</div></div><span class="badge warning" style="align-self:center;">Parked</span></div>
+              <div class="ol-row indent active"><div class="ol-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg></div><div class="ol-main"><div class="ol-title">Seed scripts</div><div class="ol-meta">agent editing now</div></div></div>
+              <div class="ol-row phase queued"><div class="ol-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/></svg></div><div class="ol-main"><div class="ol-phase-title">API routes</div><div class="ol-meta">0 / 6 · queued</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>§ 03 · Track where the work is</span><span>13 / 20</span></div>
+  </section>
+
+  <!-- ============================================================ 14 · SECTION 4 -->
+  <section class="slide is-section" data-label="Section · How decisions reach you">
+    <div class="rail"><svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4" fill="#3b4cad"/></svg>waypoint</div>
+    <div class="page-num">14 / 20</div>
+    <div class="stack" style="height:100%; justify-content:center;">
+      <div class="divider-num reveal">§ 04</div>
+      <h2 class="divider-title reveal r2">How decisions<br/>reach you</h2>
+      <p class="divider-sub reveal r3">Parked decisions collect in an inbox. Each one arrives as a proposal — framed, weighed, and ready to act on in a glance.</p>
+    </div>
+  </section>
+
+  <!-- ============================================================ 15 · DECISION INBOX HERO -->
+  <section class="slide is-wash" data-label="The decision inbox">
+    <div class="rail"><svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4" fill="#3b4cad"/></svg>waypoint</div>
+    <div class="page-num">15 / 20</div>
+    <div class="slide-head reveal" style="margin-bottom:24px;">
+      <div class="eyebrow">The decision inbox</div>
+      <h2 class="heading" style="font-size:48px;">A queue, not an interruption.</h2>
+    </div>
+    <div class="fill reveal r2">
+      <div class="app">
+        <div class="app-topbar">
+          <div class="app-brand"><svg viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="#171512" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4.5" fill="#3b4cad"/></svg>Waypoint</div>
+          <div class="app-crumb"><span class="sep">/</span><span class="here">orbit-api</span></div>
+          <div class="spacer"></div>
+          <div class="status-pill"><span class="live"></span>Agent working <span class="mono">· 6 tasks</span></div>
+          <div class="avatar">JY</div>
+        </div>
+        <div class="app-body">
+          <div class="app-sidebar">
+            <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>Map</div>
+            <div class="side-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Decisions<span class="count">3</span></div>
+            <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Activity</div>
+            <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Files</div>
+            <div style="flex:1;"></div>
+            <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</div>
+          </div>
+          <div class="app-main">
+            <div class="main-head">
+              <h3>Decisions</h3>
+              <span class="sub">· 3 waiting · agent still working on 6 tasks</span>
+              <div class="spacer"></div>
+              <div class="filter-row"><span class="chip active">All</span><span class="chip">Blocking</span><span class="chip">Non-blocking</span></div>
+            </div>
+            <div class="app-canvas" style="overflow:hidden;">
+              <div class="queue">
+                <div class="q-row sel">
+                  <div class="q-ico med"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M12 2l10 10-10 10L2 12z"/><path d="M12 8v4"/><circle cx="12" cy="16" r="0.6" fill="currentColor" stroke="none"/></svg></div>
+                  <div class="q-body">
+                    <div class="q-top"><span class="q-title">Which ORM for the data layer?</span><span class="badge warning">Medium risk</span><span class="badge neutral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L3 8"/></svg>Reversible</span></div>
+                    <div class="q-desc">Shapes every query and the migration tooling. Agent recommends Drizzle.</div>
+                  </div>
+                  <div class="q-side"><span class="q-time">parked 12m ago</span><span class="badge accent">Blocks 1 task</span></div>
+                </div>
+                <div class="q-row">
+                  <div class="q-ico med"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M12 2l10 10-10 10L2 12z"/><path d="M12 8v4"/><circle cx="12" cy="16" r="0.6" fill="currentColor" stroke="none"/></svg></div>
+                  <div class="q-body">
+                    <div class="q-top"><span class="q-title">Session storage: Redis or signed cookies?</span><span class="badge warning">Medium risk</span><span class="badge neutral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L3 8"/></svg>Reversible</span></div>
+                    <div class="q-desc">Affects deploy footprint. Agent stubbed a session interface and moved on.</div>
+                  </div>
+                  <div class="q-side"><span class="q-time">parked 26m ago</span><span class="badge neutral">Non-blocking</span></div>
+                </div>
+                <div class="q-row">
+                  <div class="q-ico high"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
+                  <div class="q-body">
+                    <div class="q-top"><span class="q-title">Merge <span class="code-ref" style="font-size:15px;">users</span> and <span class="code-ref" style="font-size:15px;">accounts</span> tables?</span><span class="badge danger">High risk</span><span class="badge danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>One-way</span></div>
+                    <div class="q-desc">Destructive migration. Agent will not run this without explicit approval.</div>
+                  </div>
+                  <div class="q-side"><span class="q-time">parked 31m ago</span><span class="badge neutral">Non-blocking</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>§ 04 · How decisions reach you</span><span>15 / 20</span></div>
+  </section>
+
+  <!-- ============================================================ 16 · PROPOSAL ANATOMY -->
+  <section class="slide" data-label="Anatomy of a proposal">
+    <div class="rail"><svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4" fill="#3b4cad"/></svg>waypoint</div>
+    <div class="page-num">16 / 20</div>
+    <div class="slide-head reveal" style="margin-bottom:22px;">
+      <div class="eyebrow">A single decision</div>
+      <h2 class="heading" style="font-size:48px;">Anatomy of a proposal.</h2>
+    </div>
+    <div class="fill reveal r2" style="display:grid; grid-template-columns:1fr 340px; gap:40px; min-height:0;">
+      <!-- proposal -->
+      <div class="proposal">
+        <div class="pr-head">
+          <div class="pr-head-top">
+            <span class="badge warning">Medium risk</span>
+            <span class="badge neutral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L3 8"/></svg>Reversible</span>
+            <span class="badge accent">Blocks · Choose ORM</span>
+          </div>
+          <h3 class="pr-q">Which ORM should the data layer use?</h3>
+          <div class="pr-meta">Parked 12m ago<span class="dotsep">·</span>agent continued on 5 unblocked tasks<span class="dotsep">·</span><span class="code-ref">src/db/index.ts</span></div>
+        </div>
+        <div class="pr-body">
+          <div>
+            <div class="pr-section-label">Why this came up</div>
+            <div class="pr-text">About to write the first six repository modules. The ORM choice shapes every query, the typing story, and the migration tooling — so it's worth one decision now rather than a refactor later.</div>
+          </div>
+          <div>
+            <div class="pr-section-label">Options &amp; tradeoffs</div>
+            <div class="options">
+              <div class="opt">
+                <div class="opt-name">Prisma</div>
+                <div class="opt-tradeoff pro"><span class="pm">+</span>Best-in-class DX, typed client</div>
+                <div class="opt-tradeoff con"><span class="pm">−</span>Heavy runtime, codegen step</div>
+              </div>
+              <div class="opt recommended">
+                <span class="rec-tag"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.6L21 11l-6.8 2.4L12 20l-2.2-6.6L3 11l6.8-2.4z"/></svg>Agent recommends</span>
+                <div class="opt-name">Drizzle</div>
+                <div class="opt-tradeoff pro"><span class="pm">+</span>Thin, SQL-first, fully typed</div>
+                <div class="opt-tradeoff con"><span class="pm">−</span>Younger ecosystem</div>
+              </div>
+              <div class="opt">
+                <div class="opt-name">Knex</div>
+                <div class="opt-tradeoff pro"><span class="pm">+</span>Battle-tested, flexible</div>
+                <div class="opt-tradeoff con"><span class="pm">−</span>No types, manual mapping</div>
+              </div>
+            </div>
+          </div>
+          <div class="callout-line info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
+            <div class="ct"><strong>If you defer:</strong> the agent keeps building against a thin <span class="code-ref" style="font-size:14px;">Repository</span> interface and stubs the implementation. Switching later costs about one file.</div>
+          </div>
+        </div>
+        <div class="pr-actions">
+          <button class="btn btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Approve recommendation</button>
+          <button class="btn btn-secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Pick another</button>
+          <div class="spacer"></div>
+          <button class="btn btn-ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Comment &amp; redirect</button>
+        </div>
+      </div>
+      <!-- annotation legend -->
+      <div class="stack reveal r3" style="gap:16px; justify-content:center;">
+        <div style="display:flex; gap:13px; align-items:flex-start;"><span class="annot" style="position:static;"><span class="num">1</span></span><div><div style="font-weight:600; font-size:19px;">The question</div><div class="small-text" style="font-size:16px;">Stated plainly, with risk and reversibility up top.</div></div></div>
+        <div style="display:flex; gap:13px; align-items:flex-start;"><span class="annot" style="position:static;"><span class="num">2</span></span><div><div style="font-weight:600; font-size:19px;">Context</div><div class="small-text" style="font-size:16px;">Why it came up, and which file it touches.</div></div></div>
+        <div style="display:flex; gap:13px; align-items:flex-start;"><span class="annot" style="position:static;"><span class="num">3</span></span><div><div style="font-weight:600; font-size:19px;">Options &amp; tradeoffs</div><div class="small-text" style="font-size:16px;">Each path's upside and cost, side by side.</div></div></div>
+        <div style="display:flex; gap:13px; align-items:flex-start;"><span class="annot" style="position:static;"><span class="num">4</span></span><div><div style="font-weight:600; font-size:19px;">The recommendation</div><div class="small-text" style="font-size:16px;">The agent's pick — never silently applied.</div></div></div>
+        <div style="display:flex; gap:13px; align-items:flex-start;"><span class="annot" style="position:static;"><span class="num">5</span></span><div><div style="font-weight:600; font-size:19px;">Impact if deferred</div><div class="small-text" style="font-size:16px;">What the agent does while it waits.</div></div></div>
+      </div>
+    </div>
+    <div class="foot"><span>§ 04 · How decisions reach you</span><span>16 / 20</span></div>
+  </section>
+
+  <!-- ============================================================ 17 · ACTIONS -->
+  <section class="slide is-wash" data-label="Approve at a glance or redirect">
+    <div class="rail"><svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4" fill="#3b4cad"/></svg>waypoint</div>
+    <div class="page-num">17 / 20</div>
+    <div class="slide-head reveal">
+      <div class="eyebrow">Acting on it</div>
+      <h2 class="heading">Approve at a glance, or redirect the agent.</h2>
+    </div>
+    <div class="fill" style="display:grid; grid-template-rows:auto 1fr; gap:34px; min-height:0;">
+      <div class="reveal r2" style="display:grid; grid-template-columns:repeat(3,1fr); gap:28px;">
+        <div class="act-card">
+          <div class="act-ico a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <h3 class="act-title">Approve</h3>
+          <p class="act-desc">One tap takes the recommendation. The agent picks it up and the parked task goes green — no restart, no re-prompt.</p>
+        </div>
+        <div class="act-card">
+          <div class="act-ico b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div>
+          <h3 class="act-title">Pick another</h3>
+          <p class="act-desc">Prefer a different option? Choose it directly. The agent proceeds with your call instead of its own.</p>
+        </div>
+        <div class="act-card">
+          <div class="act-ico c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <h3 class="act-title">Comment &amp; redirect</h3>
+          <p class="act-desc">Neither fits? Leave a note. It threads straight back to the agent as direction — a conversation, not a dead end.</p>
+        </div>
+      </div>
+      <div class="reveal r3" style="display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:center; min-height:0;">
+        <div class="compose">
+          <div class="compose-field">Use Drizzle, but keep raw SQL migrations in <span class="code-ref">db/migrations</span> — I want them reviewable.<span class="cursor"></span></div>
+          <div class="compose-bar"><span class="hint">↩ sends to agent · threads on the decision</span><div style="flex:1;"></div><button class="btn btn-primary" style="padding:7px 14px; font-size:15px;">Send</button></div>
+        </div>
+        <p class="body-text" style="font-size:26px;">Every path resolves the decision and unblocks its task — whether you took ten seconds or wrote a paragraph. The agent never sat idle waiting to find out which.</p>
+      </div>
+    </div>
+    <div class="foot"><span>§ 04 · How decisions reach you</span><span>17 / 20</span></div>
+  </section>
+
+  <!-- ============================================================ 18 · PROPOSAL VARIATIONS -->
+  <section class="slide" data-label="The proposal, two ways">
+    <div class="rail"><svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4" fill="#3b4cad"/></svg>waypoint</div>
+    <div class="page-num">18 / 20</div>
+    <div class="slide-head reveal" style="margin-bottom:24px;">
+      <div class="eyebrow">Exploration · The proposal</div>
+      <h2 class="heading" style="font-size:48px;">The proposal scales to the stakes.</h2>
+    </div>
+    <div class="fill reveal r2">
+      <div class="var-grid">
+        <!-- A: full -->
+        <div class="var-col">
+          <div class="var-head"><div class="var-tag">A</div><div><div class="var-name">Full proposal</div><div class="var-desc">For consequential, hard-to-reverse calls.</div></div></div>
+          <div class="var-frame" style="padding:26px 28px; gap:18px; justify-content:flex-start;">
+            <div class="pr-head-top"><span class="badge danger">High risk</span><span class="badge danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>One-way</span></div>
+            <h3 class="pr-q" style="font-size:26px;">Merge <span class="code-ref" style="font-size:18px;">users</span> and <span class="code-ref" style="font-size:18px;">accounts</span> tables?</h3>
+            <div class="pr-text" style="font-size:16px;">A destructive migration that can't be cleanly rolled back. Full context, the exact SQL, and a dry-run diff are attached — the agent will not run it without explicit sign-off.</div>
+            <div class="callout-line" style="background:#f9e6e3; border-color:#eac4bf; color:#7a2c23; margin-top:auto;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+              <div class="ct" style="font-size:15px;">Requires typed confirmation before the agent proceeds.</div>
+            </div>
+          </div>
+        </div>
+        <!-- B: quick -->
+        <div class="var-col">
+          <div class="var-head"><div class="var-tag">B</div><div><div class="var-name">Quick decision</div><div class="var-desc">For low-risk, reversible defaults.</div></div></div>
+          <div class="var-frame" style="padding:0; justify-content:center;">
+            <div style="padding:32px 34px;">
+              <div class="pr-head-top" style="margin-bottom:14px;"><span class="badge success">Low risk</span><span class="badge neutral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L3 8"/></svg>Reversible</span></div>
+              <h3 class="pr-q" style="font-size:28px; margin-bottom:14px;">Use <span class="code-ref" style="font-size:19px;">pnpm</span> for the workspace?</h3>
+              <div class="pr-text" style="font-size:17px; margin-bottom:22px;">Agent recommends <strong>yes</strong> — faster installs, strict by default. Switch anytime with one command.</div>
+              <div style="display:flex; gap:12px; align-items:center;">
+                <button class="btn btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Approve</button>
+                <button class="btn btn-ghost">Change</button>
+                <div style="flex:1;"></div>
+                <span class="small-text" style="font-size:14px; color:var(--fg-4);">or it self-resolves in 1h</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>§ 04 · How decisions reach you</span><span>18 / 20</span></div>
+  </section>
+
+  <!-- ============================================================ 19 · THE LOOP -->
+  <section class="slide" data-label="A session that never fully blocks">
+    <div class="rail"><svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4" fill="#3b4cad"/></svg>waypoint</div>
+    <div class="page-num">19 / 20</div>
+    <div class="slide-head reveal">
+      <div class="eyebrow">Putting it together</div>
+      <h2 class="heading">A session that never fully blocks.</h2>
+    </div>
+    <div class="fill reveal r2" style="display:flex; flex-direction:column; justify-content:center;">
+      <div class="lanes" style="height:auto;">
+        <div class="lane agent">
+          <div class="lane-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg><span class="who">Agent</span><span style="color:var(--fg-3);">— working continuously</span></div>
+          <div class="lane-track">
+            <div class="seg-work agent" style="left:1%; width:30%;">auth · migrations</div>
+            <div class="seg-work agent" style="left:33%; width:28%;">seed scripts</div>
+            <div class="seg-work agent" style="left:63%; width:36%;">validation · tests</div>
+            <div class="wp-marker" style="left:32%;"></div>
+            <div class="wp-flag" style="left:32%; top:-26px;">parks ORM decision</div>
+          </div>
+        </div>
+        <div class="lane you">
+          <div class="lane-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="who">You</span><span style="color:var(--fg-3);">— reviewing when you surface</span></div>
+          <div class="lane-track">
+            <div class="seg-work you" style="left:68%; width:14%;">review &amp; approve</div>
+            <div class="wp-marker" style="left:68%; background:var(--accent-500);"></div>
+          </div>
+        </div>
+      </div>
+      <div class="reveal r3" style="display:grid; grid-template-columns:repeat(3,1fr); gap:30px; margin-top:48px;">
+        <div class="stack" style="gap:6px;"><div style="font-family:var(--font-mono); color:var(--amber-500); font-size:16px;">→ at the fork</div><p class="small-text">The agent parks the decision and immediately starts the next unblocked task.</p></div>
+        <div class="stack" style="gap:6px;"><div style="font-family:var(--font-mono); color:var(--accent-600); font-size:16px;">→ minutes later</div><p class="small-text">You open Waypoint on your phone, read the proposal, and approve in seconds.</p></div>
+        <div class="stack" style="gap:6px;"><div style="font-family:var(--font-mono); color:var(--green-600); font-size:16px;">→ on your call</div><p class="small-text">The agent applies your pick and the parked task closes — the work lane never went flat.</p></div>
+      </div>
+    </div>
+    <div class="foot"><span>§ 04 · How decisions reach you</span><span>19 / 20</span></div>
+  </section>
+
+  <!-- ============================================================ 20 · CLOSE -->
+  <section class="slide is-dark" data-label="Close">
+    <div class="rail" style="color:#8f8b7f;"><svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="#ecebe6" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="4" fill="#3b4cad"/></svg>waypoint</div>
+    <div class="page-num" style="color:#8f8b7f;">20 / 20</div>
+    <div class="stack" style="height:100%; justify-content:center;">
+      <div class="reveal" style="display:flex; align-items:center; gap:16px; margin-bottom:44px;">
+        <svg viewBox="0 0 48 48" fill="none" style="width:48px;height:48px;"><path d="M24 5 L43 24 L24 43 L5 24 Z" stroke="#ecebe6" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="5" fill="#3b4cad"/></svg>
+        <span style="font-family:var(--font-serif); font-size:40px; color:#ecebe6; letter-spacing:-0.02em;">Waypoint</span>
+      </div>
+      <h2 class="heading reveal r2" style="color:#ecebe6; font-size:80px; max-width:1400px;">Start parking decisions<br/>instead of waiting on them.</h2>
+      <p class="lead reveal r3" style="color:#c2bfb5; margin-top:36px; max-width:1180px;">A plane between you and the agent — so the work keeps moving while the decisions wait for you, not the other way around.</p>
+    </div>
+    <div class="foot" style="color:#6b6558;"><span>Product walkthrough · 2026</span><span>An interactive plane between human and agents</span></div>
+  </section>
+
+</deck-stage>
+
+<script src="deck-stage.js"></script>
+</body>
+</html>

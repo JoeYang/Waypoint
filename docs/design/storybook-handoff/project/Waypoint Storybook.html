@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Waypoint — product prototype</title>
+<link rel="stylesheet" href="colors_and_type.css"/>
+<link rel="stylesheet" href="waypoint-app.css"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body class="axiom">
+<div id="root"></div>
+
+<script type="text/babel" src="wp-icons.jsx"></script>
+<script type="text/babel" src="wp-data.jsx"></script>
+<script type="text/babel" src="wp-ui.jsx"></script>
+<script type="text/babel" src="wp-views.jsx"></script>
+<script type="text/babel" src="wp-proposal.jsx"></script>
+<script type="text/babel" src="wp-mobile.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+const {
+  WP_DATA, Sidebar, TopBar, NotificationsPanel,
+  Home, ProjectMap, Inbox, Activity, Settings, Proposal, MobileCompanion,
+} = window;
+
+const NAV_KEY = "wp_nav_v1";
+function loadNav() {
+  try { const r = localStorage.getItem(NAV_KEY); if (r) return JSON.parse(r); } catch (e) {}
+  return { project: null, view: "home", decision: null };
+}
+
+function App() {
+  const [nav, setNav] = useState(loadNav);
+  const [briefingOpen, setBriefingOpen] = useState(true);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [resolved, setResolved] = useState({});
+  const [threads, setThreads] = useState({});
+
+  useEffect(() => { try { localStorage.setItem(NAV_KEY, JSON.stringify(nav)); } catch (e) {} }, [nav]);
+
+  const d = WP_DATA;
+  const project = nav.project ? d.projects.find(p => p.id === nav.project) : null;
+  const unread = d.notifications.filter(n => n.unread).length;
+
+  const go = (next) => { setNotifOpen(false); setNav(n => ({ project: next.project ?? null, view: next.view || "map", decision: next.decision || null })); };
+  const goHome = () => go({ project: null, view: "home" });
+  const openDecision = (id) => setNav(n => ({ ...n, view: "proposal", decision: id }));
+
+  const onResolve = (id, option) => {
+    const proj = d.projects.find(p => p.decisions.some(x => x.id === id));
+    const dec = proj.decisions.find(x => x.id === id);
+    setResolved(r => ({ ...r, [id]: { option } }));
+    setThreads(t => ({
+      ...t,
+      [id]: [...(t[id] || []), { who: "agent", t: "now", text: `Applied ${option}. Resuming “${dec.blocksTask}” now — I'll pick the rest of the stream back up behind it.` }],
+    }));
+  };
+
+  const onComment = (id, text) => {
+    const reply = "Noted — I'll factor that in. Approve an option above whenever you're ready and I'll apply it with that constraint.";
+    setThreads(t => ({
+      ...t,
+      [id]: [...(t[id] || []), { who: "you", t: "now", text }, { who: "agent", t: "now", text: reply }],
+    }));
+  };
+
+  let body;
+  if (!project || nav.view === "home") {
+    body = <Home onNav={go} briefingOpen={briefingOpen} onDismissBriefing={() => setBriefingOpen(false)} resolved={resolved} />;
+  } else if (nav.view === "proposal" && nav.decision) {
+    const dec = project.decisions.find(x => x.id === nav.decision);
+    body = dec
+      ? <Proposal decision={dec} project={project} resolved={resolved[dec.id]} threadExtra={threads[dec.id]}
+                  onBack={() => go({ project: project.id, view: "inbox" })} onResolve={onResolve} onComment={onComment} />
+      : <Inbox project={project} onOpenDecision={openDecision} resolved={resolved} />;
+  } else if (nav.view === "inbox") {
+    body = <Inbox project={project} onOpenDecision={openDecision} resolved={resolved} />;
+  } else if (nav.view === "activity") {
+    body = <Activity project={project} />;
+  } else if (nav.view === "settings") {
+    body = <Settings project={project} />;
+  } else {
+    body = <ProjectMap project={project} onNav={go} onOpenDecision={openDecision} resolved={resolved} />;
+  }
+
+  return (
+    <div className="app">
+      <Sidebar projectId={nav.project} view={nav.view} onNav={go} onHome={goHome}
+               onOpenMobile={() => setMobileOpen(true)} resolved={resolved} />
+      <div className="main">
+        <TopBar project={project} view={nav.view} now={d.now} unread={unread} onBell={() => setNotifOpen(o => !o)} />
+        <div className="view scroll">{body}</div>
+      </div>
+      {notifOpen && <NotificationsPanel onClose={() => setNotifOpen(false)} onOpen={go} />}
+      {mobileOpen && <MobileCompanion onClose={() => setMobileOpen(false)} />}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

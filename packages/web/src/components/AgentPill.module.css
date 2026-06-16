@@ -1,0 +1,44 @@
+/* Agent working/idle status pill with a pulsing live dot. Shared by the top bar and the
+   home project cards (ported from waypoint-app.css `.agent-pill`). */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  color: var(--fg-2);
+  background: var(--paper-100);
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  padding: 6px 13px 6px 11px;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--green-600);
+  animation: lvp 2s var(--ease-out) infinite;
+}
+.idle .dot {
+  background: var(--ink-300);
+  animation: none;
+}
+.mono {
+  font-family: var(--font-mono);
+  color: var(--fg-1);
+}
+@keyframes lvp {
+  0% {
+    box-shadow: 0 0 0 0 rgba(63, 122, 72, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(63, 122, 72, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(63, 122, 72, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dot {
+    animation: none;
+  }
+}
