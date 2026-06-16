@@ -1,7 +1,7 @@
 {
   "permissions": {
-    "allow": ["npm *", "npx *", "node *", "git *", "openspec *", "docker *", "psql *"],
-    "deny": ["rm -rf", "cat .env", "cat .env.*", "echo * > .env"]
+    "allow": ["Bash(npm:*)", "Bash(npx:*)", "Bash(node:*)", "Bash(git:*)", "Bash(openspec:*)", "Bash(docker:*)", "Bash(psql:*)"],
+    "deny": ["Bash(rm -rf:*)", "Bash(cat .env)", "Bash(cat .env.*)", "Bash(echo * > .env)"]
   },
   "hooks": {
     "PostToolUse": [
