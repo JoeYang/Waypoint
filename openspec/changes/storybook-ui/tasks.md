@@ -58,9 +58,9 @@ Tests query by role/label, not testid; cover empty/edge + a11y paths (frontend.m
 
 ## 7. Activity + Settings (PR7)
 
-- [ ] 7.1 RED: `Activity` timeline — groups by time, dot kinds, stream tags, subs → implement.
-- [ ] 7.2 RED: `Settings` — three toggle cards with local state (toggles are keyboard-operable, aria-pressed) → implement.
-- [ ] 7.3 Activity + Settings CSS modules.
+- [x] 7.1 RED: `Activity` timeline — groups by time, dot kinds, stream tags, subs; never-blank empty state → implement. 3 tests; verified live.
+- [x] 7.2 RED: `Settings` — three toggle cards with local state (toggles are keyboard-operable `<button>`s with aria-pressed + aria-label) → implement. 4 tests; verified live.
+- [x] 7.3 Activity + Settings CSS modules. App ViewBody now routes every view (placeholder kept only as a defensive fallback).
 
 ## 8. Mobile companion (PR8)
 
