@@ -64,8 +64,8 @@ Tests query by role/label, not testid; cover empty/edge + a11y paths (frontend.m
 
 ## 8. Mobile companion (PR8)
 
-- [ ] 8.1 RED: phone-bezel overlay, per-decision cards across projects, reversible→Approve (local done) vs one-way→review-on-desktop, all-clear empty → implement.
-- [ ] 8.2 Mobile CSS module.
+- [x] 8.1 RED: phone-bezel overlay, per-decision cards across projects, reversible→Approve (local done) vs one-way→review-on-desktop, all-clear empty → implement. Labelled aria-modal dialog; scrim/Escape/close dismiss; "Open" jumps to the proposal. 5 tests; verified live.
+- [x] 8.2 Mobile CSS module. Wired into App via the existing setMobileOpen seam.
 
 ## 9. Cleanup + docs (PR9)
 
