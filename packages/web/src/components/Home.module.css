@@ -1,0 +1,211 @@
+/* Home — cross-project landing (ported from waypoint-app.css briefing/stat/proj-grid). */
+.briefing {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  background: var(--accent-50);
+  border: 1px solid var(--accent-100);
+  border-radius: 12px;
+  padding: 20px 22px;
+  margin-bottom: 30px;
+}
+.bi {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: var(--accent-600);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.briefingTitle {
+  margin: 0 0 4px;
+  font-family: var(--font-serif);
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--accent-700);
+}
+.briefingText {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-700);
+  max-width: 760px;
+  line-height: 1.55;
+}
+.x {
+  margin-left: auto;
+  color: var(--accent-600);
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  appearance: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.x:hover {
+  background: var(--accent-100);
+}
+
+.head {
+  margin-bottom: 24px;
+}
+
+.statRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 30px;
+}
+.stat {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+.v {
+  font-family: var(--font-serif);
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.vAccent {
+  color: var(--accent-600);
+}
+.vWarn {
+  color: var(--amber-500);
+}
+.l {
+  font-size: 13px;
+  color: var(--fg-3);
+  margin-top: 8px;
+}
+
+.projGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+.pcard {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-2),
+    box-shadow var(--dur-2);
+  appearance: none;
+  text-align: left;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+}
+.pcard:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-2);
+}
+.pcardTop {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 18px;
+}
+.glyph {
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  flex-shrink: 0;
+}
+.pt {
+  flex: 1;
+  min-width: 0;
+}
+.nm {
+  font-family: var(--font-serif);
+  font-size: 20px;
+}
+.dsc {
+  font-size: 13px;
+  color: var(--fg-3);
+}
+.pcardStreams {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-bottom: 18px;
+}
+.streamline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.snm {
+  color: var(--fg-2);
+  width: 110px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--paper-200);
+  overflow: hidden;
+  position: relative;
+}
+.barFill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 9999px;
+}
+.pct {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-4);
+  width: 34px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.pcardFoot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.open {
+  margin-left: auto;
+  color: var(--fg-3);
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+@media (max-width: 1080px) {
+  .projGrid {
+    grid-template-columns: 1fr;
+  }
+  .statRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
