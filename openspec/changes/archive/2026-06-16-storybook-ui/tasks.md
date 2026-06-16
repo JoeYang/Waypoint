@@ -69,5 +69,5 @@ Tests query by role/label, not testid; cover empty/edge + a11y paths (frontend.m
 
 ## 9. Cleanup + docs (PR9)
 
-- [ ] 9.1 Delete superseded `InboxScreen/List/Card`, `Spine`, `SpineScreen` + their tests; remove dead routes.
-- [ ] 9.2 Update README + `docs/` to describe the new UI; full `npm test` + `npm run e2e` green; `openspec validate storybook-ui --strict`.
+- [x] 9.1 Deleted superseded `InboxScreen/List/Card`, `Spine`, `SpineScreen` + their unit tests; no dead routes remained (App routes every view). The live hero-loop e2e specs (`spine.e2e`, `inbox.e2e`) drove the deleted screens — removed per the agreed call, to be re-authored at the live-wiring phase; `npm run e2e` passes the empty suite via `--pass-with-no-tests`.
+- [x] 9.2 Updated README (web bullet, spine section, dev/test notes) + added `docs/web-ui.md`. `npm test` green (282); `npm run e2e` green (empty); `openspec validate storybook-ui --strict` passes.
