@@ -7,9 +7,9 @@ implementation; schema/contract changes are isolated commits. Stacks `shared →
 > Overlaps `decision-context-and-actions` (also enriches `park_ask`). Reconcile before starting:
 > fold these two fields into that change, or land this slice and rebase that change onto it.
 
-- [ ] A.1 shared: add optional `risk` (`low|medium|high`) + `reversible` (boolean) to the `park_ask` input schema, the `Ask`, and `InboxItem` (backward-compatible — absent is valid). Its own commit (schema/contract).
-- [ ] A.2 core: store `risk`/`reversible` on the ask and surface them on `InboxItem`; default when absent (`medium`/`true`); ask-lifecycle tests incl. the omitted-field backward-compat case.
-- [ ] A.3 server: the MCP `park_ask` boundary accepts + validates the two fields; the `instructions` bootstrap directs agents to supply them. Boundary tests (valid, absent, invalid enum).
+- [x] A.1 shared: added optional `risk` (`low|medium|high`, new `Risk` enum) + `reversible` to the `park_ask` input shape (backward-compatible); own commit; 5 contract tests. (Ask + InboxItem fields land in A.2 with their population so the build never breaks.)
+- [x] A.2 core: migration `0003_add_ask_risk` (own commit); `Ask` + `InboxItem` carry the fields; `parkAsk` defaults them (`medium`/`true`) when omitted and `buildInboxItem` surfaces them; Postgres repo reads/writes them (park-time immutable). 3 core tests + fixture updates.
+- [x] A.3 server: MCP `park_ask` description + `instructions` bootstrap direct agents to declare risk/reversibility; the inputSchema validates them. 4 boundary tests (instructions mention them, park carries them through, invalid risk rejected).
 
 ## 1. Shared DTOs (PR1 — types only)
 
