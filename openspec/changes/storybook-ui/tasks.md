@@ -28,9 +28,9 @@ Tests query by role/label, not testid; cover empty/edge + a11y paths (frontend.m
 
 ## 3. Home (PR3)
 
-- [ ] 3.1 RED: briefing banner (dismissible; copy from waiting count) + 4 stat tiles → implement.
-- [ ] 3.2 RED: project cards (glyph, name, desc, agent pill, top-4 stream bars via CSS var width, footer waiting/caught-up + Open); click→map → implement.
-- [ ] 3.3 Empty/edge: all-caught-up footer; idle project; Home CSS module.
+- [x] 3.1 Briefing banner (dismissible; copy from the parked-decision count) + 4 stat tiles. + Badge primitive + shared view-chrome.
+- [x] 3.2 Project cards (glyph, name, desc, AgentPill, top-4 stream bars via CSS-var width, footer waiting/caught-up Badge + Open); card is a button → opens the project map.
+- [x] 3.3 Edge: all-caught-up footer (ledger-svc), idle project; Home CSS module. 5 tests; verified live.
 
 ## 4. Project map (PR4)
 
