@@ -25,6 +25,8 @@ const inboxAsk = {
   parkedAt: 0,
   askVersion: 1,
   nodeVersion: 1,
+  risk: "medium" as const,
+  reversible: true,
 };
 
 const task = {

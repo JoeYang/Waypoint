@@ -21,6 +21,8 @@ const item = (askId: string, over: Partial<InboxItem> = {}): InboxItem => ({
   parkedAt: 1000,
   askVersion: 1,
   nodeVersion: 1,
+  risk: "medium",
+  reversible: true,
   ...over,
 });
 

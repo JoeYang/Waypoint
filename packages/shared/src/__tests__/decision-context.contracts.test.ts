@@ -36,6 +36,8 @@ describe("Ask decision-context fields", () => {
     state: "OPEN",
     required: true,
     prompt: "Which db?",
+    risk: "medium",
+    reversible: true,
     options: [{ id: "opt-1", label: "Postgres" }],
     chosenOptionId: null,
     assumption: null,
@@ -143,6 +145,8 @@ describe("InboxItem decision context (optional, degrades gracefully)", () => {
     parkedAt: 0,
     askVersion: 1,
     nodeVersion: 1,
+    risk: "medium",
+    reversible: true,
   };
 
   it("parses with no context fields (older asks)", () => {

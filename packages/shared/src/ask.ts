@@ -4,6 +4,13 @@ export const ASK_TYPES = ["QUESTION", "PROPOSAL", "DECISION"] as const;
 export const AskType = z.enum(ASK_TYPES);
 export type AskType = z.infer<typeof AskType>;
 
+// The agent's own judgement of how risky a decision is and whether it can be undone, supplied at
+// park time so the human surface shows real signal rather than a UI heuristic. Both default at the
+// boundary when omitted (medium / reversible), so older callers stay valid.
+export const RISK_LEVELS = ["low", "medium", "high"] as const;
+export const Risk = z.enum(RISK_LEVELS);
+export type Risk = z.infer<typeof Risk>;
+
 // Two flows share one state field:
 //   OPEN → ANSWERED                     (human answers directly)
 //   OPEN → ASSUMED → CONFIRMED|OVERTURNED  (agent proceeds; human ratifies/overturns)
@@ -29,6 +36,8 @@ export const AskSchema = z.object({
   required: z.boolean(), // only required+OPEN asks contribute to a node's `blocked`
   prompt: z.string().min(1),
   rationale: z.string().max(2000).nullable(), // why the agent needs this decided now
+  risk: Risk, // agent-declared risk; defaulted (medium) at the park boundary
+  reversible: z.boolean(), // agent-declared reversibility; defaulted (true) at the park boundary
   options: z.array(AskOptionSchema), // empty unless DECISION; ≥2 enforced at the boundary
   suggestedAnswers: z.array(z.string().min(1)), // QUESTION: pick-first answers; [] otherwise
   agentLabel: z.string().min(1).nullable(), // stable human-friendly provenance for the story
