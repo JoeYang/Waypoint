@@ -36,7 +36,7 @@ describe("App shell", () => {
     await user.click(sidebar().getByRole("button", { name: /orbit-api/ }));
     expect(screen.getByRole("heading", { name: "Project map" })).toBeInTheDocument();
     await user.click(sidebar().getByRole("button", { name: /Decisions/ }));
-    expect(screen.getByText(/Decisions — coming in a later slice/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /waiting/ })).toBeInTheDocument();
   });
 
   it("toggles the notifications popover from the bell", async () => {
