@@ -1,0 +1,32 @@
+.state {
+  padding: var(--sp-7) 0;
+}
+
+.retry {
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--fg-on-accent);
+  background: var(--accent-500);
+  border: 1px solid var(--accent-600);
+  border-radius: var(--r-3);
+  padding: var(--sp-2) var(--sp-5);
+  cursor: pointer;
+}
+.retry:focus-visible {
+  outline: 2px solid var(--accent-500);
+  outline-offset: 2px;
+}
+
+.error {
+  color: var(--danger);
+  font-size: var(--fs-sm);
+  margin: 0 0 var(--sp-4);
+}
+
+.reconnecting {
+  color: var(--fg-3);
+  font-size: var(--fs-sm);
+  font-style: italic;
+  margin: 0 0 var(--sp-4);
+}

@@ -1,0 +1,236 @@
+/* The project spine — calm, glanceable, with colour carrying meaning. Flat, hairline
+   borders, no shadows (Axiom); amber = needs you, green = settled, indigo = the live edge. */
+.spine {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+}
+
+.empty {
+  color: var(--fg-3);
+  font-style: italic;
+}
+
+/* The hook: what needs you, surfaced above everything. */
+.needsYou {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--border-accent);
+  border-left: 3px solid var(--warning);
+  border-radius: var(--r-3);
+  background: var(--bg-accent);
+  color: var(--fg-2);
+  font-size: var(--fs-sm);
+}
+.needsYouCount {
+  font-family: var(--font-serif);
+  font-size: var(--fs-xl, 1.4rem);
+  font-weight: var(--fw-bold, 700);
+  color: var(--warning);
+  line-height: 1;
+}
+
+/* A goal: a fixed, confident header at the top of its section. */
+.goal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+.goalHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: var(--sp-3);
+}
+.goalTitle {
+  margin: 0;
+}
+.goalMeta,
+.planMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.count,
+.agent {
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
+}
+.agent {
+  color: var(--fg-2);
+  font-variant: small-caps;
+  letter-spacing: var(--tracking-wide);
+}
+
+/* "N open" — an amber pill so waiting decisions read as the thing that needs you. */
+.openPill {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  color: #fff;
+  background: var(--warning);
+  border-radius: var(--r-2);
+  padding: 0.05em 0.5em;
+  white-space: nowrap;
+}
+
+/* Thin progress meter. */
+.meter {
+  display: inline-block;
+  width: 72px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.meterFill {
+  display: block;
+  height: 100%;
+  background: var(--success);
+  transition: width var(--dur-2, 220ms) var(--ease-out, ease);
+}
+
+.plan {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border: 1px solid var(--border);
+  border-radius: var(--r-3);
+  background: var(--bg-raised);
+}
+/* Settled plans recede — only the live edge holds full contrast. */
+.plan[data-state="done"] {
+  opacity: 0.55;
+}
+.planHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+.planTitle {
+  margin: 0;
+  font-size: var(--fs-base);
+}
+
+.tasks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.task {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding-left: var(--sp-3);
+  border-left: 2px solid transparent;
+  transition: opacity var(--dur-2, 220ms) var(--ease-out, ease);
+}
+/* The live edge: a task waiting on a human decision gets an amber rail + full weight. */
+.task[data-state="blocked-on-ask"] {
+  border-left-color: var(--warning);
+}
+.task[data-state="done"],
+.task[data-state="failed"] {
+  opacity: 0.5;
+}
+/* Importance as weight: a larger blast radius reads heavier — it never reorders the list. */
+.task[data-weight="1"] .taskTitle,
+.task[data-weight="2"] .taskTitle {
+  font-weight: var(--fw-medium);
+}
+.task[data-weight="3"] .taskTitle,
+.task[data-weight="4"] .taskTitle,
+.task[data-weight="5"] .taskTitle {
+  font-weight: var(--fw-bold, 700);
+}
+
+.taskHead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.taskTitle {
+  color: var(--fg-1);
+}
+.group {
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
+}
+
+/* State badges — a coloured dot + label. Colour is the meaning. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--fg-2);
+  white-space: nowrap;
+}
+.badge::before {
+  content: "";
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 999px;
+  background: var(--fg-4);
+}
+.badge[data-state="on-track"],
+.badge[data-state="active"],
+.badge[data-state="running"] {
+  color: var(--fg-accent);
+}
+.badge[data-state="on-track"]::before,
+.badge[data-state="active"]::before,
+.badge[data-state="running"]::before {
+  background: var(--accent-500);
+}
+.badge[data-state="at-risk"]::before,
+.badge[data-state="blocked"]::before,
+.badge[data-state="blocked-on-ask"]::before {
+  background: var(--warning);
+}
+.badge[data-state="at-risk"],
+.badge[data-state="blocked"],
+.badge[data-state="blocked-on-ask"] {
+  color: var(--warning);
+}
+.badge[data-state="failed"]::before {
+  background: var(--danger);
+}
+.badge[data-state="done"]::before {
+  background: var(--success);
+}
+
+.foldToggle {
+  align-self: flex-start;
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.foldToggle:focus-visible {
+  outline: 2px solid var(--accent-500);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .task,
+  .meterFill {
+    transition: none;
+  }
+}

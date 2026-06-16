@@ -55,3 +55,33 @@ on the task it blocks.
 - **Depends on**: slice 1's self-contained card (re-homed in place).
 - **Out of scope (slice 3)**: the while-you-were-away story, the threaded event narrative, and tiered
   notifications.
+
+## Decisions settled (independent plan review)
+
+An independent review surfaced gaps that are settled here before implementation:
+
+- **Derived states (full model).** Raw `node.status` is only `DRAFT | ACTIVE | DONE | DISCARDED`, so the
+  per-level states are _derived_, defined as:
+  - **task**: `blocked-on-ask` if it has a required OPEN ask; else `failed` if `DISCARDED` (its
+    `discardReason` is the failure reason); else `done` if `DONE`; else `running`.
+  - **plan**: `done` if every descendant task is done/closed; `blocked` if any descendant task is
+    `blocked-on-ask`; else `active`.
+  - **goal**: `blocked` if it has descendant work but none is movable (every non-done leaf is
+    blocked-on-ask); `at-risk` if ≥1 descendant is `blocked-on-ask` while other work is still movable;
+    else `on-track`.
+  - **`step` nodes**: the hierarchy walk is parent-based and kind-aware — a `step` is a nested group
+    between its plan and its tasks; its tasks roll up through the step into the plan. The spine renders
+    goal → plan → (step?) → task; `step` never silently drops a subtree.
+- **Liveness reuses the existing inbox WS signal.** The WS hub is inbox-specific by design (`hub.ts`);
+  every committed mutation already calls `hub.notify`. The spine listens to that same signal and refetches
+  `/progress` — **no new WS frame type** (deferred to slice 3 if granular deltas are ever needed). One
+  push path, no protocol change. (Supersedes the "push a progress delta over the WS seam" wording above.)
+- **Read-time rollup, decided up front.** `listProject` computes in one transaction in JS, mirroring the
+  existing `listInbox`/`getContext` pattern; progress is a derived read like `blast_radius`, which by
+  design emits no event. Benchmark budget: **p95 < 150 ms** for `GET /progress` over a seeded tree of
+  **50+ nodes** (all four kinds) with a non-trivial `depends_on` graph. If missed, the first remedy is a
+  composite index (`project_id, status`), and only then the denormalized projection.
+- **One-call card hydration.** `listProject` returns each task's open asks in `InboxItem` shape, so the
+  spine renders the unchanged slice-1 card without a second fetch.
+- **Motion is the last sub-step.** Collapse-to-live-edge and the settle/dim of completed work are a
+  UI-only polish commit after the data shape and live refetch land.

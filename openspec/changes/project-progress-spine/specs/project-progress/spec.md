@@ -8,11 +8,20 @@ with explicit state and rolled-up progress, computed from data already stored (n
 A goal SHALL report `on-track | at-risk | blocked`, the percentage of its plans done, and the count of
 open asks beneath it. A plan SHALL report `active | blocked | done`, its owning agent, its last activity,
 and its rolled-up open asks. A task SHALL report `running | blocked-on-ask | done | failed`, the agent on
-it now, and the asks it has spawned. The read model SHALL report each node's blast radius (direct
+it now, and the asks it has spawned (its open asks SHALL be carried in `InboxItem` shape so the decision
+card hydrates without a second fetch). The read model SHALL report each node's blast radius (direct
 dependents only) for use as visual weight and SHALL NOT impose a presentation sort order. The rollup
 SHALL be computed within an interactive latency budget on a realistic tree; if the read-time computation
 exceeds that budget, the implementation SHALL serve a denormalized projection updated on event append
 rather than degrade the spine.
+
+The derived states are defined as: a **task** is `blocked-on-ask` if it has a required OPEN ask, else
+`failed` if `DISCARDED` (its `discardReason` being the failure reason), else `done` if `DONE`, else
+`running`. A **plan** is `done` if every descendant task is done/closed, `blocked` if any descendant task
+is `blocked-on-ask`, else `active`. A **goal** is `blocked` if it has descendant work but none is movable
+(every non-done leaf is blocked-on-ask), `at-risk` if at least one descendant is `blocked-on-ask` while
+other work is still movable, else `on-track`. A `step` node is a kind-aware nested group between a plan
+and its tasks; its tasks roll up through the step into the plan, and no `step` subtree is dropped.
 
 #### Scenario: Levels roll up from leaves
 

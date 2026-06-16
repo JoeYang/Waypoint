@@ -1,0 +1,26 @@
+{
+  "name": "@waypoint/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@waypoint/core": "*",
+    "@waypoint/shared": "*",
+    "fastify": "^5.8.5",
+    "pg": "^8.21.0",
+    "ws": "^8.21.0"
+  }
+}
