@@ -1,0 +1,50 @@
+/* Semantic status badge (ported from waypoint-app.css `.bdg`). */
+.bdg {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+.bdg svg {
+  width: 12px;
+  height: 12px;
+}
+.neutral {
+  background: var(--paper-100);
+  color: var(--ink-700);
+  border-color: var(--border);
+}
+.accent {
+  background: #eef1fb;
+  color: #25316f;
+  border-color: #dde2f5;
+}
+.success {
+  background: #edf4ee;
+  color: #2a5731;
+  border-color: #d3e4d6;
+}
+.warning {
+  background: #fbf2dd;
+  color: #6e4e0f;
+  border-color: #f0dcaa;
+}
+.danger {
+  background: #f9e6e3;
+  color: #7a2c23;
+  border-color: #eac4bf;
+}
+.info {
+  background: #e2f0f0;
+  color: #1f5454;
+  border-color: #c7dfdf;
+}
+.mono {
+  font-family: var(--font-mono);
+}
