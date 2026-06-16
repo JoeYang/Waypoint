@@ -34,7 +34,7 @@ describe("App shell", () => {
     const user = userEvent.setup();
     renderApp();
     await user.click(sidebar().getByRole("button", { name: /orbit-api/ }));
-    expect(screen.getByText(/Project map — coming in a later slice/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Project map" })).toBeInTheDocument();
     await user.click(sidebar().getByRole("button", { name: /Decisions/ }));
     expect(screen.getByText(/Decisions — coming in a later slice/)).toBeInTheDocument();
   });
