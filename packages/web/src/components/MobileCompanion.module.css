@@ -1,0 +1,247 @@
+/* Mobile companion overlay (phone bezel), ported from waypoint-app.css mobile/phone/ph rules. */
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(23, 21, 18, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 56px;
+  padding: 40px;
+}
+
+.copy {
+  max-width: 360px;
+  color: #fff;
+}
+.copyTitle {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 400;
+  margin: 10px 0 14px;
+  letter-spacing: -0.02em;
+}
+.copy p {
+  font-size: 15px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 24px;
+}
+.close {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 9px 16px;
+  cursor: pointer;
+}
+.close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.phone {
+  width: 340px;
+  height: 720px;
+  background: #14130f;
+  border-radius: 44px;
+  padding: 11px;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+.screen {
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+  border-radius: 34px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 26px;
+  background: #14130f;
+  border-radius: 0 0 16px 16px;
+  z-index: 5;
+}
+.status {
+  height: 44px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 24px 6px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+.top {
+  padding: 8px 18px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.top svg {
+  color: var(--accent-600);
+}
+.pht {
+  font-family: var(--font-serif);
+  font-size: 19px;
+  flex: 1;
+}
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  background: var(--paper-50);
+}
+
+.card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+}
+.cardDone {
+  opacity: 0.7;
+}
+.cardProject {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 7px;
+}
+.glyph {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  color: #fff;
+}
+.projectName {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-3);
+}
+.pct {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+.pcb {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 9px;
+}
+.pcd {
+  font-size: 12.5px;
+  color: var(--fg-3);
+  line-height: 1.45;
+  margin-bottom: 12px;
+}
+.pcd strong {
+  color: var(--fg-1);
+}
+.pca {
+  display: flex;
+  gap: 8px;
+}
+.pca .btn {
+  flex: 1;
+}
+.approvedRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--green-600);
+  font-size: 13px;
+  font-weight: 600;
+}
+.doneTitle {
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 6px;
+  color: var(--fg-3);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  line-height: 1.1;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.primary {
+  background: var(--accent-600);
+  color: #fff;
+}
+.secondary {
+  background: var(--bg-raised);
+  color: var(--fg-1);
+  border-color: var(--border-strong);
+}
+.danger {
+  background: var(--bg-raised);
+  color: var(--red-500);
+  border-color: var(--border-strong);
+}
+
+.empty {
+  text-align: center;
+  padding: 60px 16px;
+}
+.empty .ei {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: var(--paper-100);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.empty .ei svg {
+  color: var(--green-600);
+}
+.empty h3 {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 400;
+  margin: 0 0 8px;
+}
+.empty p {
+  color: var(--fg-3);
+  font-size: 13px;
+  margin: 0 auto;
+  max-width: 420px;
+}

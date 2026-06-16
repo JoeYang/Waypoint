@@ -9,6 +9,7 @@ import { Inbox } from "./components/Inbox.js";
 import { Proposal } from "./components/Proposal.js";
 import { Activity } from "./components/Activity.js";
 import { Settings } from "./components/Settings.js";
+import { MobileCompanion } from "./components/MobileCompanion.js";
 import type { View } from "./wp/state.js";
 import t from "./components/typography.module.css";
 import styles from "./App.module.css";
@@ -40,10 +41,10 @@ function ViewBody(): JSX.Element {
 }
 
 // The persistent app shell: sidebar + (top bar / scrolling view), with the notifications
-// popover overlaid. The mobile companion overlay is wired here and lands in PR8.
+// popover and the mobile companion overlaid.
 export function App(): JSX.Element {
   const [notifOpen, setNotifOpen] = useState(false);
-  const [, setMobileOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div className={styles.app}>
@@ -55,6 +56,7 @@ export function App(): JSX.Element {
         </div>
       </div>
       {notifOpen ? <NotificationsPanel onClose={() => setNotifOpen(false)} /> : null}
+      {mobileOpen ? <MobileCompanion onClose={() => setMobileOpen(false)} /> : null}
     </div>
   );
 }
