@@ -2,6 +2,15 @@ Each numbered group is one PR (≤600 code lines; docs/specs/lockfiles exempt). 
 `npm test` green and `npx prettier --write .` before every commit. Interfaces/DTOs land before
 implementation; schema/contract changes are isolated commits. Stacks `shared → core → server → web`.
 
+## A. park_ask risk/reversibility extension (PR-A — MCP-contract, lands first; see D10)
+
+> Overlaps `decision-context-and-actions` (also enriches `park_ask`). Reconcile before starting:
+> fold these two fields into that change, or land this slice and rebase that change onto it.
+
+- [ ] A.1 shared: add optional `risk` (`low|medium|high`) + `reversible` (boolean) to the `park_ask` input schema, the `Ask`, and `InboxItem` (backward-compatible — absent is valid). Its own commit (schema/contract).
+- [ ] A.2 core: store `risk`/`reversible` on the ask and surface them on `InboxItem`; default when absent (`medium`/`true`); ask-lifecycle tests incl. the omitted-field backward-compat case.
+- [ ] A.3 server: the MCP `park_ask` boundary accepts + validates the two fields; the `instructions` bootstrap directs agents to supply them. Boundary tests (valid, absent, invalid enum).
+
 ## 1. Shared DTOs (PR1 — types only)
 
 - [ ] 1.1 `ProjectSummary` + `ProjectListResponse` zod schemas in `packages/shared` (id, name, openAskCount, agentTaskCount, lastActivityAt?), inferred types exported from the entrypoint.

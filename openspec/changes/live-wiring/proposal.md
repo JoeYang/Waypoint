@@ -34,9 +34,12 @@ context. Comments reuse the existing answer contract (see D3).
 ## What changes
 
 ```
-  shared ──▶ + ProjectSummary, ProjectListResponse, EventLogResponse DTOs (zod)
-  core   ──▶ + read-models: listProjects(), readEvents(projectId, sinceSeq?)  (ports + impl)
-  server ──▶ + GET /v1/projects, GET /v1/projects/:id/events  (routes over the new reads)
+  shared ──▶ + risk/reversible on park_ask input + Ask + InboxItem  (D10, MCP-contract)
+            + ProjectSummary, ProjectListResponse, EventLogResponse DTOs (zod)
+  core   ──▶ + store/surface risk+reversible (default when absent)
+            + read-models: listProjects(), readEvents(projectId, sinceSeq?)  (new ports + impl)
+  server ──▶ + park_ask accepts risk/reversible; bootstrap instructions updated
+            + GET /v1/projects, GET /v1/projects/:id/events  (routes over the new reads)
   web    ──▶ • WaypointSource becomes async: load()/subscribe()/answer()  (mockSource still works)
             • liveSource: progress→Map, inbox→Decisions, events→Activity, projects→Home
             • WaypointProvider gains loading/error/empty states (deferred from the mock phase)
@@ -44,8 +47,9 @@ context. Comments reuse the existing answer contract (see D3).
             • comment→PROPOSAL "adjust" verdict (adjustmentNote); Notifications derived client-side
 ```
 
-No change to the ask state machine, the MCP tool contract, or the WS frame schema. The new REST
-endpoints are **additive reads** (no mutation, no schema migration).
+The only contract change is the **additive, backward-compatible** `park_ask` extension (D10 — two
+optional fields); the ask state machine and the WS frame schema are unchanged, and the new REST
+endpoints are additive reads (no mutation, no schema migration).
 
 ## Key decisions (pros/cons)
 
@@ -102,26 +106,36 @@ Five rendered `Decision` fields have **no backend source**; the adapter must der
 with a documented rule (TypeScript won't catch an `undefined` the adapter constructs into JSX). This
 is the single biggest correctness risk and is **enumerated here, not hand-waved**:
 
-| view-model field                | backend source / derivation                                                  |
-| ------------------------------- | ---------------------------------------------------------------------------- |
-| `Decision.blocking`             | `InboxItem.required` (a required OPEN ask blocks its node)                   |
-| `Decision.title`                | `InboxItem.prompt`                                                           |
-| `Decision.options`              | `InboxItem.options` (label → name, `consequence` → a single con/pro line)    |
-| `Decision.recReason`            | the recommended `AskOption` (the `rec` option's label); absent → no rec tag  |
-| `Decision.context`              | `InboxItem.rationale` (nullable → empty "why this came up")                  |
-| `Decision.blocksTask`/`stream`  | the ask's node title / its plan title (from `/progress` ancestry)            |
-| `Decision.parked`               | relative label from `InboxItem.parkedAt`                                     |
-| `Decision.continuedDescription` | computed from sibling unblocked tasks (was a fixture string)                 |
-| **`Decision.risk`**             | **no source** → derive from `blastRadius` + `required` thresholds            |
-| **`Decision.reversible`**       | **no source** → default `true` (caveat) — or agent-supplied (see fork below) |
-| **`Decision.impact`**           | **no source** → generated text from `blocks`/`blastRadius`; `kind` from risk |
-| **`Decision.file`**             | **no source** → omit (drop the code-ref) unless a node carries a path        |
+| view-model field                | backend source / derivation                                                 |
+| ------------------------------- | --------------------------------------------------------------------------- |
+| `Decision.blocking`             | `InboxItem.required` (a required OPEN ask blocks its node)                  |
+| `Decision.title`                | `InboxItem.prompt`                                                          |
+| `Decision.options`              | `InboxItem.options` (label → name, `consequence` → a single con/pro line)   |
+| `Decision.recReason`            | the recommended `AskOption` (the `rec` option's label); absent → no rec tag |
+| `Decision.context`              | `InboxItem.rationale` (nullable → empty "why this came up")                 |
+| `Decision.blocksTask`/`stream`  | the ask's node title / its plan title (from `/progress` ancestry)           |
+| `Decision.parked`               | relative label from `InboxItem.parkedAt`                                    |
+| `Decision.continuedDescription` | computed from sibling unblocked tasks (was a fixture string)                |
+| **`Decision.risk`**             | **agent-supplied** via extended `park_ask` (D10); absent → "medium"         |
+| **`Decision.reversible`**       | **agent-supplied** via extended `park_ask` (D10); absent → `true`           |
+| `Decision.impact`               | generated text from `blocks`/`blastRadius`; `kind` from the agent's `risk`  |
+| `Decision.file`                 | omit (drop the code-ref) unless a node carries a path                       |
 
-The **fork** (risk / reversible / impact): derive them client-side now with the rules above, **or**
-extend `park_ask` so the agent supplies risk + reversibility (a richer, more correct signal — and a
-natural companion to the pending `decision-context-and-actions` change, which already adds
-`rationale` + per-option `consequence`). Extending `park_ask` is an MCP-contract change (ask-first),
-so it is **not** assumed here — flagged for your call.
+**Fork resolved (your call):** `risk` + `reversible` are **agent-supplied** — the agent knows them,
+so `park_ask` is extended to carry them (D10) rather than the UI guessing. `impact` stays derived
+(text from what the ask blocks; severity from the supplied `risk`); `file` is dropped when absent.
+
+**D10 — Extend `park_ask` so the agent supplies `risk` + `reversibility` (MCP-contract change).**
+`park_ask` gains optional `risk` (`low|medium|high`) and `reversible` (boolean); both are stored on
+the `Ask` and surfaced on `InboxItem` so the adapter reads real values. Optional → backward
+compatible (absent → `medium` / `true`); the MCP `instructions` bootstrap directs agents to supply
+them. _Pro:_ the decision's risk/reversibility is the agent's real judgement, not a UI heuristic.
+_Con:_ an MCP-contract change (ask-first) that must land **before** the web adapter (PR5) can use it.
+**Overlap (flagged):** this enriches `park_ask`, exactly like the pending `decision-context-and-actions`
+change (rationale + per-option consequence + suggestedAnswers). To avoid two changes editing the same
+tool schema, **recommend reconciling them** — either fold these two fields into that change, or land
+this slice first and rebase that change onto it. Sequenced here as group A so live-wiring is
+self-contained; happy to move it if you'd rather it live in `decision-context-and-actions`.
 
 **D9 — `now` and `user` have no backend identity (auth is stubbed).**
 `ProjectsData.now` resolves from the client clock; `ProjectsData.user` from a static `me` config
@@ -144,7 +158,8 @@ independently shippable (mock stays green until the live source is selected).
 ## Out of scope
 
 Auth (still stubbed behind the `principal` seam), URL routing, a richer comment/discussion
-capability beyond PROPOSAL adjust, the deck, and any MCP-tool or ask-state-machine change.
+capability beyond PROPOSAL adjust, the deck, the ask-state-machine, and any `park_ask` enrichment
+beyond the two `risk`/`reversible` fields (D10).
 
 ## Risks / failure injection (required tests)
 
