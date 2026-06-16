@@ -1,0 +1,81 @@
+/* Project map: stream lanes + legend, ported from waypoint-app.css .lane/.legend2. */
+.empty {
+  color: var(--fg-3);
+  font-style: italic;
+}
+
+.intro {
+  font-size: 14px;
+  color: var(--fg-2);
+  margin-top: -8px;
+  margin-bottom: 22px;
+  max-width: 720px;
+}
+
+.legend {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--fg-2);
+}
+.sw {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+}
+.sw.done {
+  background: var(--paper-100);
+}
+.sw.active {
+  background: #eef1fb;
+  border-color: var(--accent-300);
+}
+.sw.blocked {
+  background: #fdf8ee;
+  border-color: #e9cfa0;
+}
+.sw.queued {
+  background: var(--bg-raised);
+  border-style: dashed;
+}
+
+.lane {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+.laneHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.lname {
+  font-family: var(--font-serif);
+  font-size: 18px;
+}
+.lmeta {
+  font-size: 12px;
+  color: var(--fg-3);
+  font-family: var(--font-mono);
+}
+.lspace {
+  flex: 1;
+}
+.laneTrack {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}

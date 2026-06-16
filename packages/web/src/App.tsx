@@ -4,6 +4,7 @@ import { Sidebar } from "./components/Sidebar.js";
 import { TopBar } from "./components/TopBar.js";
 import { NotificationsPanel } from "./components/NotificationsPanel.js";
 import { Home } from "./components/Home.js";
+import { ProjectMap } from "./components/ProjectMap.js";
 import type { View } from "./wp/state.js";
 import t from "./components/typography.module.css";
 import styles from "./App.module.css";
@@ -17,11 +18,12 @@ const VIEW_LABEL: Record<View, string> = {
   settings: "Settings",
 };
 
-// Routes the current view to its screen. Home is live; the rest are placeholders until
-// their slices (PR4–7) land.
+// Routes the current view to its screen. Home and the project map are live; the rest are
+// placeholders until their slices (PR5–7) land.
 function ViewBody(): JSX.Element {
   const { nav } = useWaypoint();
   if (nav.view === "home") return <Home />;
+  if (nav.view === "map") return <ProjectMap />;
   return (
     <div className={t.viewInner}>
       <p className={styles.placeholder}>{VIEW_LABEL[nav.view]} — coming in a later slice.</p>

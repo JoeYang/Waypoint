@@ -1,0 +1,118 @@
+/* One task node on a stream lane, ported from waypoint-app.css .tnode/.conn/.tcard. */
+.tnode {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.conn {
+  width: 26px;
+  height: 2px;
+  background: var(--ink-700);
+  flex-shrink: 0;
+}
+.conn.future {
+  background: none;
+  border-top: 2px dashed var(--border-strong);
+}
+.tnode:first-child .conn {
+  display: none;
+}
+
+.tcard {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 13px;
+  min-width: 150px;
+  background: var(--bg-raised);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: default;
+  transition: box-shadow var(--dur-2);
+}
+.tt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.tt svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+.tm {
+  display: block;
+  font-size: 11px;
+  color: var(--fg-4);
+  font-family: var(--font-mono);
+  margin-top: 4px;
+}
+.resuming {
+  display: block;
+  font-size: 11px;
+  color: var(--green-600);
+  font-family: var(--font-mono);
+  margin-top: 4px;
+}
+.parked,
+.hereTag {
+  display: inline-flex;
+  margin-top: 7px;
+}
+
+.done {
+  background: var(--paper-50);
+}
+.done .tt {
+  color: var(--fg-3);
+}
+.done .tt svg {
+  color: var(--green-600);
+}
+.active {
+  border-color: var(--accent-300);
+  border-width: 1.5px;
+  background: #f6f7fd;
+}
+.active .tt svg {
+  color: var(--accent-600);
+}
+.blocked {
+  border-color: #e9cfa0;
+  background: #fdf8ee;
+  cursor: pointer;
+}
+.blocked .tt svg {
+  color: var(--amber-500);
+}
+.blocked:hover {
+  box-shadow: 0 3px 12px rgba(184, 132, 31, 0.18);
+}
+.queued {
+  border-style: dashed;
+}
+.queued .tt {
+  color: var(--fg-4);
+}
+.queued .tt svg {
+  color: var(--ink-300);
+}
+
+/* The "you are here" pill (waypoint-app.css .here-tag). */
+.hereTag {
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-700);
+  background: var(--accent-50);
+  border: 1px solid var(--accent-100);
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+.hereTag svg {
+  width: 11px;
+  height: 11px;
+}
