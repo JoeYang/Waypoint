@@ -48,6 +48,7 @@ interface NodeRow {
   title: string;
   status: string;
   discard_reason: string | null;
+  pr_url: string | null;
   session_id: string | null;
   version: number;
   created_at: string;
@@ -105,6 +106,7 @@ const toNode = (r: NodeRow): Node => ({
   title: r.title,
   status: r.status as NodeStatus,
   discardReason: r.discard_reason,
+  prUrl: r.pr_url,
   sessionId: r.session_id,
   version: r.version,
   createdAt: Number(r.created_at),
@@ -198,8 +200,8 @@ function makeContext(db: Queryable): RepositoryContext {
     insert: async (n) => {
       await db.query(
         `INSERT INTO node (id, project_id, parent_id, kind, title, status, discard_reason,
-           session_id, version, created_at, updated_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+           pr_url, session_id, version, created_at, updated_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
         [
           n.id,
           n.projectId,
@@ -208,6 +210,7 @@ function makeContext(db: Queryable): RepositoryContext {
           n.title,
           n.status,
           n.discardReason,
+          n.prUrl,
           n.sessionId,
           n.version,
           n.createdAt,
@@ -218,7 +221,7 @@ function makeContext(db: Queryable): RepositoryContext {
     update: async (n) => {
       await db.query(
         `UPDATE node SET parent_id=$3, kind=$4, title=$5, status=$6, discard_reason=$7,
-           session_id=$8, version=$9, updated_at=$10 WHERE project_id=$1 AND id=$2`,
+           pr_url=$8, session_id=$9, version=$10, updated_at=$11 WHERE project_id=$1 AND id=$2`,
         [
           n.projectId,
           n.id,
@@ -227,6 +230,7 @@ function makeContext(db: Queryable): RepositoryContext {
           n.title,
           n.status,
           n.discardReason,
+          n.prUrl,
           n.sessionId,
           n.version,
           n.updatedAt,

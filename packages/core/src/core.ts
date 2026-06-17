@@ -316,6 +316,7 @@ export function createCore(deps: CoreDeps): Core {
           title: input.title,
           status: "DRAFT",
           discardReason: null,
+          prUrl: input.prUrl ?? null,
           sessionId: input.sessionId ?? null,
           version: 1,
           createdAt: now,
@@ -822,6 +823,7 @@ export function createCore(deps: CoreDeps): Core {
           title: taskNode.title,
           state: deriveTaskState(taskNode, hasRequiredOpenAsk(taskNode.id)),
           agentLabel: aliasFor(taskNode),
+          prUrl: taskNode.prUrl,
           blastRadius: countDependents(edges, taskNode.id),
           group: planId !== null ? stepGroupFor(taskNode.id, planId) : null,
           asks: (pendingByNode.get(taskNode.id) ?? []).map((a) =>
