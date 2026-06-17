@@ -4,6 +4,8 @@ import { defineConfig, devices } from "@playwright/test";
 // neighbouring project's dev server, which reuseExistingServer would wrongly adopt.
 const WEB_PORT = process.env.WAYPOINT_WEB_PORT ?? "5273";
 const WEB_URL = process.env.WAYPOINT_WEB_URL ?? `http://localhost:${WEB_PORT}`;
+// The web app reads the live backend from VITE_WAYPOINT_API_BASE — the REST/WS host (:8849).
+const API_BASE = process.env.WAYPOINT_API_BASE ?? "http://localhost:8849";
 
 // End-to-end tests for the full park → answer → unblock loop. The test drives an MCP
 // client (agent) and a browser (human) against a running stack. Playwright starts the web
@@ -23,7 +25,7 @@ export default defineConfig({
   webServer: {
     command: "npm run dev -w @waypoint/web",
     url: WEB_URL,
-    env: { WAYPOINT_WEB_PORT: WEB_PORT },
+    env: { WAYPOINT_WEB_PORT: WEB_PORT, VITE_WAYPOINT_API_BASE: API_BASE },
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },
