@@ -107,7 +107,13 @@ describe("adapter — decision (D8 provenance)", () => {
       parked: "12m ago",
     });
     expect(d.impact.kind).toBe("danger"); // high risk
-    expect(d.options[0]).toEqual({ name: "Prisma", pros: ["heavy runtime"], cons: [] });
+    expect(d.version).toBe(1); // ask version carried for optimistic concurrency
+    expect(d.options[0]).toEqual({
+      id: "opt-1",
+      name: "Prisma",
+      pros: ["heavy runtime"],
+      cons: [],
+    });
   });
 
   it("degrades the no-source fields (no rec, no file)", () => {
