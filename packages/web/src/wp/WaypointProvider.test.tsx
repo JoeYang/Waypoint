@@ -24,6 +24,7 @@ function Probe(): React.JSX.Element {
       <button onClick={() => wp.openDecision("d1")}>open</button>
       <button onClick={() => wp.resolve("d1", "Drizzle")}>resolve</button>
       <button onClick={() => wp.comment("d1", "hi")}>comment</button>
+      <button onClick={() => wp.adjust("d1", "keep the poller 30d")}>adjust</button>
       <button onClick={() => wp.goHome()}>home</button>
     </div>
   );
@@ -267,6 +268,33 @@ describe("WaypointProvider answer wiring", () => {
     );
     // Optimistic UI flips immediately, regardless of the async persist.
     expect(screen.getByTestId("resolved")).toHaveTextContent("Drizzle");
+  });
+
+  it("adjust sends a PROPOSAL adjustment note to source.answer (and resolves)", async () => {
+    const data = answerableData();
+    const answer = vi.fn(() => Promise.resolve());
+    const source = {
+      initial: () => data,
+      load: () => Promise.resolve(data),
+      subscribe: () => () => {},
+      answer,
+    };
+    render(
+      <WaypointProvider source={source}>
+        <Probe />
+      </WaypointProvider>,
+    );
+    click("adjust");
+    await waitFor(() =>
+      expect(answer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          decisionId: "d1",
+          adjustmentNote: "keep the poller 30d",
+          expectedVersion: 3,
+        }),
+      ),
+    );
+    expect(screen.getByTestId("resolved")).toHaveTextContent("keep the poller 30d");
   });
 
   it("reloads to reconcile when the answer is rejected (no lost write)", async () => {

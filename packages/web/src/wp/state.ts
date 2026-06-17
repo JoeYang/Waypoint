@@ -33,7 +33,10 @@ export type Action =
   | { type: "goHome" }
   | { type: "openDecision"; id: string }
   | { type: "resolve"; id: string; option: string; blocksTask: string }
-  | { type: "comment"; id: string; text: string };
+  | { type: "comment"; id: string; text: string }
+  // Drop optimistic resolved/thread entries whose decision no longer exists in live data (it was
+  // answered, here or by another agent, and the reload removed it) — keeps the maps from drifting.
+  | { type: "prune"; validIds: readonly string[] };
 
 // The agent's resume message when a decision is approved (matches the handoff copy).
 export const resolveMessage = (option: string, blocksTask: string): Message => ({
@@ -86,6 +89,18 @@ export function reducer(state: WaypointState, action: Action): WaypointState {
           [action.id]: [...prior, youMessage(action.text), agentReply()],
         },
       };
+    }
+    case "prune": {
+      const valid = new Set(action.validIds);
+      const keep = <T>(map: Record<string, T>): Record<string, T> =>
+        Object.fromEntries(Object.entries(map).filter(([id]) => valid.has(id)));
+      const resolved = keep(state.resolved);
+      const threads = keep(state.threads);
+      // Preserve referential identity when nothing changed (avoids a needless re-render).
+      const sameSize =
+        Object.keys(resolved).length === Object.keys(state.resolved).length &&
+        Object.keys(threads).length === Object.keys(state.threads).length;
+      return sameSize ? state : { ...state, resolved, threads };
     }
     default:
       return assertNever(action);

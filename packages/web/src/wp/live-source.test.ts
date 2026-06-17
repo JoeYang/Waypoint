@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from "vitest";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
 import { createLiveSource } from "./live-source.js";
@@ -8,6 +8,30 @@ const server = setupServer();
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
+
+// A minimal fake WebSocket so subscribe() can be exercised without a real socket.
+type WsHandler = (e: { data: string }) => void;
+class FakeWebSocket {
+  static instances: FakeWebSocket[] = [];
+  handlers: Record<string, WsHandler[]> = {};
+  sent: string[] = [];
+  closed = false;
+  constructor(readonly url: string) {
+    FakeWebSocket.instances.push(this);
+  }
+  addEventListener(type: string, h: WsHandler): void {
+    (this.handlers[type] ??= []).push(h);
+  }
+  send(data: string): void {
+    this.sent.push(data);
+  }
+  close(): void {
+    this.closed = true;
+  }
+  emit(type: string, e: { data: string }): void {
+    (this.handlers[type] ?? []).forEach((h) => h(e));
+  }
+}
 
 const progress = {
   projectId: "orbit-api",
@@ -135,5 +159,39 @@ describe("liveSource", () => {
       expectedVersion: 2,
     });
     expect(received).toEqual({ expectedVersion: 2, chosenOptionId: "opt-1" });
+  });
+
+  it("subscribe opens a per-project WS and reloads on a delta frame", async () => {
+    FakeWebSocket.instances = [];
+    const realWs = globalThis.WebSocket;
+    globalThis.WebSocket = FakeWebSocket as unknown as typeof WebSocket;
+    server.use(
+      http.get(`${BASE}/v1/projects`, () =>
+        HttpResponse.json({
+          projects: [{ id: "orbit-api", name: "orbit-api", openAskCount: 0, agentTaskCount: 0 }],
+        }),
+      ),
+    );
+    try {
+      let changes = 0;
+      const unsubscribe = createLiveSource(BASE).subscribe(() => {
+        changes += 1;
+      });
+      await vi.waitFor(() => expect(FakeWebSocket.instances).toHaveLength(1));
+      const ws = FakeWebSocket.instances[0]!;
+      expect(ws.url).toBe("ws://waypoint.test/v1/projects/orbit-api/stream");
+      ws.emit("open", { data: "" });
+      expect(ws.sent[0]).toContain('"type":"resume"');
+
+      ws.emit("message", { data: JSON.stringify({ type: "resync", reason: "gap" }) });
+      expect(changes).toBe(1);
+      ws.emit("message", { data: JSON.stringify({ type: "delta", seq: 1 }) });
+      expect(changes).toBe(2);
+
+      unsubscribe();
+      expect(ws.closed).toBe(true);
+    } finally {
+      globalThis.WebSocket = realWs;
+    }
   });
 });
