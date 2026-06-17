@@ -273,4 +273,63 @@ describe("Inbox REST API", () => {
       expect(JSON.stringify(body)).not.toMatch(/stack|at Object|\.ts:/i);
     });
   });
+
+  describe("GET /v1/projects", () => {
+    it("lists every project with derived counts and a tracing header", async () => {
+      const n = await task("node");
+      await core.transition({ projectId: PROJECT, nodeId: n.id, to: "ACTIVE", expectedVersion: 1 });
+      await decision(n.id, "which db?");
+
+      const res = await app.inject({ method: "GET", url: "/v1/projects" });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.headers["x-request-id"]).toBeTruthy();
+      const body = res.json();
+      expect(body.projects).toHaveLength(1);
+      expect(body.projects[0]).toMatchObject({ id: PROJECT, openAskCount: 1, agentTaskCount: 1 });
+    });
+  });
+
+  describe("GET /v1/projects/:projectId/events", () => {
+    it("returns the project's event log in append order", async () => {
+      const n = await task("node");
+      await decision(n.id, "which db?");
+
+      const res = await app.inject({ method: "GET", url: `/v1/projects/${PROJECT}/events` });
+
+      expect(res.statusCode).toBe(200);
+      const body = res.json();
+      expect(body).toMatchObject({ projectId: PROJECT });
+      expect(body.events.map((e: { verb: string }) => e.verb)).toEqual([
+        "node.created",
+        "ask.parked",
+      ]);
+    });
+
+    it("filters with sinceSeq", async () => {
+      const n = await task("node");
+      await decision(n.id, "which db?");
+      const res = await app.inject({
+        method: "GET",
+        url: `/v1/projects/${PROJECT}/events?sinceSeq=1`,
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().events.every((e: { seq: number }) => e.seq > 1)).toBe(true);
+    });
+
+    it("400s an invalid sinceSeq with the error envelope", async () => {
+      const res = await app.inject({
+        method: "GET",
+        url: `/v1/projects/${PROJECT}/events?sinceSeq=nope`,
+      });
+      expect(res.statusCode).toBe(400);
+      expect(res.json()).toMatchObject({ error: "VALIDATION" });
+    });
+
+    it("404s an unknown project", async () => {
+      const res = await app.inject({ method: "GET", url: "/v1/projects/ghost/events" });
+      expect(res.statusCode).toBe(404);
+      expect(res.json()).toMatchObject({ error: "NOT_FOUND" });
+    });
+  });
 });
