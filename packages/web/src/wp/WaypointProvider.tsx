@@ -1,12 +1,25 @@
 // React context that wires the data source to the nav/decision reducer and persists nav to
 // localStorage. Screens consume `useWaypoint()` for the data snapshot, the current nav, and
 // the bound actions; they never import the source or reducer directly.
+//
+// The source is async (it may be the live backend): the outer component owns loading / error /
+// empty states and only renders the inner provider — and any screen — once data is present, so
+// `useWaypoint().data` is never null and `safeNav` never runs against missing data.
 
-import { createContext, useContext, useEffect, useMemo, useReducer } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  useState,
+} from "react";
 import type { JSX, ReactNode } from "react";
 import { mockSource, type WaypointSource } from "./source.js";
 import { initialState, loadNav, reducer, saveNav, safeNav, type Nav, type View } from "./state.js";
 import type { Decision, ProjectsData, Message } from "./types.js";
+import s from "./provider-states.module.css";
 
 export interface WaypointContextValue {
   data: ProjectsData;
@@ -42,8 +55,60 @@ export function WaypointProvider({
   source = mockSource,
   storage,
 }: WaypointProviderProps): JSX.Element {
+  const [data, setData] = useState<ProjectsData | null>(() => source.initial());
+  const [errored, setErrored] = useState(false);
+
+  const reload = useCallback(() => {
+    setErrored(false);
+    source.load().then(setData, () => setErrored(true));
+  }, [source]);
+
+  useEffect(() => {
+    reload();
+    return source.subscribe(reload); // live deltas ask for a re-load; the mock never fires
+  }, [reload, source]);
+
+  if (data === null) {
+    return errored ? (
+      <div className={s.center} role="alert">
+        <div className={s.title}>Couldn&apos;t reach Waypoint</div>
+        <button type="button" className={s.retry} onClick={reload}>
+          Try again
+        </button>
+      </div>
+    ) : (
+      <div className={s.center} role="status" aria-live="polite">
+        Loading…
+      </div>
+    );
+  }
+
+  if (data.projects.length === 0) {
+    return (
+      <div className={s.center}>
+        <div className={s.title}>No projects yet</div>
+        <p>Connect an agent and park a decision to see it here.</p>
+      </div>
+    );
+  }
+
+  return (
+    <ReadyProvider data={data} storage={storage}>
+      {children}
+    </ReadyProvider>
+  );
+}
+
+function ReadyProvider({
+  data,
+  storage,
+  children,
+}: {
+  data: ProjectsData;
+  storage: Pick<Storage, "getItem" | "setItem"> | undefined;
+  children: ReactNode;
+}): JSX.Element {
   const store = storage ?? (typeof localStorage !== "undefined" ? localStorage : undefined);
-  const data = source.getData();
   const [state, dispatch] = useReducer(reducer, undefined, () => initialState(loadNav(store)));
 
   useEffect(() => {
