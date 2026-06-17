@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, act, cleanup, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
@@ -132,6 +132,7 @@ describe("WaypointProvider async states", () => {
       initial: () => null,
       load: () => new Promise(() => {}), // never resolves
       subscribe: () => () => {},
+      answer: () => Promise.resolve(),
     };
     render(
       <WaypointProvider source={pending}>
@@ -152,6 +153,7 @@ describe("WaypointProvider async states", () => {
         return attempts === 1 ? Promise.reject(new Error("offline")) : Promise.resolve(WP_DATA);
       },
       subscribe: () => () => {},
+      answer: () => Promise.resolve(),
     };
     render(
       <WaypointProvider source={flaky}>
@@ -171,6 +173,7 @@ describe("WaypointProvider async states", () => {
       initial: () => data,
       load: () => Promise.resolve(data),
       subscribe: () => () => {},
+      answer: () => Promise.resolve(),
     };
     render(
       <WaypointProvider source={empty}>
@@ -191,6 +194,7 @@ describe("WaypointProvider async states", () => {
         handlers.push(onChange);
         return () => {};
       },
+      answer: () => Promise.resolve(),
     };
     render(
       <WaypointProvider source={live}>
@@ -204,5 +208,87 @@ describe("WaypointProvider async states", () => {
     await waitFor(() =>
       expect(screen.getByTestId("projects")).toHaveTextContent(String(WP_DATA.projects.length)),
     );
+  });
+});
+
+// A source whose orbit-api d1 carries a backend option id + version, so the provider can build
+// a real answer command from the view-model.
+function answerableData(): typeof WP_DATA {
+  return {
+    ...WP_DATA,
+    projects: WP_DATA.projects.map((p) =>
+      p.id === "orbit-api"
+        ? {
+            ...p,
+            decisions: p.decisions.map((d) =>
+              d.id === "d1"
+                ? {
+                    ...d,
+                    version: 3,
+                    options: d.options.map((o) =>
+                      o.name === "Drizzle" ? { ...o, id: "opt-2" } : o,
+                    ),
+                  }
+                : d,
+            ),
+          }
+        : p,
+    ),
+  };
+}
+
+describe("WaypointProvider answer wiring", () => {
+  beforeEach(() => localStorage.clear());
+
+  it("delegates resolve to source.answer with the chosen option id and expected version", async () => {
+    const data = answerableData();
+    const answer = vi.fn(() => Promise.resolve());
+    const source = {
+      initial: () => data,
+      load: () => Promise.resolve(data),
+      subscribe: () => () => {},
+      answer,
+    };
+    render(
+      <WaypointProvider source={source}>
+        <Probe />
+      </WaypointProvider>,
+    );
+    click("resolve"); // the Probe resolves d1 with "Drizzle"
+    await waitFor(() =>
+      expect(answer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          projectId: "orbit-api",
+          decisionId: "d1",
+          chosenOptionId: "opt-2",
+          expectedVersion: 3,
+        }),
+      ),
+    );
+    // Optimistic UI flips immediately, regardless of the async persist.
+    expect(screen.getByTestId("resolved")).toHaveTextContent("Drizzle");
+  });
+
+  it("reloads to reconcile when the answer is rejected (no lost write)", async () => {
+    const data = answerableData();
+    let loads = 0;
+    const source = {
+      initial: () => data,
+      load: () => {
+        loads += 1;
+        return Promise.resolve(data);
+      },
+      subscribe: () => () => {},
+      answer: () => Promise.reject(new Error("STALE_VERSION")),
+    };
+    render(
+      <WaypointProvider source={source}>
+        <Probe />
+      </WaypointProvider>,
+    );
+    await waitFor(() => expect(loads).toBeGreaterThanOrEqual(1)); // mount load
+    const before = loads;
+    click("resolve");
+    await waitFor(() => expect(loads).toBeGreaterThan(before)); // rejection → reconcile reload
   });
 });

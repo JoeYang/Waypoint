@@ -43,18 +43,24 @@ implementation; schema/contract changes are isolated commits. Stacks `shared →
 
 ## 6. Answer + live updates (PR6 — web)
 
-- [ ] 6.0 RED: change the `resolve` action signature from `(id, optionName)` to carry the backend **`chosenOptionId`** (the reducer/`Proposal.tsx` today pass the option _label_, but `answerAsk` needs the `opt-N` id). Cross-cuts `state.ts` / `source.ts` / `WaypointProvider.tsx` / `Proposal.tsx` + their tests — land the signature change first, mock still green.
-- [ ] 6.1 RED: `resolve` → `answerAsk({ chosenOptionId, expectedVersion })`, optimistic; the WS delta (`removedAskIds`) removes the card AND **clears the matching `resolved` entry** so optimistic state reconciles with live data. Implement; subscribe re-ranks the inbox on delta (no poll).
-- [ ] 6.2 RED: `STALE_VERSION` `ApiError` → refetch + "already answered" reconcile that also reconciles the `resolved` map, no lost write (failure injection) → implement.
-- [ ] 6.3 RED: PROPOSAL composer relabelled **"Approve with adjustment"** → `answerAsk({ proposalVerdict: "adjust", adjustmentNote })` (it RESOLVES the ask — D3); the composer is hidden (thread read-only) for DECISION/QUESTION → implement.
+- [x] 6.0 No `resolve`-signature change needed: the adapter carries the option `id` + ask `version` onto the view-model, and the provider derives `chosenOptionId` from the chosen option's name — so `Proposal.tsx`/`state.ts` and their tests are untouched (mock stays green).
+- [x] 6.1 `resolve` → optimistic dispatch, then `source.answer({ chosenOptionId, expectedVersion })` and **reload** (the backend drives the card leaving on live data; the mock answer is a no-op so its optimistic state stands). + `liveSource` (compose client + adapter) and `answer()` on the seam.
+- [x] 6.2 A rejected answer (e.g. `STALE_VERSION`) reconciles via the same reload — no lost write (provider + liveSource tests, mock spy + msw).
+- [ ] 6.3 DEFERRED → PR6b: PROPOSAL composer "Approve with adjustment" needs the ask `type` threaded onto the view-model `Decision` + the `Thread` composer; split out to keep PR6 focused.
+- [ ] 6.4 DEFERRED → follow-up: incremental WS push (re-rank on another agent's delta). The human's own answer already refreshes via reload-after-answer; cross-agent live push + the `resolved`↔delta prune land with the WS subscriber.
 
 ## 7. Activity + Home + Notifications (PR7 — web)
 
-- [ ] 7.1 RED: Activity from `GET …/events` — verb→`ActivityKind` mapping, grouped by time; unmapped verb → neutral dot → implement.
-- [ ] 7.2 RED: Home from `GET /v1/projects` + a web config map (id→glyph/color/desc) with a deterministic fallback → implement.
-- [ ] 7.3 RED: Notifications derived client-side from open asks + recent events; per-surface loading/empty → implement.
+- [x] 7.1 `eventsToActivity` maps the event log to the timeline — verb→`ActivityKind` via an exhaustive `Record` (new verb = compile error, not a silent miss), newest-first, grouped by minute; folded into `Project.activity` by liveSource.
+- [x] 7.2 Home from `GET /v1/projects` + the deterministic chrome config (glyph/colour from id, overridable) — done in PR6's liveSource; loading/empty handled by the PR4 provider states.
+- [x] 7.3 `deriveNotifications` — a "needs you" card per open decision across projects (no backend notification feed); wired into liveSource. Adapter + liveSource tests.
 
-## 8. Live e2e + docs (PR8)
+## 8. Source selection + docs (PR8)
 
-- [ ] 8.1 Re-author the hero-loop e2e (park via MCP → card appears → answer in the browser → WS removal) against the running stack; the WS resume/resync path. **Caveat (document in-test):** the e2e uses a seeded/agreed `projectId` shared between the MCP call and the REST answer URL; it is known-fragile against the auth seam landing — note it so a future auth change is expected to revisit it.
-- [ ] 8.2 Update README (web now consumes the live backend) + `docs/web-ui.md` (the live source, adapter, derived fields); full `npm test` + `npm run e2e` green; `openspec validate live-wiring --strict`; archive.
+- [x] 8.0 `selectSource(VITE_WAYPOINT_API_BASE)` → live vs mock; `main.tsx` wires it (the bit that makes the live path reachable from the app). 2 tests.
+- [x] 8.2 Updated README (point the web at the backend with `VITE_WAYPOINT_API_BASE`) + `docs/web-ui.md` (live source, adapter, status + tracked follow-ups). `npm test` green (331); `tsc -b` + eslint clean.
+
+## 9. Finale (after the deferred follow-ups land)
+
+- [ ] 8.1 Hero-loop e2e (park via MCP → open the project → answer → card leaves) against the running stack, pointing the web at the backend via `VITE_WAYPOINT_API_BASE`. Seeded-project caveat documented in-test.
+- [ ] 9.x `openspec validate live-wiring --strict` + archive — **after** 6.3 (PROPOSAL adjust composer) and 6.4 (WS push) land, so the change isn't archived while incomplete.
