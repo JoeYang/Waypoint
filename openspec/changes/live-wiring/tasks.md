@@ -13,9 +13,9 @@ implementation; schema/contract changes are isolated commits. Stacks `shared →
 
 ## 1. Shared DTOs (PR1 — types only)
 
-- [ ] 1.1 `ProjectSummary` + `ProjectListResponse` zod schemas in `packages/shared` (id, name, openAskCount, agentTaskCount, lastActivityAt?), inferred types exported from the entrypoint.
-- [ ] 1.2 `EventLogResponse` zod schema (projectId, seq, events: EventEntry[]) reusing the existing `event` verbs; inferred types.
-- [ ] 1.3 Schema-shape unit tests; no behaviour.
+- [x] 1.1 `ProjectSummary` + `ProjectListResponse` in `packages/shared/src/project.ts` (id, name, openAskCount, agentTaskCount, lastActivityAt?); exported via the entrypoint.
+- [x] 1.2 `EventLogResponse` in `event.ts` (projectId, seq, events) reusing the existing `EventSchema`/verbs; inferred types.
+- [x] 1.3 8 shape-consistency tests; no behaviour. Build + lint clean.
 
 ## 2. Core read-models (PR2)
 
