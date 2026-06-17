@@ -33,6 +33,7 @@ export const TaskProgressSchema = z.object({
   title: z.string().min(1),
   state: TaskState,
   agentLabel: z.string().min(1).nullable(), // who is on it now; null if unattributed
+  prUrl: z.string().url().nullable(), // GitHub PR URL for the task's work; null when none
   blastRadius: z.number().int().nonnegative(), // direct dependents — visual weight, not a sort key
   group: TaskGroupSchema.nullable(), // the owning step, or null when the plan parents it directly
   asks: z.array(InboxItemSchema), // open asks in InboxItem shape → the slice-1 card hydrates from one call

@@ -18,6 +18,7 @@ export const NodeSchema = z.object({
   title: z.string().min(1),
   status: NodeStatus,
   discardReason: z.string().min(1).nullable(), // required iff status === DISCARDED
+  prUrl: z.string().url().nullable(), // GitHub PR URL supplied at create_node; null when none
   sessionId: z.string().min(1).nullable(), // provenance: last session to mutate this node
   version: z.number().int().positive(), // optimistic-concurrency token, starts at 1
   createdAt: z.number().int().nonnegative(), // epoch ms

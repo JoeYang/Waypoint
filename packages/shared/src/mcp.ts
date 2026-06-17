@@ -44,6 +44,7 @@ export const CreateNodeInputSchema = z.object({
   parentId: z.string().min(1).nullable(),
   kind: NodeKind,
   title: z.string().min(1),
+  prUrl: z.string().url().optional(), // GitHub PR URL for the work behind the node; opaque to Waypoint
   sessionId: z.string().min(1).optional(),
 });
 export type CreateNodeInput = z.infer<typeof CreateNodeInputSchema>;
