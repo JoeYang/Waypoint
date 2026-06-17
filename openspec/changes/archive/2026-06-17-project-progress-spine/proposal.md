@@ -1,3 +1,10 @@
+> **Archival note (2026-06-17).** This slice was completed (15/15) but never archived; meanwhile slice 3
+> (`storybook-ui`) superseded its web surfaces — the project-spine screen and the inbox-as-lens — and was
+> archived first (those `Spine`/`SpineScreen`/`Inbox*` components were deleted). To avoid applying dead
+> requirements to the live specs, the `Project spine view` requirement and the entire `inbox` MODIFIED
+> delta were dropped at archive time; only the still-current **Three-level progress read model** (the
+> `listProject` / `GET /v1/projects/:id/progress` backend the live-wiring change consumes) is applied.
+
 ## Why
 
 The second founder goal is unbuilt: now that humans are _in and out_ of the loop, there must be a way

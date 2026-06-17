@@ -1,5 +1,8 @@
-## ADDED Requirements
+# project-progress Specification
 
+## Purpose
+TBD - created by archiving change project-progress-spine. Update Purpose after archive.
+## Requirements
 ### Requirement: Three-level progress read model
 
 The system SHALL expose a read model that reports the project on three levels — goal, plan, task — each
@@ -38,26 +41,3 @@ and its tasks; its tasks roll up through the step into the plan, and no `step` s
 - **WHEN** the progress read model is requested for a project with many plans and tasks
 - **THEN** it is computed in a single transaction without per-node follow-up queries
 
-### Requirement: Project spine view
-
-The web app SHALL present the project spine as the application home: a fixed goal header, plan sections
-showing progress, and tasks beneath them, with asks appearing in place on the task they block (using the
-self-contained decision card). Importance SHALL be shown as visual weight, never by reordering the list
-under the reader. The tree SHALL collapse to the live edge by default to stay glanceable and SHALL be
-expandable. On a live update, completed work SHALL settle/dim and only changed items SHALL move; the goal
-SHALL remain fixed.
-
-#### Scenario: Returning human sees where things stand
-
-- **WHEN** a human opens the spine
-- **THEN** they see the goal, each plan's progress, and the tasks that need them, in one column
-
-#### Scenario: An ask appears on the task it blocks
-
-- **WHEN** a task is blocked by an ask
-- **THEN** the ask is rendered in place on that task with its slice-1 context and intent-matched actions
-
-#### Scenario: Importance is weight, not position
-
-- **WHEN** one blocked task has a much larger blast radius than another
-- **THEN** it is rendered with greater visual weight without reordering the surrounding tree
