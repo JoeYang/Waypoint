@@ -17,9 +17,14 @@ wired in later without rewriting a screen.
   mapping is recorded in comments (e.g. `continuedDescription` → a computed `unblockedTaskCount` at
   wiring). A shape-consistency test stands in for zod this phase.
 - **`wp/fixtures.ts`** — `WP_DATA`, the typed port of the prototype's three projects.
-- **`wp/source.ts`** — `WaypointSource { getData(): ProjectsData }` + `mockSource`. The live source
-  (backed by the kept `api/client.ts` + `inbox/useWaypointStream.ts`) drops in here at the wiring
-  phase.
+- **`wp/source.ts`** — `WaypointSource { initial(); load(); subscribe(); answer() }` + `mockSource`.
+  The async seam admits a live backend; `initial()` is a synchronous seed (the mock returns its
+  fixtures, the live source returns `null` → the provider shows loading).
+- **`wp/live-source.ts`** — `createLiveSource(baseUrl)`: `load()` fans out over the project list
+  (progress + inbox + events per project) and maps each via `adapter.ts`; `answer()` POSTs with the
+  ask's expected version. **`wp/adapter.ts`** holds the pure DTO→view-model mappers (see the
+  live-wiring proposal D8 for the field provenance). **`wp/select-source.ts`** picks live vs mock
+  from `VITE_WAYPOINT_API_BASE`.
 - **`wp/state.ts`** — a pure reducer for navigation + local decision state (`resolve` threads the
   agent's resume message and is a no-op once resolved; `comment` threads you + an agent reply).
   `loadNav`/`saveNav` guard corrupt/absent/throwing storage; `safeNav` corrects a nav pointing at
@@ -55,7 +60,15 @@ Shared primitives: `Badge`, `AgentPill`, `RiskBadge`, `RevBadge`, `Icon`, and th
   `medium`).
 - Serif page headings are scoped under `:global(.axiom)` to beat the design system's element rule.
 
-## Out of scope (deferred to the wiring phase)
+## Live wiring — status
 
-Live data, the WebSocket loading/error/retry states, auth, URL routing. The live hero-loop e2e
-specs were removed with the old screens and will be re-authored against the live wiring.
+The live source is wired (set `VITE_WAYPOINT_API_BASE`): map, inbox, proposal, activity, and the
+cross-project home all render live data, and resolving a decision POSTs to the backend
+(optimistic, then a reload; a stale version reconciles). The provider handles loading / error+retry
+/ empty.
+
+Still open (tracked follow-ups): the PROPOSAL "Approve with adjustment" composer (needs the ask
+`type` on the view-model), incremental WebSocket push (re-rank on another agent's delta — the
+human's own answer already refreshes via reload), the live hero-loop e2e, auth, and URL routing.
+The backend has no signal yet for a _recommended option_ (so "Agent recommends X" is blank live) —
+a candidate `park_ask` extension, like the agent-supplied risk/reversibility already added.
