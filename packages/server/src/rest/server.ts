@@ -4,6 +4,8 @@ import {
   type AnswerResponse,
   type InboxResponse,
   type ProjectProgress,
+  type ProjectListResponse,
+  type EventLogResponse,
 } from "@waypoint/shared";
 import { type Core, WaypointError, ValidationError, type ErrorCode } from "@waypoint/core";
 
@@ -18,6 +20,9 @@ const HTTP_STATUS: Record<ErrorCode, number> = {
 
 interface ProjectParams {
   projectId: string;
+}
+interface EventsQuery {
+  sinceSeq?: string;
 }
 interface AnswerParams {
   projectId: string;
@@ -53,6 +58,31 @@ export function createRestServer(core: Core): FastifyInstance {
       request_id: req.id,
     });
   });
+
+  // The cross-project home: one summary row per project (derived counts + last activity).
+  app.get("/v1/projects", async (_req, reply) => {
+    const list: ProjectListResponse = await core.listProjects();
+    reply.send(list);
+  });
+
+  // The project's append-only event log (the Activity timeline). `sinceSeq` requests only
+  // newer events for incremental reads; an invalid value is a client error, not silent.
+  app.get<{ Params: ProjectParams; Querystring: EventsQuery }>(
+    "/v1/projects/:projectId/events",
+    async (req, reply) => {
+      let sinceSeq: number | undefined;
+      const raw = req.query.sinceSeq;
+      if (raw !== undefined) {
+        const n = Number(raw);
+        if (!Number.isInteger(n) || n < 0) {
+          throw new ValidationError("sinceSeq must be a non-negative integer", { sinceSeq: raw });
+        }
+        sinceSeq = n;
+      }
+      const log: EventLogResponse = await core.readEvents(req.params.projectId, sinceSeq);
+      reply.send(log);
+    },
+  );
 
   app.get<{ Params: ProjectParams }>("/v1/projects/:projectId/inbox", async (req, reply) => {
     const inbox: InboxResponse = await core.listInbox(req.params.projectId);
