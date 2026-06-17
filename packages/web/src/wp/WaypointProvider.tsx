@@ -31,6 +31,7 @@ export interface WaypointContextValue {
   openDecision: (id: string) => void;
   resolve: (id: string, option: string) => void;
   comment: (id: string, text: string) => void;
+  adjust: (id: string, note: string) => void;
 }
 
 const WaypointContext = createContext<WaypointContextValue | null>(null);
@@ -149,6 +150,22 @@ function ReadyProvider({
           .then(reload, reload);
       },
       comment: (id, text) => dispatch({ type: "comment", id, text }),
+      // A PROPOSAL "Approve with adjustment": resolves the ask carrying the note (per D3, the
+      // backend's "adjust" verdict is an approval, not a discussion turn). Optimistic, then the
+      // same answer/reconcile path as resolve.
+      adjust: (id, note) => {
+        const found = findDecision(data, id);
+        if (!found) return;
+        dispatch({ type: "resolve", id, option: note, blocksTask: found.decision.blocksTask });
+        void source
+          .answer({
+            projectId: found.projectId,
+            decisionId: id,
+            adjustmentNote: note,
+            expectedVersion: found.decision.version ?? 0,
+          })
+          .then(reload, reload);
+      },
     };
   }, [data, state.nav, state.resolved, state.threads, source, reload]);
 

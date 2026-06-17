@@ -117,6 +117,7 @@ describe("adapter — decision (D8 provenance)", () => {
     });
     expect(d.impact.kind).toBe("danger"); // high risk
     expect(d.version).toBe(1); // ask version carried for optimistic concurrency
+    expect(d.kind).toBe("decision"); // ask type → drives the thread composer
     expect(d.options[0]).toEqual({
       id: "opt-1",
       name: "Prisma",

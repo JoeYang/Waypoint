@@ -46,7 +46,7 @@ implementation; schema/contract changes are isolated commits. Stacks `shared →
 - [x] 6.0 No `resolve`-signature change needed: the adapter carries the option `id` + ask `version` onto the view-model, and the provider derives `chosenOptionId` from the chosen option's name — so `Proposal.tsx`/`state.ts` and their tests are untouched (mock stays green).
 - [x] 6.1 `resolve` → optimistic dispatch, then `source.answer({ chosenOptionId, expectedVersion })` and **reload** (the backend drives the card leaving on live data; the mock answer is a no-op so its optimistic state stands). + `liveSource` (compose client + adapter) and `answer()` on the seam.
 - [x] 6.2 A rejected answer (e.g. `STALE_VERSION`) reconciles via the same reload — no lost write (provider + liveSource tests, mock spy + msw).
-- [ ] 6.3 DEFERRED → PR6b: PROPOSAL composer "Approve with adjustment" needs the ask `type` threaded onto the view-model `Decision` + the `Thread` composer; split out to keep PR6 focused.
+- [x] 6.3 The `Thread` composer is kind-aware (live): a PROPOSAL gets **"Approve with adjustment"** → `source.answer` adjust (resolves, per D3); a DECISION/QUESTION is read-only (answered via options); mock decisions (no `kind`) keep the free-form composer. `Decision.kind` carried by the adapter; provider `adjust` action. 6 tests.
 - [ ] 6.4 DEFERRED → follow-up: incremental WS push (re-rank on another agent's delta). The human's own answer already refreshes via reload-after-answer; cross-agent live push + the `resolved`↔delta prune land with the WS subscriber.
 
 ## 7. Activity + Home + Notifications (PR7 — web)

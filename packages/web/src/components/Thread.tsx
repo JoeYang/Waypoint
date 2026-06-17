@@ -31,15 +31,35 @@ function Msg({ m, user }: { m: Message; user: User }): JSX.Element {
   );
 }
 
-// The discussion alongside a proposal: the agent's reasoning, your comments, and the system
-// resume notes — plus a composer to comment or redirect without resolving. Sending threads to
-// the agent (you + an agent reply); approving an option is the resolve path (in the proposal).
+// The discussion alongside a proposal. The composer is kind-aware (live): a PROPOSAL takes an
+// "Approve with adjustment" (the backend's adjust verdict — it resolves, per D3); a DECISION or
+// QUESTION is read-only here (answered via the option cards). Mock decisions carry no kind, so
+// they keep the prototype's free-form composer (you + an agent reply).
+const COMPOSER = {
+  comment: {
+    placeholder: "Comment, or redirect the agent…",
+    hint: "⌘↩ to send · threads to the agent",
+    button: "Send",
+    label: "Comment, or redirect the agent",
+  },
+  adjust: {
+    placeholder: "Add an adjustment, then approve…",
+    hint: "⌘↩ to approve with this note",
+    button: "Approve with adjustment",
+    label: "Approve with an adjustment note",
+  },
+} as const;
+
 export function Thread({ decision }: { decision: Decision }): JSX.Element {
-  const { data, threads, comment } = useWaypoint();
+  const { data, threads, comment, adjust } = useWaypoint();
   const [text, setText] = useState("");
   const bodyRef = useRef<HTMLDivElement>(null);
 
   const messages = [...decision.thread, ...(threads[decision.id] ?? [])];
+
+  // Known DECISION/QUESTION asks are answered via the options, not free text → no composer.
+  const mode: "comment" | "adjust" | null =
+    decision.kind === "proposal" ? "adjust" : decision.kind === undefined ? "comment" : null;
 
   useEffect(() => {
     const el = bodyRef.current;
@@ -48,8 +68,9 @@ export function Thread({ decision }: { decision: Decision }): JSX.Element {
 
   const send = (): void => {
     const v = text.trim();
-    if (!v) return;
-    comment(decision.id, v);
+    if (!v || mode === null) return;
+    if (mode === "adjust") adjust(decision.id, v);
+    else comment(decision.id, v);
     setText("");
   };
 
@@ -76,31 +97,33 @@ export function Thread({ decision }: { decision: Decision }): JSX.Element {
           <Msg key={i} m={m} user={data.user} />
         ))}
       </div>
-      <div className={styles.threadCompose}>
-        <div className={styles.composeBox}>
-          <textarea
-            className={styles.textarea}
-            aria-label="Comment, or redirect the agent"
-            placeholder="Comment, or redirect the agent…"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={onKeyDown}
-          />
-          <div className={styles.composeBar}>
-            <span className={styles.hint}>⌘↩ to send · threads to the agent</span>
-            <div className={styles.sp} />
-            <button
-              type="button"
-              className={`${styles.btn} ${styles.primary} ${styles.sm}`}
-              onClick={send}
-              disabled={text.trim() === ""}
-            >
-              <Icon name="send" size={14} />
-              Send
-            </button>
+      {mode === null ? null : (
+        <div className={styles.threadCompose}>
+          <div className={styles.composeBox}>
+            <textarea
+              className={styles.textarea}
+              aria-label={COMPOSER[mode].label}
+              placeholder={COMPOSER[mode].placeholder}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={onKeyDown}
+            />
+            <div className={styles.composeBar}>
+              <span className={styles.hint}>{COMPOSER[mode].hint}</span>
+              <div className={styles.sp} />
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.primary} ${styles.sm}`}
+                onClick={send}
+                disabled={text.trim() === ""}
+              >
+                <Icon name="send" size={14} />
+                {COMPOSER[mode].button}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
