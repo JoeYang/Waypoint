@@ -111,7 +111,7 @@ npm run dogfood:seed   # creates the goal + plan nodes via the real agent-facing
 ```bash
 npm test                 # Vitest — unit + integration (DB tests skip unless a test DB is set)
 npm test -- --coverage   # all logical paths: lifecycle, blocked/blast_radius, concurrency
-npm run e2e              # Playwright — empty this phase (the live-loop specs return with wiring)
+npm run e2e              # Playwright hero loop (park via MCP → answer in the live UI); needs the stack up
 npx eslint .            # import-direction layering is lint-enforced
 ```
 

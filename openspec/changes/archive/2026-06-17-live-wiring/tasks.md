@@ -62,5 +62,5 @@ implementation; schema/contract changes are isolated commits. Stacks `shared →
 
 ## 9. Finale (after the deferred follow-ups land)
 
-- [ ] 8.1 Hero-loop e2e (park via MCP → open the project → answer → card leaves) against the running stack, pointing the web at the backend via `VITE_WAYPOINT_API_BASE`. Seeded-project caveat documented in-test.
-- [ ] 9.x `openspec validate live-wiring --strict` + archive — **after** 6.3 (PROPOSAL adjust composer) and 6.4 (WS push) land, so the change isn't archived while incomplete.
+- [x] 8.1 Hero-loop e2e (`e2e/hero-loop.e2e.ts`): park a DECISION via MCP → open the project's inbox in the live UI → approve → it leaves the queue. Playwright points the web at the backend via `VITE_WAYPOINT_API_BASE` (config). Seeded-project + auth caveat documented in-test. **Authored; runs against a live stack (not in unit CI).**
+- [x] 9.x `openspec validate live-wiring --strict` passes; change archived.
