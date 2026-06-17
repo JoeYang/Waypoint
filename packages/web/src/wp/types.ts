@@ -87,7 +87,13 @@ export interface Decision {
   // The ask version, carried by the live adapter for optimistic-concurrency answers; absent for
   // mock fixtures.
   version?: number;
+  // The ask kind, carried by the live adapter. Drives the thread composer: a PROPOSAL takes an
+  // "Approve with adjustment", a DECISION/QUESTION is read-only (answered via options). Absent for
+  // mock fixtures, which keep the prototype's free-form composer.
+  kind?: DecisionKind;
 }
+
+export type DecisionKind = "question" | "proposal" | "decision";
 
 export interface ActivityItem {
   kind: ActivityKind;

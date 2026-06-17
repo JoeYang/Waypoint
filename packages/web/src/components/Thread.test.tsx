@@ -67,6 +67,31 @@ describe("Thread", () => {
   });
 });
 
+describe("Thread composer by ask kind (live)", () => {
+  const render1 = (decision: typeof d1) =>
+    render(
+      <WaypointProvider>
+        <Thread decision={decision} />
+      </WaypointProvider>,
+    );
+
+  it("keeps the free-form composer for a mock decision (no kind)", () => {
+    render1(d1);
+    expect(screen.getByRole("button", { name: /Send/ })).toBeInTheDocument();
+  });
+
+  it("hides the composer for a live DECISION (answered via the options)", () => {
+    render1({ ...d1, kind: "decision" });
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Send|Approve/ })).not.toBeInTheDocument();
+  });
+
+  it("offers 'Approve with adjustment' for a live PROPOSAL", () => {
+    render1({ ...d1, kind: "proposal" });
+    expect(screen.getByRole("button", { name: /Approve with adjustment/ })).toBeInTheDocument();
+  });
+});
+
 describe("Proposal + Thread integration", () => {
   it("appends the agent's resume message to the thread when resolved", async () => {
     const user = userEvent.setup();

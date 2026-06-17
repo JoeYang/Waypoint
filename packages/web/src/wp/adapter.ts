@@ -19,6 +19,7 @@ import type {
   Stream,
   Task,
   Decision,
+  DecisionKind,
   Option,
   StreamStatus,
   TaskStatus,
@@ -114,6 +115,7 @@ export function toDecision(item: InboxItem, streamName: string, nowMs: number): 
     impact: { kind: item.risk === "high" ? "danger" : "info", text: impactText(item) },
     thread: [],
     version: item.askVersion,
+    kind: item.type.toLowerCase() as DecisionKind,
   };
 }
 
