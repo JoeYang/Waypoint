@@ -55,7 +55,12 @@ implementation; schema/contract changes are isolated commits. Stacks `shared →
 - [x] 7.2 Home from `GET /v1/projects` + the deterministic chrome config (glyph/colour from id, overridable) — done in PR6's liveSource; loading/empty handled by the PR4 provider states.
 - [x] 7.3 `deriveNotifications` — a "needs you" card per open decision across projects (no backend notification feed); wired into liveSource. Adapter + liveSource tests.
 
-## 8. Live e2e + docs (PR8)
+## 8. Source selection + docs (PR8)
 
-- [ ] 8.1 Re-author the hero-loop e2e (park via MCP → card appears → answer in the browser → WS removal) against the running stack; the WS resume/resync path. **Caveat (document in-test):** the e2e uses a seeded/agreed `projectId` shared between the MCP call and the REST answer URL; it is known-fragile against the auth seam landing — note it so a future auth change is expected to revisit it.
-- [ ] 8.2 Update README (web now consumes the live backend) + `docs/web-ui.md` (the live source, adapter, derived fields); full `npm test` + `npm run e2e` green; `openspec validate live-wiring --strict`; archive.
+- [x] 8.0 `selectSource(VITE_WAYPOINT_API_BASE)` → live vs mock; `main.tsx` wires it (the bit that makes the live path reachable from the app). 2 tests.
+- [x] 8.2 Updated README (point the web at the backend with `VITE_WAYPOINT_API_BASE`) + `docs/web-ui.md` (live source, adapter, status + tracked follow-ups). `npm test` green (331); `tsc -b` + eslint clean.
+
+## 9. Finale (after the deferred follow-ups land)
+
+- [ ] 8.1 Hero-loop e2e (park via MCP → open the project → answer → card leaves) against the running stack, pointing the web at the backend via `VITE_WAYPOINT_API_BASE`. Seeded-project caveat documented in-test.
+- [ ] 9.x `openspec validate live-wiring --strict` + archive — **after** 6.3 (PROPOSAL adjust composer) and 6.4 (WS push) land, so the change isn't archived while incomplete.

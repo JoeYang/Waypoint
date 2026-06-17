@@ -90,13 +90,17 @@ npm run build        # tsc -b across all workspaces
 # terminal 1 — the agent + human backend (MCP :8848, REST + WS :8849)
 DATABASE_URL=postgresql://waypoint@localhost:55432/waypoint npm start -w @waypoint/server
 
-# terminal 2 — the web UI (:5273)
+# terminal 2 — the web UI (:5273) on mock fixtures
 npm run dev -w @waypoint/web
+
+# …or against the live backend (the same screens, real data):
+VITE_WAYPOINT_API_BASE=http://localhost:8849 npm run dev -w @waypoint/web
 ```
 
-The web UI runs on typed mock fixtures this phase, so terminal 2 stands alone — it does not yet
-consume the backend (live wiring is a separate change). To exercise the backend loop directly,
-seed Waypoint's own build structure through the live MCP tools:
+The web UI runs on typed mock fixtures by default; set `VITE_WAYPOINT_API_BASE` to point it at the
+REST/WS backend, and the same screens render live data through the swappable `WaypointSource` seam
+(no screen changes). To exercise the backend loop, seed Waypoint's own build structure through the
+live MCP tools:
 
 ```bash
 npm run dogfood:seed   # creates the goal + plan nodes via the real agent-facing MCP surface
