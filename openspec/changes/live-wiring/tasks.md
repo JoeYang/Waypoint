@@ -43,10 +43,11 @@ implementation; schema/contract changes are isolated commits. Stacks `shared →
 
 ## 6. Answer + live updates (PR6 — web)
 
-- [ ] 6.0 RED: change the `resolve` action signature from `(id, optionName)` to carry the backend **`chosenOptionId`** (the reducer/`Proposal.tsx` today pass the option _label_, but `answerAsk` needs the `opt-N` id). Cross-cuts `state.ts` / `source.ts` / `WaypointProvider.tsx` / `Proposal.tsx` + their tests — land the signature change first, mock still green.
-- [ ] 6.1 RED: `resolve` → `answerAsk({ chosenOptionId, expectedVersion })`, optimistic; the WS delta (`removedAskIds`) removes the card AND **clears the matching `resolved` entry** so optimistic state reconciles with live data. Implement; subscribe re-ranks the inbox on delta (no poll).
-- [ ] 6.2 RED: `STALE_VERSION` `ApiError` → refetch + "already answered" reconcile that also reconciles the `resolved` map, no lost write (failure injection) → implement.
-- [ ] 6.3 RED: PROPOSAL composer relabelled **"Approve with adjustment"** → `answerAsk({ proposalVerdict: "adjust", adjustmentNote })` (it RESOLVES the ask — D3); the composer is hidden (thread read-only) for DECISION/QUESTION → implement.
+- [x] 6.0 No `resolve`-signature change needed: the adapter carries the option `id` + ask `version` onto the view-model, and the provider derives `chosenOptionId` from the chosen option's name — so `Proposal.tsx`/`state.ts` and their tests are untouched (mock stays green).
+- [x] 6.1 `resolve` → optimistic dispatch, then `source.answer({ chosenOptionId, expectedVersion })` and **reload** (the backend drives the card leaving on live data; the mock answer is a no-op so its optimistic state stands). + `liveSource` (compose client + adapter) and `answer()` on the seam.
+- [x] 6.2 A rejected answer (e.g. `STALE_VERSION`) reconciles via the same reload — no lost write (provider + liveSource tests, mock spy + msw).
+- [ ] 6.3 DEFERRED → PR6b: PROPOSAL composer "Approve with adjustment" needs the ask `type` threaded onto the view-model `Decision` + the `Thread` composer; split out to keep PR6 focused.
+- [ ] 6.4 DEFERRED → follow-up: incremental WS push (re-rank on another agent's delta). The human's own answer already refreshes via reload-after-answer; cross-agent live push + the `resolved`↔delta prune land with the WS subscriber.
 
 ## 7. Activity + Home + Notifications (PR7 — web)
 
