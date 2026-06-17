@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
 import type { InboxResponse, AnswerResponse } from "@waypoint/shared";
-import { fetchInbox, answerAsk, ApiError } from "./client.js";
+import { fetchInbox, fetchProjects, fetchEvents, answerAsk, ApiError } from "./client.js";
 
 const BASE = "http://waypoint.test";
 const server = setupServer();
@@ -97,5 +97,30 @@ describe("REST client", () => {
     await expect(
       answerAsk(BASE, "default", "ask-1", { expectedVersion: 1, answerText: "x" }),
     ).rejects.toBeInstanceOf(ApiError);
+  });
+
+  it("fetches and validates the project list", async () => {
+    server.use(
+      http.get(`${BASE}/v1/projects`, () =>
+        HttpResponse.json({
+          projects: [{ id: "orbit-api", name: "orbit-api", openAskCount: 3, agentTaskCount: 6 }],
+        }),
+      ),
+    );
+    const result = await fetchProjects(BASE);
+    expect(result.projects[0]).toMatchObject({ id: "orbit-api", openAskCount: 3 });
+  });
+
+  it("fetches the event log and passes sinceSeq through", async () => {
+    let url = "";
+    server.use(
+      http.get(`${BASE}/v1/projects/default/events`, ({ request }) => {
+        url = request.url;
+        return HttpResponse.json({ projectId: "default", seq: 4, events: [] });
+      }),
+    );
+    const result = await fetchEvents(BASE, "default", 2);
+    expect(result).toMatchObject({ projectId: "default", seq: 4 });
+    expect(url).toContain("sinceSeq=2");
   });
 });
