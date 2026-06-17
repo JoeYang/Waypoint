@@ -37,9 +37,9 @@ implementation; schema/contract changes are isolated commits. Stacks `shared →
 
 ## 5. Live source adapter (PR5 — web)
 
-- [ ] 5.1 RED: `liveSource.load` maps `ProjectProgress` → Project/Stream/Task (`goal/plan/task` state → stream/task status; `blocked-on-ask` → blocked + `Task.decision`; "you are here" from the active task) → implement.
-- [ ] 5.2 RED: map `InboxItem` → `Decision` per the **D8 provenance table** — every field has an explicit source, derivation, or documented fallback; the no-source fields (`risk`, `reversible`, `impact`, `file`) follow the agreed rule (derive client-side unless the park_ask-extension fork is taken). No field is left `undefined` into JSX.
-- [ ] 5.3 Adapter unit tests over captured DTO fixtures (a real `/progress` + `/inbox` snapshot); unknown enums fall back, never throw; asserts the derived risk/reversible/impact rules explicitly.
+- [x] 5.1 `adapter.ts` pure mappers: `ProjectProgress` → Stream/Task (plan→stream, goals flattened; task states mapped, failed→blocked + non-interactive; `blocked-on-ask` → blocked + `Task.decision` from the first ask). + `fetchProjects`/`fetchEvents` read client. ("you are here" has no backend signal — omitted, documented.)
+- [x] 5.2 `toDecision` per the **D8 provenance table** — `risk`/`reversible` are real (agent-supplied via group A); parked is relative; option `consequence` → a pro line; impact severity from risk. No-source fields degrade by rule (no rec tag, no `file`) — never `undefined` into JSX. Note: backend carries no recommended-option flag, so `recReason` is empty (a candidate park_ask extension, like risk/reversible).
+- [x] 5.3 8 adapter unit tests over DTO fixtures (status maps, decision provenance, no-source degradation, project assembly incl. deterministic chrome + override) + 2 client tests (project list, events sinceSeq passthrough).
 
 ## 6. Answer + live updates (PR6 — web)
 

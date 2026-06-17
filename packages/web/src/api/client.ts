@@ -2,10 +2,14 @@ import {
   InboxResponseSchema,
   AnswerResponseSchema,
   ProjectProgressSchema,
+  ProjectListResponseSchema,
+  EventLogResponseSchema,
   type AnswerRequest,
   type AnswerResponse,
   type InboxResponse,
   type ProjectProgress,
+  type ProjectListResponse,
+  type EventLogResponse,
 } from "@waypoint/shared";
 
 // A failed REST call, carrying the server's typed envelope code (NOT_FOUND, STALE_VERSION,
@@ -54,6 +58,28 @@ export async function fetchProgress(baseUrl: string, projectId: string): Promise
   const res = await fetch(`${project(baseUrl, projectId)}/progress`);
   if (!res.ok) await fail(res);
   return ProjectProgressSchema.parse(await res.json());
+}
+
+// GET the cross-project list (the home): each project with its derived counts.
+export async function fetchProjects(baseUrl: string): Promise<ProjectListResponse> {
+  const res = await fetch(`${baseUrl}/v1/projects`);
+  if (!res.ok) await fail(res);
+  return ProjectListResponseSchema.parse(await res.json());
+}
+
+// GET the project event log (the Activity timeline). `sinceSeq` requests only newer events.
+export async function fetchEvents(
+  baseUrl: string,
+  projectId: string,
+  sinceSeq?: number,
+): Promise<EventLogResponse> {
+  const url =
+    sinceSeq === undefined
+      ? `${project(baseUrl, projectId)}/events`
+      : `${project(baseUrl, projectId)}/events?sinceSeq=${sinceSeq}`;
+  const res = await fetch(url);
+  if (!res.ok) await fail(res);
+  return EventLogResponseSchema.parse(await res.json());
 }
 
 // POST a human answer. The caller supplies expected_version from the inbox item so the
