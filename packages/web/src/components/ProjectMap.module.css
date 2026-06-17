@@ -59,6 +59,24 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 14px;
+  /* Reset native button chrome — the header is a full-width toggle. */
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.laneHead:focus-visible {
+  outline: 2px solid var(--accent-500);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+/* A collapsed header has no track beneath it, so drop the gap it would leave. */
+.laneHead[aria-expanded="false"] {
+  margin-bottom: 0;
 }
 .lname {
   font-family: var(--font-serif);
