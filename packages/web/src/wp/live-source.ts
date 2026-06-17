@@ -8,8 +8,8 @@
 
 import type { ProjectsData, User } from "./types.js";
 import type { WaypointSource, AnswerCommand } from "./source.js";
-import { toProject } from "./adapter.js";
-import { fetchProjects, fetchProgress, fetchInbox, answerAsk } from "../api/client.js";
+import { toProject, deriveNotifications } from "./adapter.js";
+import { fetchProjects, fetchProgress, fetchInbox, fetchEvents, answerAsk } from "../api/client.js";
 
 // No identity until auth lands (D9): a stub viewer and the client clock for the time label.
 const VIEWER: User = { name: "You", email: "", initials: "YOU" };
@@ -28,14 +28,20 @@ export function createLiveSource(baseUrl: string): WaypointSource {
       const { projects } = await fetchProjects(baseUrl);
       const built = await Promise.all(
         projects.map(async (summary) => {
-          const [progress, inbox] = await Promise.all([
+          const [progress, inbox, events] = await Promise.all([
             fetchProgress(baseUrl, summary.id),
             fetchInbox(baseUrl, summary.id),
+            fetchEvents(baseUrl, summary.id),
           ]);
-          return toProject(summary, progress, inbox.items, now.getTime());
+          return toProject(summary, progress, inbox.items, events.events, now.getTime());
         }),
       );
-      return { now: timeLabel(now), user: VIEWER, projects: built, notifications: [] };
+      return {
+        now: timeLabel(now),
+        user: VIEWER,
+        projects: built,
+        notifications: deriveNotifications(built),
+      };
     },
     subscribe: () => () => {}, // WS push deferred (see header); answer-triggered reload covers self-actions
     answer: async (command: AnswerCommand): Promise<void> => {

@@ -80,6 +80,25 @@ describe("liveSource", () => {
       ),
       http.get(`${BASE}/v1/projects/orbit-api/progress`, () => HttpResponse.json(progress)),
       http.get(`${BASE}/v1/projects/orbit-api/inbox`, () => HttpResponse.json(inbox)),
+      http.get(`${BASE}/v1/projects/orbit-api/events`, () =>
+        HttpResponse.json({
+          projectId: "orbit-api",
+          seq: 5,
+          events: [
+            {
+              id: "e1",
+              projectId: "orbit-api",
+              seq: 5,
+              actor: "agent",
+              verb: "ask.parked",
+              ref: { kind: "ask", id: "d1" },
+              sessionId: null,
+              summary: "parked a decision",
+              at: 1,
+            },
+          ],
+        }),
+      ),
     );
 
     const data = await createLiveSource(BASE).load();
@@ -89,6 +108,8 @@ describe("liveSource", () => {
     expect(p.streams[0]).toMatchObject({ name: "Data layer", status: "blocked" });
     expect(p.decisions[0]).toMatchObject({ id: "d1", risk: "high", reversible: false, version: 2 });
     expect(p.decisions[0]?.options[0]).toMatchObject({ id: "opt-1", name: "Drizzle" });
+    expect(p.activity[0]?.items[0]).toMatchObject({ kind: "parked" });
+    expect(data.notifications).toHaveLength(1); // derived from the open decision
   });
 
   it("answer POSTs with the expected version and chosen option id", async () => {

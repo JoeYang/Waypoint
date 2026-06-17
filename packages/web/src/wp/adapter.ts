@@ -11,8 +11,21 @@ import type {
   ProjectSummary,
   PlanState,
   TaskState,
+  Event,
+  EventVerb,
 } from "@waypoint/shared";
-import type { Project, Stream, Task, Decision, Option, StreamStatus, TaskStatus } from "./types.js";
+import type {
+  Project,
+  Stream,
+  Task,
+  Decision,
+  Option,
+  StreamStatus,
+  TaskStatus,
+  ActivityGroup,
+  ActivityKind,
+  Notification,
+} from "./types.js";
 
 // Plan/task states → the web's presentational statuses. The backend has no `queued` (plans are
 // active/blocked/done) and the web has no `failed`; a failed (DISCARDED) task reads as `blocked`
@@ -125,12 +138,66 @@ function deterministicChrome(id: string, name: string): ProjectChrome {
   };
 }
 
-// Assemble one web Project from its summary + progress + inbox. Activity (the event log) is
-// folded in at PR7; it is empty here.
+function hhmm(at: number): string {
+  const d = new Date(at);
+  const h = d.getHours() % 12 || 12;
+  return `${h}:${d.getMinutes().toString().padStart(2, "0")} ${d.getHours() < 12 ? "AM" : "PM"}`;
+}
+
+// Event verb → the timeline's dot kind. Exhaustive over EVENT_VERBS, so a new backend verb is a
+// compile error here rather than a silent miss. Human resolutions read as "you"; a parked ask as
+// "parked"; a node transition as "done"; structural edits as "edit".
+const VERB_KIND: Record<EventVerb, ActivityKind> = {
+  "ask.parked": "parked",
+  "ask.answered": "you",
+  "ask.confirmed": "you",
+  "ask.overturned": "you",
+  "node.transitioned": "done",
+  "node.created": "edit",
+  "dependency.added": "edit",
+  "ask.assumed": "edit",
+};
+
+// The append-only event log → the Activity timeline: newest first, grouped by minute label.
+export function eventsToActivity(events: Event[]): ActivityGroup[] {
+  const groups: ActivityGroup[] = [];
+  for (const e of [...events].sort((a, b) => b.seq - a.seq)) {
+    const time = hhmm(e.at);
+    let group = groups.find((g) => g.time === time);
+    if (!group) {
+      group = { time, items: [] };
+      groups.push(group);
+    }
+    group.items.push({ kind: VERB_KIND[e.verb], stream: "", text: e.summary ?? e.verb, sub: "" });
+  }
+  return groups;
+}
+
+// Notifications are derived client-side (no backend feed) from the open decisions across all
+// projects — each parked decision is a "needs you" card linking to its proposal.
+export function deriveNotifications(projects: Project[]): Notification[] {
+  return projects.flatMap((p) =>
+    p.decisions.map(
+      (d): Notification => ({
+        id: `notif-${d.id}`,
+        unread: true,
+        tone: d.risk === "high" ? "warning" : "accent",
+        icon: "diamond",
+        project: p.name,
+        text: d.title,
+        time: d.parked,
+        to: { project: p.id, decision: d.id, view: "proposal" },
+      }),
+    ),
+  );
+}
+
+// Assemble one web Project from its summary + progress + inbox + events.
 export function toProject(
   summary: ProjectSummary,
   progress: ProjectProgress,
   inboxItems: InboxItem[],
+  events: Event[],
   nowMs: number,
   chrome: Record<string, ProjectChrome> = {},
 ): Project {
@@ -152,6 +219,6 @@ export function toProject(
     decisions: inboxItems.map((it) =>
       toDecision(it, planTitleByTaskNode.get(it.nodeId) ?? it.nodeTitle, nowMs),
     ),
-    activity: [],
+    activity: eventsToActivity(events),
   };
 }
