@@ -10,6 +10,8 @@ import type {
   DependencyEdge,
   InboxItem,
   InboxResponse,
+  ProjectListResponse,
+  EventLogResponse,
   TransitionInput,
   ParkAskInput,
   ProposalVerdict,
@@ -130,6 +132,9 @@ const RESOLVED_STATES = new Set(["ANSWERED", "CONFIRMED", "OVERTURNED"]);
 // asks let the agent proceed but the human may still confirm or overturn them.
 const PENDING_STATES = new Set<AskState>(["OPEN", "ASSUMED"]);
 
+// Upper bound on a single event-log read (the Activity timeline shows a recent window).
+const EVENT_PAGE_MAX = 500;
+
 // Loads an ask and enforces the optimistic-concurrency guard before any state change.
 async function requireAsk(
   ctx: RepositoryContext,
@@ -162,6 +167,8 @@ export interface Core {
   blastRadius(projectId: string, nodeId: string): Promise<number>;
   listInbox(projectId: string): Promise<InboxResponse>;
   listProject(projectId: string): Promise<ProjectProgress>;
+  listProjects(): Promise<ProjectListResponse>;
+  readEvents(projectId: string, sinceSeq?: number): Promise<EventLogResponse>;
   getContext(projectId: string): Promise<ContextPack>;
 }
 
@@ -738,6 +745,27 @@ export function createCore(deps: CoreDeps): Core {
           .sort((x, y) => y.blastRadius - x.blastRadius || x.parkedAt - y.parkedAt);
 
         return { projectId, seq, items };
+      });
+    },
+
+    // Cross-project home: every project with read-time-derived counts. The repository
+    // computes the aggregate in one query (no N+1 over projects).
+    async listProjects() {
+      return uow.run(async (ctx) => ({ projects: await ctx.projects.listSummaries() }));
+    },
+
+    // The project's append-only event log (the Activity timeline source). `sinceSeq`
+    // filters to newer events for incremental reads; bounded to the most recent page.
+    async readEvents(projectId, sinceSeq = 0) {
+      return uow.run(async (ctx) => {
+        const project = await ctx.projects.findById(projectId);
+        if (!project) throw new NotFoundError("project", projectId);
+        const since = await ctx.events.listSince(projectId, sinceSeq);
+        // listSince is ascending; the tail is the most recent page and its last seq is the
+        // project's current max. When nothing is newer, hold the caller's position.
+        const events = since.slice(-EVENT_PAGE_MAX);
+        const seq = since.length > 0 ? since[since.length - 1]!.seq : sinceSeq;
+        return { projectId, seq, events };
       });
     },
 

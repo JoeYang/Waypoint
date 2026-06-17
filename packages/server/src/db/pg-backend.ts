@@ -33,6 +33,13 @@ interface ProjectRow {
   name: string;
   created_at: string;
 }
+interface ProjectSummaryRow {
+  id: string;
+  name: string;
+  open_ask_count: string; // COUNT(*) → bigint → string
+  agent_task_count: string;
+  last_activity_at: string | null; // MAX(at); null when the project has no events
+}
 interface NodeRow {
   id: string;
   project_id: string;
@@ -145,6 +152,32 @@ function makeContext(db: Queryable): RepositoryContext {
     findById: async (id) => {
       const { rows } = await db.query<ProjectRow>("SELECT * FROM project WHERE id = $1", [id]);
       return rows[0] ? toProject(rows[0]) : null;
+    },
+    // One aggregate query — no N+1 over projects. Counts come from grouped subqueries
+    // joined onto the project row; absent groups COALESCE to zero / null.
+    listSummaries: async () => {
+      const { rows } = await db.query<ProjectSummaryRow>(
+        `SELECT p.id, p.name,
+                COALESCE(a.open_count, 0)   AS open_ask_count,
+                COALESCE(n.active_count, 0) AS agent_task_count,
+                e.last_at                   AS last_activity_at
+           FROM project p
+           LEFT JOIN (SELECT project_id, COUNT(*) AS open_count
+                        FROM ask WHERE state = 'OPEN' GROUP BY project_id) a ON a.project_id = p.id
+           LEFT JOIN (SELECT project_id, COUNT(*) AS active_count
+                        FROM node WHERE kind = 'task' AND status = 'ACTIVE'
+                        GROUP BY project_id) n ON n.project_id = p.id
+           LEFT JOIN (SELECT project_id, MAX(at) AS last_at
+                        FROM event GROUP BY project_id) e ON e.project_id = p.id
+          ORDER BY p.created_at ASC`,
+      );
+      return rows.map((r) => ({
+        id: r.id,
+        name: r.name,
+        openAskCount: Number(r.open_ask_count),
+        agentTaskCount: Number(r.agent_task_count),
+        ...(r.last_activity_at !== null ? { lastActivityAt: Number(r.last_activity_at) } : {}),
+      }));
     },
   };
 

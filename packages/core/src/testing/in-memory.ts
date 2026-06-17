@@ -1,4 +1,4 @@
-import type { Project, Node, Ask, Event, DependencyEdge } from "@waypoint/shared";
+import type { Project, ProjectSummary, Node, Ask, Event, DependencyEdge } from "@waypoint/shared";
 import type {
   Clock,
   IdGenerator,
@@ -59,6 +59,24 @@ export class InMemoryBackend {
 
   readonly projects: ProjectRepository = {
     findById: async (id) => this.state.projects.get(id) ?? null,
+    listSummaries: async () =>
+      [...this.state.projects.values()].map((p): ProjectSummary => {
+        const openAskCount = [...this.state.asks.values()].filter(
+          (a) => a.projectId === p.id && a.state === "OPEN",
+        ).length;
+        const agentTaskCount = [...this.state.nodes.values()].filter(
+          (n) => n.projectId === p.id && n.kind === "task" && n.status === "ACTIVE",
+        ).length;
+        const ats = this.state.events.filter((e) => e.projectId === p.id).map((e) => e.at);
+        const lastActivityAt = ats.length > 0 ? Math.max(...ats) : undefined;
+        return {
+          id: p.id,
+          name: p.name,
+          openAskCount,
+          agentTaskCount,
+          ...(lastActivityAt !== undefined ? { lastActivityAt } : {}),
+        };
+      }),
   };
 
   readonly nodes: NodeRepository = {
