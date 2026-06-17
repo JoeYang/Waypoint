@@ -32,7 +32,7 @@ mcp.listen(mcpPort, () => {
   console.log(`Waypoint MCP server listening on http://localhost:${mcpPort}/mcp`);
 });
 
-const rest = createRestServer(notifying);
+const rest = createRestServer(notifying, { corsOrigin: process.env.WAYPOINT_CORS_ORIGIN });
 createInboxWsServer(hub, rest.server);
 rest
   .listen({ port: httpPort, host: "0.0.0.0" })

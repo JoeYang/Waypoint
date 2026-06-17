@@ -97,6 +97,10 @@ npm run dev -w @waypoint/web
 VITE_WAYPOINT_API_BASE=http://localhost:8849 npm run dev -w @waypoint/web
 ```
 
+The API enables CORS for the browser UI — `*` by default (the web app runs on a different port
+than the API). In a deployed environment set `WAYPOINT_CORS_ORIGIN` to the UI's exact origin so
+the API is not readable from arbitrary sites.
+
 The web UI runs on typed mock fixtures by default; set `VITE_WAYPOINT_API_BASE` to point it at the
 REST/WS backend, and the same screens render live data through the swappable `WaypointSource` seam
 (no screen changes). To exercise the backend loop, seed Waypoint's own build structure through the
