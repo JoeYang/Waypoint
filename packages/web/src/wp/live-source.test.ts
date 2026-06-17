@@ -62,6 +62,7 @@ const progress = {
               agentLabel: null,
               blastRadius: 0,
               group: null,
+              prUrl: null,
               asks: [],
             },
           ],
