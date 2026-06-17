@@ -35,10 +35,13 @@ export interface WaypointContextValue {
 
 const WaypointContext = createContext<WaypointContextValue | null>(null);
 
-const findDecision = (data: ProjectsData, id: string): Decision | undefined => {
+const findDecision = (
+  data: ProjectsData,
+  id: string,
+): { decision: Decision; projectId: string } | undefined => {
   for (const p of data.projects) {
     const d = p.decisions.find((x) => x.id === id);
-    if (d) return d;
+    if (d) return { decision: d, projectId: p.id };
   }
   return undefined;
 };
@@ -93,7 +96,7 @@ export function WaypointProvider({
   }
 
   return (
-    <ReadyProvider data={data} storage={storage}>
+    <ReadyProvider data={data} storage={storage} source={source} reload={reload}>
       {children}
     </ReadyProvider>
   );
@@ -102,10 +105,14 @@ export function WaypointProvider({
 function ReadyProvider({
   data,
   storage,
+  source,
+  reload,
   children,
 }: {
   data: ProjectsData;
   storage: Pick<Storage, "getItem" | "setItem"> | undefined;
+  source: WaypointSource;
+  reload: () => void;
   children: ReactNode;
 }): JSX.Element {
   const store = storage ?? (typeof localStorage !== "undefined" ? localStorage : undefined);
@@ -125,13 +132,25 @@ function ReadyProvider({
       goHome: () => dispatch({ type: "goHome" }),
       openDecision: (id) => dispatch({ type: "openDecision", id }),
       resolve: (id, option) => {
-        const decision = findDecision(data, id);
-        if (!decision) return; // unknown id → no-op, never throws
-        dispatch({ type: "resolve", id, option, blocksTask: decision.blocksTask });
+        const found = findDecision(data, id);
+        if (!found) return; // unknown id → no-op, never throws
+        // Optimistic: flip the UI immediately, then persist. The backend answer drives a reload
+        // (the card leaves on live data); a rejection (e.g. STALE_VERSION) reconciles via the
+        // same reload. The mock answer is a no-op, so its optimistic state simply stands.
+        dispatch({ type: "resolve", id, option, blocksTask: found.decision.blocksTask });
+        const chosenOptionId = found.decision.options.find((o) => o.name === option)?.id;
+        void source
+          .answer({
+            projectId: found.projectId,
+            decisionId: id,
+            ...(chosenOptionId !== undefined ? { chosenOptionId } : {}),
+            expectedVersion: found.decision.version ?? 0,
+          })
+          .then(reload, reload);
       },
       comment: (id, text) => dispatch({ type: "comment", id, text }),
     };
-  }, [data, state.nav, state.resolved, state.threads]);
+  }, [data, state.nav, state.resolved, state.threads, source, reload]);
 
   return <WaypointContext.Provider value={value}>{children}</WaypointContext.Provider>;
 }

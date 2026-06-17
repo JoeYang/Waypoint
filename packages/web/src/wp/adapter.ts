@@ -90,11 +90,17 @@ export function toDecision(item: InboxItem, streamName: string, nowMs: number): 
     file: "",
     context: item.rationale ?? "",
     options: item.options.map(
-      (o): Option => ({ name: o.label, pros: o.consequence ? [o.consequence] : [], cons: [] }),
+      (o): Option => ({
+        id: o.id,
+        name: o.label,
+        pros: o.consequence ? [o.consequence] : [],
+        cons: [],
+      }),
     ),
     recReason: "",
     impact: { kind: item.risk === "high" ? "danger" : "info", text: impactText(item) },
     thread: [],
+    version: item.askVersion,
   };
 }
 

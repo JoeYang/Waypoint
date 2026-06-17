@@ -50,6 +50,9 @@ export interface Option {
   rec?: boolean; // the agent's recommended option
   pros: string[];
   cons: string[];
+  // The backend option id (`opt-N`), carried by the live adapter so an answer can identify the
+  // choice; absent for mock fixtures (the mock answer is a no-op).
+  id?: string;
 }
 
 export interface Message {
@@ -81,6 +84,9 @@ export interface Decision {
   recReason: string; // the recommended option's name, echoed in copy
   impact: Impact;
   thread: Message[];
+  // The ask version, carried by the live adapter for optimistic-concurrency answers; absent for
+  // mock fixtures.
+  version?: number;
 }
 
 export interface ActivityItem {

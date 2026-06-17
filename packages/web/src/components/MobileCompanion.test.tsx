@@ -65,6 +65,7 @@ describe("MobileCompanion", () => {
       initial: () => data,
       load: () => Promise.resolve(data),
       subscribe: () => () => {},
+      answer: () => Promise.resolve(),
     };
     renderCompanion(() => {}, emptySource);
     expect(screen.getByText(/All clear/)).toBeInTheDocument();
