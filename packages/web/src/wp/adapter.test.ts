@@ -1,6 +1,15 @@
 import { describe, it, expect } from "vitest";
 import type { InboxItem, ProjectProgress, ProjectSummary, TaskProgress } from "@waypoint/shared";
-import { toTask, toStream, progressToStreams, toDecision, toProject } from "./adapter.js";
+import type { Event } from "@waypoint/shared";
+import {
+  toTask,
+  toStream,
+  progressToStreams,
+  toDecision,
+  toProject,
+  eventsToActivity,
+  deriveNotifications,
+} from "./adapter.js";
 
 const NOW = 1_700_000_000_000;
 
@@ -127,7 +136,7 @@ describe("adapter — decision (D8 provenance)", () => {
 
 describe("adapter — project assembly", () => {
   it("assembles a project with streams, decisions keyed to their plan, and derived chrome", () => {
-    const p = toProject(summary, progress(), [item()], NOW);
+    const p = toProject(summary, progress(), [item()], [], NOW);
     expect(p).toMatchObject({ id: "p1", name: "orbit-api", agent: "working", agentTasks: 3 });
     expect(p.streams).toHaveLength(1);
     expect(p.decisions[0]).toMatchObject({ id: "d1", stream: "Data layer" });
@@ -137,10 +146,47 @@ describe("adapter — project assembly", () => {
   });
 
   it("reads idle when no agent tasks, and honours a chrome override", () => {
-    const idle = toProject({ ...summary, agentTaskCount: 0 }, progress(), [], NOW, {
+    const idle = toProject({ ...summary, agentTaskCount: 0 }, progress(), [], [], NOW, {
       p1: { glyph: "ZZ", color: "#000", desc: "custom" },
     });
     expect(idle.agent).toBe("idle");
     expect(idle).toMatchObject({ glyph: "ZZ", color: "#000", desc: "custom" });
+  });
+});
+
+const event = (over: Partial<Event>): Event => ({
+  id: "e1",
+  projectId: "p1",
+  seq: 1,
+  actor: "agent",
+  verb: "node.created",
+  ref: { kind: "node", id: "n1" },
+  sessionId: null,
+  summary: "did a thing",
+  at: NOW,
+  ...over,
+});
+
+describe("adapter — activity & notifications", () => {
+  it("maps event verbs to dot kinds, newest first, grouped by time", () => {
+    const groups = eventsToActivity([
+      event({ seq: 1, verb: "node.created", summary: "created", at: NOW - 3_600_000 }),
+      event({ seq: 2, verb: "ask.parked", summary: "parked it", at: NOW }),
+      event({ seq: 3, verb: "ask.answered", summary: "you answered", at: NOW }),
+    ]);
+    // Newest (seq 3, 2 share NOW) first; the older one (seq 1) is a separate time group.
+    expect(groups[0]?.items.map((i) => i.kind)).toEqual(["you", "parked"]);
+    expect(groups[1]?.items[0]).toMatchObject({ kind: "edit", text: "created" });
+  });
+
+  it("derives a notification per open decision across projects", () => {
+    const p = toProject(summary, progress(), [item({ askId: "d1" })], [], NOW);
+    const notes = deriveNotifications([p]);
+    expect(notes).toHaveLength(1);
+    expect(notes[0]).toMatchObject({
+      project: "orbit-api",
+      tone: "warning", // d1 is high risk
+      to: { project: "p1", decision: "d1", view: "proposal" },
+    });
   });
 });
