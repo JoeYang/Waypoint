@@ -1,4 +1,4 @@
-import type { Project, Node, Ask, Event, DependencyEdge } from "@waypoint/shared";
+import type { Project, ProjectSummary, Node, Ask, Event, DependencyEdge } from "@waypoint/shared";
 
 // Outbound ports declared by the domain and implemented by adapters (server/Postgres,
 // in-memory fakes in tests). Core reaches persistence, time, and identity ONLY through
@@ -17,6 +17,10 @@ export interface IdGenerator {
 
 export interface ProjectRepository {
   findById(id: string): Promise<Project | null>;
+  // Every project with read-time-derived counts for the cross-project home. The adapter
+  // computes the aggregate in ONE query (no N+1 over projects): open asks, agent-occupied
+  // tasks, and the newest event's timestamp per project.
+  listSummaries(): Promise<ProjectSummary[]>;
 }
 
 export interface NodeRepository {

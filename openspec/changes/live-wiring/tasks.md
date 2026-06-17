@@ -19,9 +19,9 @@ implementation; schema/contract changes are isolated commits. Stacks `shared →
 
 ## 2. Core read-models (PR2)
 
-- [ ] 2.1 RED: `listProjects(): ProjectSummary[]` — a NEW port method (today `ProjectRepository` exposes only `findById`; the `project` table already has id/name/seq_counter so no migration). `openAskCount` from the `ask` table scoped by project; `agentTaskCount` (running tasks) needs a dedicated aggregate query — **avoid the N+1** of loading every project's nodes. In-memory fake → Postgres impl.
-- [ ] 2.2 RED: `readEvents(projectId, sinceSeq?): EventEntry[]` port + in-memory fake → impl; append-only order, bounded page.
-- [ ] 2.3 Postgres implementations of both ports behind the existing repository; parameterized queries only.
+- [x] 2.1 `listProjects()` core use-case over a NEW `ProjectRepository.listSummaries()` port (open-ask + agent-task counts, last activity). Postgres computes it in ONE aggregate query (grouped subqueries — no N+1); in-memory fake mirrors it. 2 core tests.
+- [x] 2.2 `readEvents(projectId, sinceSeq?)` core use-case reusing `EventLog.listSince`; project-existence-checked, `sinceSeq` filter, bounded most-recent page (seq held when none newer). 3 core tests.
+- [x] 2.3 Postgres `listSummaries` (parameterized aggregate); `readEvents` reuses the existing pg `listSince`. DB-gated integration case covers both.
 
 ## 3. Server routes (PR3)
 

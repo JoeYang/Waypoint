@@ -76,6 +76,37 @@ describeDb("PgBackend satisfies the repository port contract", () => {
     expect(await core.computeBlocked(PROJECT, node.id)).toBe(false);
   });
 
+  it("aggregates project summaries in one query and reads the event log", async () => {
+    const node = await task("T");
+    await core.transition({
+      projectId: PROJECT,
+      nodeId: node.id,
+      to: "ACTIVE",
+      expectedVersion: 1,
+    });
+    await core.parkAsk({
+      projectId: PROJECT,
+      nodeId: node.id,
+      type: "DECISION",
+      prompt: "Which store?",
+      required: true,
+      options: ["Postgres", "SQLite"],
+    });
+
+    const { projects } = await core.listProjects();
+    const summary = projects.find((p) => p.id === PROJECT);
+    expect(summary).toMatchObject({ openAskCount: 1, agentTaskCount: 1 });
+    expect(summary?.lastActivityAt).toBeGreaterThan(0);
+
+    const log = await core.readEvents(PROJECT);
+    expect(log.events.map((e) => e.verb)).toEqual([
+      "node.created",
+      "node.transitioned",
+      "ask.parked",
+    ]);
+    expect(log.seq).toBe(log.events[log.events.length - 1]?.seq);
+  });
+
   it("round-trips decision context (rationale, per-option consequence, agent label) across transactions", async () => {
     const node = await task("decide the store");
     const parked = await core.parkAsk({
