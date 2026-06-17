@@ -40,3 +40,13 @@ export const EventSchema = z.object({
   at: z.number().int().nonnegative(), // epoch ms
 });
 export type Event = z.infer<typeof EventSchema>;
+
+// GET /v1/projects/:projectId/events — the project's append-only event log (the Activity
+// timeline source). `seq` echoes the project's latest seq for resume; `events` are in
+// append order, optionally filtered by a `sinceSeq` query.
+export const EventLogResponseSchema = z.object({
+  projectId: z.string().min(1),
+  seq: z.number().int().nonnegative(),
+  events: z.array(EventSchema),
+});
+export type EventLogResponse = z.infer<typeof EventLogResponseSchema>;
