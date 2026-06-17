@@ -51,9 +51,9 @@ implementation; schema/contract changes are isolated commits. Stacks `shared →
 
 ## 7. Activity + Home + Notifications (PR7 — web)
 
-- [ ] 7.1 RED: Activity from `GET …/events` — verb→`ActivityKind` mapping, grouped by time; unmapped verb → neutral dot → implement.
-- [ ] 7.2 RED: Home from `GET /v1/projects` + a web config map (id→glyph/color/desc) with a deterministic fallback → implement.
-- [ ] 7.3 RED: Notifications derived client-side from open asks + recent events; per-surface loading/empty → implement.
+- [x] 7.1 `eventsToActivity` maps the event log to the timeline — verb→`ActivityKind` via an exhaustive `Record` (new verb = compile error, not a silent miss), newest-first, grouped by minute; folded into `Project.activity` by liveSource.
+- [x] 7.2 Home from `GET /v1/projects` + the deterministic chrome config (glyph/colour from id, overridable) — done in PR6's liveSource; loading/empty handled by the PR4 provider states.
+- [x] 7.3 `deriveNotifications` — a "needs you" card per open decision across projects (no backend notification feed); wired into liveSource. Adapter + liveSource tests.
 
 ## 8. Live e2e + docs (PR8)
 
