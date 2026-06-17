@@ -123,6 +123,13 @@ function ReadyProvider({
     saveNav(store, state.nav);
   }, [store, state.nav]);
 
+  // When live data reloads, drop optimistic state for decisions that no longer exist (answered
+  // here or by another agent). Keyed on the decision-id set, so it only fires on a real change.
+  const decisionIds = data.projects.flatMap((p) => p.decisions.map((d) => d.id)).join(",");
+  useEffect(() => {
+    dispatch({ type: "prune", validIds: decisionIds === "" ? [] : decisionIds.split(",") });
+  }, [decisionIds]);
+
   const value = useMemo<WaypointContextValue>(() => {
     return {
       data,
