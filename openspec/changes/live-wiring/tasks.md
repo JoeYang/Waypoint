@@ -25,9 +25,9 @@ implementation; schema/contract changes are isolated commits. Stacks `shared →
 
 ## 3. Server routes (PR3)
 
-- [ ] 3.1 RED: `GET /v1/projects` → `ProjectListResponse` (versioned, consistent error envelope) → implement over `listProjects`.
-- [ ] 3.2 RED: `GET /v1/projects/:id/events` → `EventLogResponse` (project-scoped, `sinceSeq` query) → implement over `readEvents`.
-- [ ] 3.3 Integration tests (real Postgres/testcontainer): happy path + unknown project + empty.
+- [x] 3.1 `GET /v1/projects` → `ProjectListResponse` over `listProjects` (versioned, X-Request-ID, typed-error envelope).
+- [x] 3.2 `GET /v1/projects/:id/events` → `EventLogResponse` over `readEvents`; optional `sinceSeq` query, non-integer → 400 VALIDATION; unknown project → 404.
+- [x] 3.3 6 route tests (inject) cover counts, append order, sinceSeq filter, invalid sinceSeq, unknown project; the PR2 Postgres integration case covers the read-model over a real DB.
 
 ## 4. Async source seam (PR4 — web, no live calls yet)
 
