@@ -1,0 +1,31 @@
+/* The provider's pre-content states (loading / error / empty) — shown before any screen. */
+.center {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: var(--bg);
+  color: var(--fg-2);
+  font-size: 15px;
+}
+.title {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: var(--fg-1);
+}
+.retry {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 9px 18px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: var(--accent-600);
+  color: #fff;
+  cursor: pointer;
+}
+.retry:hover {
+  background: var(--accent-700);
+}

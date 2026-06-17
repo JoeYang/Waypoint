@@ -31,9 +31,9 @@ implementation; schema/contract changes are isolated commits. Stacks `shared →
 
 ## 4. Async source seam (PR4 — web, no live calls yet)
 
-- [ ] 4.1 RED: `WaypointSource` becomes `load(projectId?): Promise<ProjectsData>`, `subscribe(onDelta): () => void`, `answer(...): Promise<…>`; `mockSource` satisfies it (load resolves immediately, subscribe no-op).
-- [ ] 4.2 RED: `WaypointProvider` loading / error+retry / empty states (frontend.md); **guard `safeNav` so it does not run against undefined `data` during the loading frame** (today it calls `data.projects.find`); existing screen tests stay green against the async mock.
-- [ ] 4.3 Failure injection: a rejecting `load` → error state with a retry that re-invokes `load`.
+- [x] 4.1 `WaypointSource` becomes `initial()` (sync seed, keeps screen tests green) + `load(): Promise<ProjectsData>` + `subscribe(onChange): () => void`; `mockSource` satisfies it. (`answer()` joins the seam in PR6 when it's wired — avoiding dead interface surface.)
+- [x] 4.2 `WaypointProvider` loading / error+retry / empty states (frontend.md); an outer/inner split renders the context only once data is present, so `safeNav` never runs against null `data`. All existing screen tests stay green against the async mock seed. Verified live (mock renders Home, no white screen).
+- [x] 4.3 Failure injection: a rejecting `load` → error state with a retry that re-invokes `load` (test asserts the second attempt succeeds). 5 provider async tests.
 
 ## 5. Live source adapter (PR5 — web)
 

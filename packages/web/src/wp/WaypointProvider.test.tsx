@@ -1,9 +1,12 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { render, screen, act, cleanup } from "@testing-library/react";
+import { render, screen, act, cleanup, waitFor } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 import { WaypointProvider, useWaypoint } from "./WaypointProvider.js";
 import { NAV_KEY } from "./state.js";
+import { WP_DATA } from "./fixtures.js";
+import type { WaypointSource } from "./source.js";
 
 afterEach(cleanup);
 
@@ -113,5 +116,93 @@ describe("WaypointProvider", () => {
     };
     // Silence React's error boundary console noise for the expected throw.
     expect(() => render(<Bare />)).toThrow(/within a WaypointProvider/);
+  });
+});
+
+function CountProbe(): React.JSX.Element {
+  const { data } = useWaypoint();
+  return <span data-testid="projects">{data.projects.length}</span>;
+}
+
+describe("WaypointProvider async states", () => {
+  beforeEach(() => localStorage.clear());
+
+  it("shows the loading state while an async load is in flight (no sync seed)", () => {
+    const pending: WaypointSource = {
+      initial: () => null,
+      load: () => new Promise(() => {}), // never resolves
+      subscribe: () => () => {},
+    };
+    render(
+      <WaypointProvider source={pending}>
+        <CountProbe />
+      </WaypointProvider>,
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(/Loading/i);
+    expect(screen.queryByTestId("projects")).not.toBeInTheDocument();
+  });
+
+  it("shows the error state with a retry that re-invokes load", async () => {
+    const user = userEvent.setup();
+    let attempts = 0;
+    const flaky: WaypointSource = {
+      initial: () => null,
+      load: () => {
+        attempts += 1;
+        return attempts === 1 ? Promise.reject(new Error("offline")) : Promise.resolve(WP_DATA);
+      },
+      subscribe: () => () => {},
+    };
+    render(
+      <WaypointProvider source={flaky}>
+        <CountProbe />
+      </WaypointProvider>,
+    );
+    expect(await screen.findByRole("alert")).toHaveTextContent(/Couldn't reach Waypoint/i);
+
+    await user.click(screen.getByRole("button", { name: /Try again/i }));
+    await waitFor(() => expect(screen.getByTestId("projects")).toBeInTheDocument());
+    expect(attempts).toBe(2);
+  });
+
+  it("shows the empty state when the source has no projects", () => {
+    const data = { ...WP_DATA, projects: [] };
+    const empty: WaypointSource = {
+      initial: () => data,
+      load: () => Promise.resolve(data),
+      subscribe: () => () => {},
+    };
+    render(
+      <WaypointProvider source={empty}>
+        <CountProbe />
+      </WaypointProvider>,
+    );
+    expect(screen.getByText(/No projects yet/i)).toBeInTheDocument();
+    expect(screen.queryByTestId("projects")).not.toBeInTheDocument();
+  });
+
+  it("re-loads when the source signals a change", async () => {
+    const handlers: Array<() => void> = [];
+    let payload = { ...WP_DATA, projects: WP_DATA.projects.slice(0, 1) };
+    const live: WaypointSource = {
+      initial: () => null,
+      load: () => Promise.resolve(payload),
+      subscribe: (onChange) => {
+        handlers.push(onChange);
+        return () => {};
+      },
+    };
+    render(
+      <WaypointProvider source={live}>
+        <CountProbe />
+      </WaypointProvider>,
+    );
+    await waitFor(() => expect(screen.getByTestId("projects")).toHaveTextContent("1"));
+
+    payload = { ...WP_DATA };
+    act(() => handlers.forEach((h) => h()));
+    await waitFor(() =>
+      expect(screen.getByTestId("projects")).toHaveTextContent(String(WP_DATA.projects.length)),
+    );
   });
 });

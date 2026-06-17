@@ -57,11 +57,14 @@ describe("MobileCompanion", () => {
   });
 
   it("shows the all-clear empty state when nothing is parked", () => {
+    const data = {
+      ...WP_DATA,
+      projects: WP_DATA.projects.map((p) => ({ ...p, decisions: [] })),
+    };
     const emptySource: WaypointSource = {
-      getData: () => ({
-        ...WP_DATA,
-        projects: WP_DATA.projects.map((p) => ({ ...p, decisions: [] })),
-      }),
+      initial: () => data,
+      load: () => Promise.resolve(data),
+      subscribe: () => () => {},
     };
     renderCompanion(() => {}, emptySource);
     expect(screen.getByText(/All clear/)).toBeInTheDocument();
