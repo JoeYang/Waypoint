@@ -1,4 +1,5 @@
 import Fastify, { type FastifyInstance } from "fastify";
+import fastifyStatic from "@fastify/static";
 import {
   AnswerRequestSchema,
   type AnswerResponse,
@@ -36,6 +37,12 @@ export interface RestServerOptions {
    * (e.g. via WAYPOINT_CORS_ORIGIN) so the API is not readable from arbitrary sites.
    */
   corsOrigin?: string;
+  /**
+   * Absolute path to the built web SPA (the `vite build` output). When set, this same Fastify
+   * server serves the UI (decision D7: one process serves API + web in the prod container),
+   * with deep-link fallback to index.html. Unset in dev/tests, where Vite serves the web.
+   */
+  webRoot?: string;
 }
 
 // The human's answer surface. Two endpoints over the core read/answer use-cases; every
@@ -43,6 +50,7 @@ export interface RestServerOptions {
 export function createRestServer(core: Core, opts: RestServerOptions = {}): FastifyInstance {
   const app = Fastify({ logger: false });
   const corsOrigin = opts.corsOrigin ?? "*";
+  const webRoot = opts.webRoot;
 
   // CORS: the web UI is served from a different origin than this API (dev: :5273 → :8849),
   // so without these headers the browser discards every response. Set on all routes; a
@@ -66,6 +74,20 @@ export function createRestServer(core: Core, opts: RestServerOptions = {}): Fast
     reply.header("X-Request-ID", req.id);
     return payload;
   });
+
+  // Liveness/readiness probe for the container HEALTHCHECK (docker.md). Cheap and dependency-free
+  // so the orchestrator can restart a wedged process without hitting the database.
+  app.get("/healthz", async (_req, reply) => {
+    reply.send({ status: "ok" });
+  });
+
+  // In the prod container, serve the built web SPA from this same server (D7). Registered after
+  // the API routes are declared below — find-my-way matches the explicit /v1 + /healthz routes
+  // before the static wildcard, so the API is never shadowed. SPA deep links 404 in static and
+  // fall through to the not-found handler, which returns index.html.
+  if (webRoot !== undefined) {
+    void app.register(fastifyStatic, { root: webRoot });
+  }
 
   app.setErrorHandler((err, req, reply) => {
     if (err instanceof WaypointError) {
@@ -161,6 +183,21 @@ export function createRestServer(core: Core, opts: RestServerOptions = {}): Fast
       reply.send(body);
     },
   );
+
+  // Unmatched routes: a non-API GET falls back to the SPA shell when web serving is on (so
+  // client-side deep links resolve); everything else gets the JSON error envelope, never HTML.
+  app.setNotFoundHandler((req, reply) => {
+    if (
+      webRoot !== undefined &&
+      req.method === "GET" &&
+      !req.url.startsWith("/v1") &&
+      !req.url.startsWith("/healthz")
+    ) {
+      void reply.type("text/html").sendFile("index.html");
+      return;
+    }
+    reply.status(404).send({ error: "NOT_FOUND", message: "not found", request_id: req.id });
+  });
 
   return app;
 }

@@ -16,6 +16,7 @@
     "start": "node dist/main.js"
   },
   "dependencies": {
+    "@fastify/static": "^9.1.3",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@waypoint/core": "*",
     "@waypoint/shared": "*",
