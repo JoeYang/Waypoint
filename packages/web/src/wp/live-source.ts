@@ -20,6 +20,10 @@ function timeLabel(d: Date): string {
   return `${h}:${m} ${d.getHours() < 12 ? "AM" : "PM"}`;
 }
 
+function wsUrlFor(baseUrl: string, projectId: string): string {
+  return `${baseUrl.replace(/^http/, "ws")}/v1/projects/${encodeURIComponent(projectId)}/stream`;
+}
+
 export function createLiveSource(baseUrl: string): WaypointSource {
   return {
     initial: () => null, // no synchronous snapshot — the provider shows loading until load() resolves
@@ -43,7 +47,40 @@ export function createLiveSource(baseUrl: string): WaypointSource {
         notifications: deriveNotifications(built),
       };
     },
-    subscribe: () => () => {}, // WS push deferred (see header); answer-triggered reload covers self-actions
+    // Open a per-project WebSocket and ask the provider to re-load on any delta/resync — a
+    // coarse full-snapshot refresh (not incremental delta application), which keeps "no poll"
+    // while staying simple. Guarded for environments without a WebSocket (SSR/tests).
+    subscribe: (onChange) => {
+      if (typeof WebSocket === "undefined") return () => {};
+      let closed = false;
+      const sockets: WebSocket[] = [];
+      void fetchProjects(baseUrl)
+        .then(({ projects }) => {
+          if (closed) return;
+          for (const p of projects) {
+            const ws = new WebSocket(wsUrlFor(baseUrl, p.id));
+            ws.addEventListener("open", () =>
+              ws.send(JSON.stringify({ type: "resume", projectId: p.id, lastSeq: null })),
+            );
+            ws.addEventListener("message", (e: MessageEvent) => {
+              try {
+                const frame = JSON.parse(String(e.data)) as { type?: string };
+                if (frame.type === "delta" || frame.type === "resync") onChange();
+              } catch {
+                // ignore a malformed frame
+              }
+            });
+            sockets.push(ws);
+          }
+        })
+        .catch(() => {
+          // a failed project list just means no live push this session; load() already errored
+        });
+      return () => {
+        closed = true;
+        for (const ws of sockets) ws.close();
+      };
+    },
     answer: async (command: AnswerCommand): Promise<void> => {
       await answerAsk(baseUrl, command.projectId, command.decisionId, {
         expectedVersion: command.expectedVersion,

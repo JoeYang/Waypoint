@@ -142,3 +142,22 @@ describe("safeNav", () => {
     expect(safeNav(nav, WP_DATA)).toEqual(nav);
   });
 });
+
+describe("prune (reconcile optimistic state with live data)", () => {
+  const resolvedState = (): WaypointState => {
+    const s = reducer(base(), { type: "resolve", id: "d1", option: "X", blocksTask: "T" });
+    return reducer(s, { type: "resolve", id: "d2", option: "Y", blocksTask: "U" });
+  };
+
+  it("drops resolved/thread entries whose decision is gone from live data", () => {
+    const pruned = reducer(resolvedState(), { type: "prune", validIds: ["d1"] });
+    expect(pruned.resolved).toHaveProperty("d1");
+    expect(pruned.resolved).not.toHaveProperty("d2");
+    expect(pruned.threads).not.toHaveProperty("d2");
+  });
+
+  it("is identity-stable when nothing needs pruning", () => {
+    const s = resolvedState();
+    expect(reducer(s, { type: "prune", validIds: ["d1", "d2"] })).toBe(s);
+  });
+});
