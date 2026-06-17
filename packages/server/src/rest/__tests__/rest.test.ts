@@ -290,6 +290,49 @@ describe("Inbox REST API", () => {
     });
   });
 
+  describe("CORS", () => {
+    it("stamps Access-Control-Allow-Origin on a normal response (default *)", async () => {
+      const res = await app.inject({
+        method: "GET",
+        url: "/v1/projects",
+        headers: { origin: "http://localhost:5273" },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.headers["access-control-allow-origin"]).toBe("*");
+    });
+
+    it("answers an OPTIONS preflight with 204 and the allowed methods/headers", async () => {
+      const res = await app.inject({
+        method: "OPTIONS",
+        url: "/v1/projects/default/asks/x/answer",
+        headers: {
+          origin: "http://localhost:5273",
+          "access-control-request-method": "POST",
+          "access-control-request-headers": "content-type",
+        },
+      });
+      expect(res.statusCode).toBe(204);
+      expect(res.headers["access-control-allow-origin"]).toBe("*");
+      expect(String(res.headers["access-control-allow-methods"])).toContain("POST");
+      expect(String(res.headers["access-control-allow-headers"]).toLowerCase()).toContain(
+        "content-type",
+      );
+    });
+
+    it("restricts the origin when configured (production seam)", async () => {
+      const restricted = createRestServer(core, { corsOrigin: "https://app.example" });
+      await restricted.ready();
+      try {
+        const res = await restricted.inject({ method: "GET", url: "/v1/projects" });
+        expect(res.headers["access-control-allow-origin"]).toBe("https://app.example");
+        // A restricted origin must vary the cache by Origin.
+        expect(String(res.headers["vary"]).toLowerCase()).toContain("origin");
+      } finally {
+        await restricted.close();
+      }
+    });
+  });
+
   describe("GET /v1/projects/:projectId/events", () => {
     it("returns the project's event log in append order", async () => {
       const n = await task("node");

@@ -1,18 +1,21 @@
 /* One task node on a stream lane, ported from waypoint-app.css .tnode/.conn/.tcard. */
 .tnode {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   flex-shrink: 0;
 }
 .conn {
-  width: 26px;
-  height: 2px;
+  width: 2px;
+  height: 20px;
+  margin-left: 22px;
   background: var(--ink-700);
   flex-shrink: 0;
 }
 .conn.future {
+  width: 0;
   background: none;
-  border-top: 2px dashed var(--border-strong);
+  border-left: 2px dashed var(--border-strong);
 }
 .tnode:first-child .conn {
   display: none;

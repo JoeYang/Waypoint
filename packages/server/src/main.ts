@@ -32,7 +32,12 @@ mcp.listen(mcpPort, () => {
   console.log(`Waypoint MCP server listening on http://localhost:${mcpPort}/mcp`);
 });
 
-const rest = createRestServer(notifying);
+const rest = createRestServer(notifying, {
+  corsOrigin: process.env.WAYPOINT_CORS_ORIGIN,
+  // In the prod container the server also serves the built web SPA (D7); WAYPOINT_WEB_ROOT
+  // points at the copied `vite build` output. Unset in dev, where Vite serves the web.
+  webRoot: process.env.WAYPOINT_WEB_ROOT,
+});
 createInboxWsServer(hub, rest.server);
 rest
   .listen({ port: httpPort, host: "0.0.0.0" })
@@ -43,3 +48,15 @@ rest
     console.error("failed to start inbox API", err);
     process.exit(1);
   });
+
+// Graceful shutdown: the orchestrator sends SIGTERM before SIGKILL. Close Fastify (and the
+// WebSocket server attached to it) so in-flight requests drain and sockets close cleanly.
+const shutdown = (signal: string): void => {
+  console.log(`${signal} received — draining connections`);
+  rest
+    .close()
+    .then(() => process.exit(0))
+    .catch(() => process.exit(1));
+};
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));

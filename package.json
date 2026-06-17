@@ -9,6 +9,7 @@
   },
   "workspaces": [
     "packages/*",
+    "packages/desktop",
     "e2e"
   ],
   "scripts": {

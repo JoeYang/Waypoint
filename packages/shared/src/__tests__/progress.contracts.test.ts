@@ -34,6 +34,7 @@ const task = {
   title: "cache layer",
   state: "blocked-on-ask" as const,
   agentLabel: "checkout-agent",
+  prUrl: null,
   blastRadius: 2,
   group: null,
   asks: [inboxAsk],
@@ -92,6 +93,19 @@ describe("TaskProgress", () => {
   it("requires the embedded asks to be valid InboxItems", () => {
     const bad = { ...task, asks: [{ askId: "a1" }] };
     expect(TaskProgressSchema.safeParse(bad).success).toBe(false);
+  });
+
+  it("carries a GitHub PR URL when the task has one, null when it does not", () => {
+    expect(TaskProgressSchema.parse(task).prUrl).toBeNull();
+    const withPr = TaskProgressSchema.parse({
+      ...task,
+      prUrl: "https://github.com/acme/waypoint/pull/42",
+    });
+    expect(withPr.prUrl).toBe("https://github.com/acme/waypoint/pull/42");
+  });
+
+  it("rejects a malformed PR URL", () => {
+    expect(TaskProgressSchema.safeParse({ ...task, prUrl: "not-a-url" }).success).toBe(false);
   });
 
   it("a running task carries no asks", () => {

@@ -1,0 +1,42 @@
+# Production stack — the full app (MCP + REST/WS + web SPA) plus its own Postgres, fully
+# isolated from local dev (host `npm run dev` + the dev-only docker-compose.yml / dev-db.sh).
+# Decision D6: self-contained compose so the service keeps running on a host.
+#
+#   WAYPOINT_DB_PASSWORD=... docker compose -f docker-compose.prod.yml up -d --build
+#
+# Never reuse dev credentials here; set a real WAYPOINT_DB_PASSWORD (required below).
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${WAYPOINT_DB_USER:-waypoint}
+      POSTGRES_PASSWORD: ${WAYPOINT_DB_PASSWORD:?WAYPOINT_DB_PASSWORD is required in prod}
+      POSTGRES_DB: ${WAYPOINT_DB_NAME:-waypoint}
+    volumes:
+      - waypoint_pgdata_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${WAYPOINT_DB_USER:-waypoint}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Injected at runtime — never baked into the image (docker.md / security.md).
+      DATABASE_URL: postgresql://${WAYPOINT_DB_USER:-waypoint}:${WAYPOINT_DB_PASSWORD:?WAYPOINT_DB_PASSWORD is required in prod}@postgres:5432/${WAYPOINT_DB_NAME:-waypoint}
+      # Restrict CORS to the real UI origin in prod; defaults to permissive only if unset.
+      WAYPOINT_CORS_ORIGIN: ${WAYPOINT_CORS_ORIGIN:-*}
+    ports:
+      - "${WAYPOINT_MCP_PORT:-8848}:8848"
+      - "${WAYPOINT_HTTP_PORT:-8849}:8849"
+    restart: unless-stopped
+
+volumes:
+  waypoint_pgdata_prod:

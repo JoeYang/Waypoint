@@ -18,6 +18,7 @@ const task = (over: Partial<TaskProgress>): TaskProgress => ({
   title: "A task",
   state: "running",
   agentLabel: null,
+  prUrl: null,
   blastRadius: 0,
   group: null,
   asks: [],

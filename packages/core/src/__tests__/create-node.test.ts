@@ -61,6 +61,51 @@ describe("createNode — node hierarchy within a project", () => {
     expect(node.sessionId).toBe("sess-abc");
   });
 
+  it("persists a supplied prUrl and surfaces it on the task in listProject", async () => {
+    const goal = await core.createNode({
+      projectId: PROJECT,
+      parentId: null,
+      kind: "goal",
+      title: "Ship the MVP",
+    });
+    const task = await core.createNode({
+      projectId: PROJECT,
+      parentId: goal.id,
+      kind: "task",
+      title: "Wire the API",
+      prUrl: "https://github.com/acme/waypoint/pull/42",
+    });
+    expect(task.prUrl).toBe("https://github.com/acme/waypoint/pull/42");
+
+    const res = await core.listProject(PROJECT);
+    const taskProgress = res.goals
+      .flatMap((g) => [...g.plans.flatMap((p) => p.tasks)])
+      .find((t) => t.nodeId === task.id);
+    expect(taskProgress?.prUrl).toBe("https://github.com/acme/waypoint/pull/42");
+  });
+
+  it("defaults prUrl to null when omitted and reports null in listProject", async () => {
+    const goal = await core.createNode({
+      projectId: PROJECT,
+      parentId: null,
+      kind: "goal",
+      title: "Ship the MVP",
+    });
+    const task = await core.createNode({
+      projectId: PROJECT,
+      parentId: goal.id,
+      kind: "task",
+      title: "No PR yet",
+    });
+    expect(task.prUrl).toBeNull();
+
+    const res = await core.listProject(PROJECT);
+    const taskProgress = res.goals
+      .flatMap((g) => [...g.plans.flatMap((p) => p.tasks)])
+      .find((t) => t.nodeId === task.id);
+    expect(taskProgress?.prUrl).toBeNull();
+  });
+
   it("appends exactly one node.created event with seq 1 by the agent", async () => {
     const node = await core.createNode({
       projectId: PROJECT,

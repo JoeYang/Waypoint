@@ -75,6 +75,39 @@ describe("ProjectMap", () => {
     expect(screen.queryByRole("button", { name: /Choose ORM/ })).not.toBeInTheDocument();
   });
 
+  it("collapses a done lane by default — its task nodes are hidden", () => {
+    seedMap("orbit-api");
+    renderMap();
+    // The "Auth" stream is status: "done" (2/2). Its header stays visible…
+    const auth = screen.getByRole("button", { name: /Auth/ });
+    expect(auth).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByText("2/2 done")).toBeInTheDocument();
+    // …but its task nodes are not rendered while collapsed.
+    expect(screen.queryByText("Auth middleware")).not.toBeInTheDocument();
+    expect(screen.queryByText("Token rotation")).not.toBeInTheDocument();
+  });
+
+  it("expands a done lane when its header is activated", async () => {
+    const user = userEvent.setup();
+    seedMap("orbit-api");
+    renderMap();
+    const auth = screen.getByRole("button", { name: /Auth/ });
+    await user.click(auth);
+    expect(auth).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("Auth middleware")).toBeInTheDocument();
+    expect(screen.getByText("Token rotation")).toBeInTheDocument();
+  });
+
+  it("leaves a non-done lane expanded — its task nodes are visible by default", () => {
+    seedMap("orbit-api");
+    renderMap();
+    // "Data layer" is status: "active"; its header is an expanded toggle and its tasks show.
+    const dataLayer = screen.getByRole("button", { name: /Data layer/ });
+    expect(dataLayer).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("Schema migration")).toBeInTheDocument();
+    expect(screen.getByText("Seed scripts")).toBeInTheDocument();
+  });
+
   it("renders an empty state when the nav points at no project", () => {
     // No seed → provider stays on home (project null) → map has nothing to show.
     renderMap();
