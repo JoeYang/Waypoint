@@ -155,6 +155,17 @@ function makeContext(db: Queryable): RepositoryContext {
       const { rows } = await db.query<ProjectRow>("SELECT * FROM project WHERE id = $1", [id]);
       return rows[0] ? toProject(rows[0]) : null;
     },
+    // Idempotent create. ON CONFLICT DO NOTHING makes concurrent registers race-safe; the
+    // affected-row count tells us whether THIS call created the project (true) or it existed.
+    insert: async (project) => {
+      const res = await db.query(
+        `INSERT INTO project (id, name, seq_counter, created_at)
+         VALUES ($1, $2, 0, $3)
+         ON CONFLICT (id) DO NOTHING`,
+        [project.id, project.name, project.createdAt],
+      );
+      return (res.rowCount ?? 0) > 0;
+    },
     // One aggregate query — no N+1 over projects. Counts come from grouped subqueries
     // joined onto the project row; absent groups COALESCE to zero / null.
     listSummaries: async () => {

@@ -59,6 +59,12 @@ export class InMemoryBackend {
 
   readonly projects: ProjectRepository = {
     findById: async (id) => this.state.projects.get(id) ?? null,
+    // Idempotent create — mirrors Postgres' ON CONFLICT DO NOTHING (LSP): never overwrites.
+    insert: async (project) => {
+      if (this.state.projects.has(project.id)) return false;
+      this.state.projects.set(project.id, structuredClone(project));
+      return true;
+    },
     listSummaries: async () =>
       [...this.state.projects.values()].map((p): ProjectSummary => {
         const openAskCount = [...this.state.asks.values()].filter(

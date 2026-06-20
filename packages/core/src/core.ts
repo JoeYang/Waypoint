@@ -7,6 +7,8 @@ import type {
   AskState,
   ContextPack,
   CreateNodeInput,
+  Project,
+  RegisterProjectInput,
   DependencyEdge,
   InboxItem,
   InboxResponse,
@@ -153,6 +155,7 @@ async function requireAsk(
 // The domain use-cases the adapters (MCP, REST) drive. Every mutation runs inside a
 // single UnitOfWork transaction so the row change and its event append commit together.
 export interface Core {
+  registerProject(input: RegisterProjectInput): Promise<{ project: Project; created: boolean }>;
   createNode(input: CreateNodeInput): Promise<Node>;
   addDependency(input: AddDependencyInput): Promise<void>;
   transition(input: TransitionInput): Promise<Node>;
@@ -289,6 +292,24 @@ export function createCore(deps: CoreDeps): Core {
   const { uow, clock, ids } = deps;
 
   return {
+    // Create an isolated board on demand. Race-safe + idempotent: trust the insert's `created`
+    // flag (ON CONFLICT DO NOTHING) rather than a check-then-insert, then read back the stored
+    // row so a re-register returns the existing project untouched. No event — a project carries
+    // no audit row; the trail begins when the first node is created under it.
+    async registerProject(input) {
+      return uow.run(async (ctx) => {
+        const project: Project = {
+          id: input.projectId,
+          name: input.name,
+          createdAt: clock.now(),
+        };
+        const created = await ctx.projects.insert(project);
+        if (created) return { project, created: true };
+        const existing = await ctx.projects.findById(input.projectId);
+        return { project: existing ?? project, created: false };
+      });
+    },
+
     async createNode(input) {
       return uow.run(async (ctx) => {
         const project = await ctx.projects.findById(input.projectId);
