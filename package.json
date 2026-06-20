@@ -21,6 +21,7 @@
     "e2e": "playwright test --pass-with-no-tests",
     "walk": "node --experimental-strip-types scripts/walk.ts",
     "walk:ci": "vitest run --config vitest.walk.config.ts",
+    "test:routine": "bash scripts/test-routine.sh",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
