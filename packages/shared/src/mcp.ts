@@ -116,3 +116,23 @@ export const TransitionResultSchema = z.object({
   version: z.number().int().positive(),
 });
 export type TransitionResult = z.infer<typeof TransitionResultSchema>;
+
+// register_project — create an isolated board so an agent can park work under its own
+// projectId instead of sharing the default one. Idempotent: re-registering an existing id
+// returns it untouched. `projectId` is a stable slug the agent then uses everywhere else.
+export const RegisterProjectInputSchema = z.object({
+  projectId: z
+    .string()
+    .min(1)
+    .max(64)
+    .regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/, "projectId must be a slug: letters, digits, - or _"),
+  name: z.string().min(1).max(120),
+});
+export type RegisterProjectInput = z.infer<typeof RegisterProjectInputSchema>;
+
+export const RegisterProjectResultSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  created: z.boolean(), // false when the project already existed (idempotent re-register)
+});
+export type RegisterProjectResult = z.infer<typeof RegisterProjectResultSchema>;
