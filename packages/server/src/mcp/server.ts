@@ -3,6 +3,7 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import {
   GetContextInputSchema,
   CreateNodeInputSchema,
+  RegisterProjectInputSchema,
   TransitionInputSchema,
   parkAskInputShape,
 } from "@waypoint/shared";
@@ -61,6 +62,25 @@ export function createWaypointMcpServer(core: Core): McpServer {
     async (args) => {
       try {
         return ok(await core.getContext(args.projectId));
+      } catch (err) {
+        return fail(err);
+      }
+    },
+  );
+
+  server.registerTool(
+    "register_project",
+    {
+      description:
+        "Create a project (an isolated board) so you can park work under your own projectId " +
+        "instead of the shared default. Idempotent: returns the existing project if the id is " +
+        "already registered. Use the returned id as projectId in get_context/create_node/park_ask.",
+      inputSchema: RegisterProjectInputSchema.shape,
+    },
+    async (args) => {
+      try {
+        const { project, created } = await core.registerProject(args);
+        return ok({ id: project.id, name: project.name, created });
       } catch (err) {
         return fail(err);
       }

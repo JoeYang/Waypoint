@@ -43,12 +43,13 @@ describe("Waypoint MCP server", () => {
   const call = (name: string, args: Record<string, unknown>): Promise<CallToolResult> =>
     client.callTool({ name, arguments: args }) as Promise<CallToolResult>;
 
-  it("completes the handshake and lists the four tools", async () => {
+  it("completes the handshake and lists the five tools", async () => {
     const { tools } = await client.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual([
       "create_node",
       "get_context",
       "park_ask",
+      "register_project",
       "transition",
     ]);
   });
@@ -286,6 +287,74 @@ describe("Waypoint MCP server — backend unavailable", () => {
       })) as CallToolResult;
       expect(res.isError).toBe(true);
       expect(bodyOf(res).code).toBe("BACKEND_UNAVAILABLE");
+    } finally {
+      await client.close();
+    }
+  });
+});
+
+describe("register_project tool", () => {
+  const NEW = "trading-universe";
+
+  // A fresh backend with NO project seeded — registration is the thing under test.
+  async function freshClient(): Promise<Client> {
+    const backend = new InMemoryBackend();
+    const core = createCore({
+      uow: backend.uow,
+      clock: new FakeClock(1_000),
+      ids: new FakeIdGenerator("x"),
+    });
+    return connect(core);
+  }
+
+  it("creates a new project and lets work be parked under it", async () => {
+    const client = await freshClient();
+    try {
+      const res = (await client.callTool({
+        name: "register_project",
+        arguments: { projectId: NEW, name: "Trading Universe" },
+      })) as CallToolResult;
+      expect(res.isError).toBeFalsy();
+      expect(bodyOf(res)).toEqual({ id: NEW, name: "Trading Universe", created: true });
+      // The new project is immediately usable as a board.
+      const node = (await client.callTool({
+        name: "create_node",
+        arguments: { projectId: NEW, parentId: null, kind: "goal", title: "G" },
+      })) as CallToolResult;
+      expect(node.isError).toBeFalsy();
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("is idempotent: re-registering returns the existing project with created:false", async () => {
+    const client = await freshClient();
+    try {
+      await client.callTool({
+        name: "register_project",
+        arguments: { projectId: NEW, name: "Trading Universe" },
+      });
+      const again = (await client.callTool({
+        name: "register_project",
+        arguments: { projectId: NEW, name: "Renamed" },
+      })) as CallToolResult;
+      expect(bodyOf(again)).toEqual({ id: NEW, name: "Trading Universe", created: false });
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("rejects an invalid projectId slug at the boundary", async () => {
+    const client = await freshClient();
+    try {
+      // The SDK validates inputSchema before the handler and returns an error result
+      // (isError) carrying the validation message — no project is created.
+      const res = (await client.callTool({
+        name: "register_project",
+        arguments: { projectId: "bad id!", name: "X" },
+      })) as CallToolResult;
+      expect(res.isError).toBe(true);
+      expect((res.content[0] as { text: string }).text).toContain("validation");
     } finally {
       await client.close();
     }
