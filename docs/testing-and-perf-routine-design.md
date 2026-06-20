@@ -45,7 +45,7 @@
 
 ### The three gaps this design closes
 
-1. **No single fresh full-stack environment** for iterating — dev is host+pg_ctl _or_ pg-only compose; only _prod_ compose runs the whole app, and it's not seeded for testing.
+1. **No single fresh full-stack environment** for iterating — dev is host+pg*ctl \_or* pg-only compose; only _prod_ compose runs the whole app, and it's not seeded for testing.
 2. **E2E covers one path.** The other ~90% of the surface (PROPOSAL/QUESTION asks, assume→confirm/overturn, DISCARD, concurrency conflicts, events pagination, WS resync, error envelopes) is only covered piecemeal at the unit layer, never walked end-to-end against the wire.
 3. **Zero performance signal.** The read endpoints compute `blocked` + `blast_radius` over the graph and the WS hub fans out diffs — both are latency-sensitive and completely unmeasured.
 
@@ -184,18 +184,36 @@ A single ordered journey that drives the **live wire** of a freshly-seeded stack
                                       │  ws delta ─────────► removedAskIds includes it ✓
                                       │◄── POST answer(QUESTION, answerText)
                                       │◄── POST answer(PROPOSAL, verdict=adjust+note)
- (agent assumes)     park→transition► ASSUMED (no longer blocks)
-                                      │◄── POST answer → CONFIRMED  ✓
-                                      │◄── overturn path → OVERTURNED, node version bumped ✓
- transition(stale expectedVersion)─► 409 STALE_VERSION(actualVersion) ✓
- transition(task→DONE)─────────────► dependents unblocked ✓
+ transition(stale expectedVersion)─► STALE_VERSION(actualVersion) ✓
+ transition(unknown node)──────────► NOT_FOUND ✓
+ transition(node under project B)──► NOT_FOUND ✓ (cross-project / tenant isolation)
+ transition(task→DONE)─────────────► terminal ✓
  transition(task→DISCARDED,reason)─► failed state ✓
-                                      │  GET /events?sinceSeq=0 ──► full audit verb sequence ✓
-                                      │  ws reconnect resume(old seq)─► resync ✓
+                                      │  GET /events?sinceSeq=0 ──► verb sequence + tail semantics ✓
+                                      │  POST answer(unknown ask) ► 404 envelope ✓
                                       │  GET /healthz ─────► {status:"ok"} ✓
 ```
 
-**Implementation choice (see §8-D):** a standalone TypeScript harness using the MCP SDK client + `fetch` + a `ws` client, runnable as `npm run walk`, and **registered as a Vitest suite in its own `pool: 'forks'` project** so it gets reporting/retries/CI integration without sharing the serial PG pool — and without dragging in a headless browser it has no use for. Assertions are explicit; the script is idempotent against a fresh seed.
+**As-built scope (bounded to what the wire actually exposes).** The walk drives only the
+externally reachable surface, which turned out to be narrower than first sketched:
+
+- **`OPEN→ANSWERED` only.** `assume`/`confirmAssumption`/`overturnAssumption` exist in `core`
+  but have **no MCP tool and no REST route** — so `ASSUMED→CONFIRMED/OVERTURNED` is not
+  reachable over the wire and stays L1 unit-tested, not walked.
+- **No `resync` in the walk.** Resync only fires once the 256-snapshot ring evicts (>256
+  events) or under back-pressure; forcing it over the wire is expensive and non-deterministic,
+  so it stays L2 (unit-tested with a small `retain`). The walk asserts `delta` (snapshot +
+  upsert-on-park + removal-on-answer).
+- Added vs the sketch: explicit **NOT_FOUND** (unknown node), **cross-project isolation**
+  (a node is invisible under another project id), and the **REST 404 envelope**.
+
+**Implementation (as built — `scripts/walk.ts`):** a standalone TypeScript harness using the
+MCP SDK client + global `fetch` + **Node 22's global `WebSocket`** (no `ws` dependency), run
+via `node --experimental-strip-types` (the repo's existing `.ts`-script pattern) as
+`npm run walk`, and **registered as a Vitest `pool: 'forks'` suite** (`npm run walk:ci`) so it
+gets reporting/retries without sharing the serial PG pool — and without a headless browser it
+has no use for. A declared-surface set (27 surfaces) fails the run on any silent coverage gap.
+Assertions are explicit; best-effort cleanup keeps a shared dev project unpolluted.
 
 **Determinism rules (resolves the §11 timestamp hazard up front):** the walk asserts only _ordering invariants_, never absolute wall-clock values — inbox order is checked by `blast_radius` desc, and oldest-first tie-breaks are made unambiguous by parking the relevant asks in distinct, awaited steps (so their creation order — not millisecond collisions — drives the tie). The `/events?sinceSeq` assertion checks the **verb sequence and tail semantics** (length may be < total log; returned `seq` is the latest), not a fixed event count.
 
@@ -217,6 +235,34 @@ A dedicated lane asserting graceful degradation — no silent failures, clean en
 | Connection refused  | point client at a down port                              | typed client error, ret/timeout, no hang                                       |
 
 `packages/server/src/db/__tests__/pg-failure*.test.ts` already seeds this lane — extend it to the transport edges above.
+
+### 5.5 Orchestration & the daily Claude Code routine (as built)
+
+The first foundation slice ships the loop end-to-end (design slices 1, 3, 6 → one OpenSpec
+change `test-routine`):
+
+- **`scripts/test-routine.sh`** (`npm run test:routine`) — provisions an **isolated throwaway
+  database** (`waypoint_routine` on the dev `pg_ctl` cluster :55432) and a **server on
+  dedicated ports** (18848/18849), builds only the server chain (`tsc -b packages/server`, so
+  an unrelated in-progress web edit can't break it), runs the **full unit + integration suite**
+  (`WAYPOINT_TEST_DATABASE_URL` flips the 16 integration tests on → 382/382, 0 skipped) and the
+  **full-surface walk** against them, then always tears down (SIGTERM drain + `dropdb`) via a
+  trap. Distinct DB + ports mean it is safe to run while `npm run dev` is up; the dev/dogfood
+  data is never touched.
+- **`scripts/daily-routine.sh`** (`npm run routine:daily`) — runs `test:routine`, captures the
+  full output to `reports/test-routine/<stamp>.log`, distils a compact ANSI-free
+  `reports/test-routine/<date>.md` (result + phase/suite summary + a triage prompt on failure),
+  and fires a best-effort `notify-send`. It **only runs and records** — it changes no code.
+  Reports are git-ignored run artifacts.
+- **The daily Claude Code routine** (user-scheduled) — invokes `npm run routine:daily`, then
+  reads the latest report + log to **reason about the outcome**: on green, a one-line ack; on
+  red, it identifies the failing phase (build / migrate / suite / walk), the root cause, and the
+  suspected `file:line`, and surfaces a triaged summary. **It does not edit source or open a PR
+  — triage only** (the chosen risk posture for an unattended run). Headless `claude -p` is not
+  used for Waypoint's resume flow; here Claude reasons over a finished report, which is fine.
+
+Deferred to follow-up changes (design §5.1, §5.4, §6): the on-demand `docker-compose.dev.yml`
+fresh env, the L2 coverage gaps, the failure-injection transport edges, and the k6 perf suite.
 
 ---
 
@@ -360,7 +406,8 @@ Key properties:
 | ------------------------------------------------------------- | :-: | :-: | :-: | :-: | :-----: | :-----: |
 | zod contracts (node/ask/project/event/DTOs)                   |  ✓  |     |     |     |         |         |
 | node lifecycle transitions (legal + illegal)                  |     |  ✓  |  ✓  |     |    ✓    |         |
-| ask lifecycle (OPEN→ANSWERED/ASSUMED→CONFIRMED/OVERTURNED)    |     |  ✓  |  ✓  |  ✓  |    ✓    |         |
+| ask OPEN→ANSWERED (DECISION/QUESTION/PROPOSAL)                |     |  ✓  |  ✓  |  ✓  |    ✓    |         |
+| ask ASSUMED→CONFIRMED/OVERTURNED (core-only, unrouted)        |     |  ✓  |  ✓  |     |         |         |
 | `blocked` + `blast_radius` computation                        |     |  ✓  |  ✓  |     |    ✓    |    ✓    |
 | optimistic concurrency / STALE_VERSION                        |     |  ✓  |  ✓  |     |    ✓    |         |
 | MCP get_context / create_node / park_ask / transition         |     |     |  ✓  |     |    ✓    |    ✓    |
@@ -368,8 +415,9 @@ Key properties:
 | REST /projects /inbox /progress /events /answer /healthz      |     |     |  ✓  |  ✓  |    ✓    |    ✓    |
 | REST error envelope + status map + X-Request-ID               |     |     |  ✓  |     |    ✓    |         |
 | WS delta / removedAskIds                                      |     |     |  ✓  |  ✓  |    ✓    |    ✓    |
-| WS resync (history gap, back-pressure)                        |     |     |  ✓  |     |    ✓    |         |
-| WS heartbeat / reconnect resume                               |     |     |  ✓  |     |    ✓    |         |
+| WS resync (history gap, back-pressure; needs >256 events)     |     |     |  ✓  |     |         |         |
+| WS connect + resume snapshot                                  |     |     |  ✓  |     |    ✓    |         |
+| WS heartbeat / reconnect-gap resume                           |     |     |  ✓  |     |         |         |
 | persistence: project scoping, seq monotonicity, audit append  |     |  ✓  |  ✓  |     |    ✓    |         |
 | **cross-project isolation (A's ids → NOT_FOUND under B)**     |     |  ✓  |  ✓  |     |    ✓    |         |
 | **migration rollback (apply→revert→re-apply, no corruption)** |     |     |  ✓  |     |         |         |
