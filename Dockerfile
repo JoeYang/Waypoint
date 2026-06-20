@@ -45,12 +45,14 @@ COPY --from=builder /app/packages/server/src/db/migrations packages/server/dist/
 # Built web SPA (served by the API process).
 COPY --from=builder /app/packages/web/dist packages/web/dist
 COPY docker/entrypoint.sh /app/docker/entrypoint.sh
+COPY docker/healthcheck.js /app/docker/healthcheck.js
 RUN chmod +x /app/docker/entrypoint.sh
 
 USER node
 EXPOSE 8848 8849
-# Container HEALTHCHECK hits the dependency-free /healthz probe (docker.md).
+# Container HEALTHCHECK hits the dependency-free /healthz probe (docker.md). A script file,
+# not an inline `node -e`, so compose runners can't mangle its quoting.
 HEALTHCHECK --interval=15s --timeout=3s --start-period=20s --retries=3 \
-  CMD node -e "fetch('http://localhost:'+(process.env.WAYPOINT_HTTP_PORT||8849)+'/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+  CMD node /app/docker/healthcheck.js
 # Entrypoint migrates the DB, then exec's the server as PID 1 (so SIGTERM reaches it).
 ENTRYPOINT ["/app/docker/entrypoint.sh"]

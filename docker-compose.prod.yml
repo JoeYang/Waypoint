@@ -39,15 +39,10 @@ services:
       - "${WAYPOINT_MCP_PORT:-8848}:8848"
       - "${WAYPOINT_HTTP_PORT:-8849}:8849"
     # Compose-level healthcheck: the image HEALTHCHECK is dropped under podman's OCI build
-    # format, so probe /healthz here for real health status on `podman ps`.
+    # format, so probe /healthz here. A script file (not inline node -e) because podman-compose
+    # mangles the quoting of an inline CMD array into broken /bin/sh.
     healthcheck:
-      test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "fetch('http://localhost:8849/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
-        ]
+      test: ["CMD-SHELL", "node /app/docker/healthcheck.js"]
       interval: 15s
       timeout: 3s
       retries: 3
