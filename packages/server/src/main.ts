@@ -49,12 +49,16 @@ rest
     process.exit(1);
   });
 
-// Graceful shutdown: the orchestrator sends SIGTERM before SIGKILL. Close Fastify (and the
-// WebSocket server attached to it) so in-flight requests drain and sockets close cleanly.
+// Graceful shutdown: the orchestrator (or `podman stop`) sends SIGTERM before SIGKILL. Close
+// BOTH listeners — Fastify (REST + the WebSocket server attached to it) AND the MCP HTTP
+// server — so every open handle is released and the process actually exits. Closing only one
+// leaves the other listening, so the process lingers until it is SIGKILLed (and its port stays
+// bound). A hard-timeout fallback guarantees shutdown never hangs past the drain window.
 const shutdown = (signal: string): void => {
   console.log(`${signal} received — draining connections`);
-  rest
-    .close()
+  setTimeout(() => process.exit(1), 5_000).unref(); // never hang on a stuck connection
+  const closeMcp = new Promise<void>((resolve) => mcp.close(() => resolve()));
+  Promise.all([rest.close(), closeMcp])
     .then(() => process.exit(0))
     .catch(() => process.exit(1));
 };
