@@ -17,6 +17,10 @@ export interface IdGenerator {
 
 export interface ProjectRepository {
   findById(id: string): Promise<Project | null>;
+  // Idempotent create: insert the project if absent. Returns true when it created a new row,
+  // false when the id already existed (`ON CONFLICT (id) DO NOTHING` in Postgres). The
+  // in-memory fake honours the SAME contract — never overwrites an existing project.
+  insert(project: Project): Promise<boolean>;
   // Every project with read-time-derived counts for the cross-project home. The adapter
   // computes the aggregate in ONE query (no N+1 over projects): open asks, agent-occupied
   // tasks, and the newest event's timestamp per project.

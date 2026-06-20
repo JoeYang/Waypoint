@@ -7,7 +7,7 @@
 # Never reuse dev credentials here; set a real WAYPOINT_DB_PASSWORD (required below).
 services:
   postgres:
-    image: postgres:17-alpine
+    image: docker.io/library/postgres:17-alpine
     environment:
       POSTGRES_USER: ${WAYPOINT_DB_USER:-waypoint}
       POSTGRES_PASSWORD: ${WAYPOINT_DB_PASSWORD:?WAYPOINT_DB_PASSWORD is required in prod}
@@ -22,6 +22,8 @@ services:
     restart: unless-stopped
 
   app:
+    # Prefer the pre-built image (built from the committed tree). compose only rebuilds with --build.
+    image: localhost/waypoint:latest
     build:
       context: .
       dockerfile: Dockerfile
