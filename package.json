@@ -19,6 +19,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test --pass-with-no-tests",
+    "walk": "node --experimental-strip-types scripts/walk.ts",
+    "walk:ci": "vitest run --config vitest.walk.config.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
