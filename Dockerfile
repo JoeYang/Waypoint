@@ -1,13 +1,13 @@
 # Waypoint production image — one process serving MCP (:8848) + REST/WS (:8849) + the built
 # web SPA (via @fastify/static, decision D7). Multi-stage: full toolchain builds, slim runtime
-# ships. See .claude/rules/docker.md. NOTE: pin `node:22-slim` by digest for reproducible
-# prod builds (omitted here; add @sha256:… in your registry).
+# ships. See .claude/rules/docker.md. The base is pinned by digest for reproducible builds —
+# bump the digest deliberately to pick up CVE patches (re-pull node:22-slim, copy its digest).
 #
-# Build:  docker build -t waypoint .
+# Build:  scripts/deploy.sh   (or: git archive HEAD | podman build -t localhost/waypoint -)
 # Run:    via docker-compose.prod.yml (injects DATABASE_URL + ports at runtime).
 
 # ---- builder: install all deps, compile TS, bundle the web SPA ----
-FROM node:22-slim AS builder
+FROM node:22-slim@sha256:689c11043dad91472750cd824c97dd5e2318e9dd6f954e492fe7af0135d33ceb AS builder
 WORKDIR /app
 # Copy manifests first for layer caching, then install the whole workspace.
 COPY package.json package-lock.json ./
@@ -24,7 +24,7 @@ RUN npm run bundle -w @waypoint/web # vite build → packages/web/dist
 RUN npm prune --omit=dev           # strip devDeps (electron, vite, playwright…) from node_modules
 
 # ---- runtime: slim, non-root, prod node_modules + built output only ----
-FROM node:22-slim AS runtime
+FROM node:22-slim@sha256:689c11043dad91472750cd824c97dd5e2318e9dd6f954e492fe7af0135d33ceb AS runtime
 ENV NODE_ENV=production
 ENV WAYPOINT_MCP_PORT=8848 WAYPOINT_HTTP_PORT=8849
 # The server serves the built SPA from here (D7).
