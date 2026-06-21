@@ -4,12 +4,35 @@
   "private": true,
   "type": "module",
   "description": "Thin Electron shell that loads the Waypoint web UI from a separately-run backend.",
+  "author": "Joe Yang",
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc -b",
-    "dev": "electron ."
+    "dev": "electron .",
+    "package": "npm run build && electron-builder --linux AppImage"
+  },
+  "build": {
+    "appId": "io.joeyang.waypoint",
+    "productName": "Waypoint",
+    "executableName": "waypoint",
+    "electronVersion": "42.4.1",
+    "publish": null,
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Development"
+    }
   },
   "devDependencies": {
-    "electron": "^42.4.1"
+    "electron": "^42.4.1",
+    "electron-builder": "^26.15.3"
   }
 }

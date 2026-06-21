@@ -26,3 +26,6 @@ waypoint-inbox.png
 waypoint-demo-inbox.png
 backups/
 reports/
+
+# Electron packaged artifacts
+packages/desktop/release/
