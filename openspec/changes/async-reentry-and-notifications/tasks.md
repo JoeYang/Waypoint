@@ -25,9 +25,9 @@
 
 ## 6. Web — while-you-were-away + story (TDD, RTL)
 
-- [ ] 6.1 RED: a while-you-were-away panel sits atop the spine on return, summarizing change since last seen, and dismisses (acks the cursor) into the spine → implement.
-- [ ] 6.2 RED: the project story is viewable as a threaded narrative; entries link to their node → implement.
-- [ ] 6.3 RED: the client handles the `digest.ready` WS frame per the user's cadence/threshold (re-fetch the digest / surface the panel); no policy → silent, digest-on-return only → implement.
+- [x] 6.1 RED: a while-you-were-away panel sits atop the spine on return, summarizing change since last seen, and dismisses (acks the cursor) into the spine → implement.
+- [x] 6.2 RED: the project story is viewable as a threaded narrative; entries link to their node → implement.
+- [x] 6.3 RED: the client handles the `digest.ready` WS frame per the user's cadence/threshold (re-fetch the digest / surface the panel); no policy → silent, digest-on-return only → implement.
 
 ## 7. Wiring & verification
 
