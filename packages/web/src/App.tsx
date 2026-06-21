@@ -9,6 +9,7 @@ import { Inbox } from "./components/Inbox.js";
 import { Proposal } from "./components/Proposal.js";
 import { Activity } from "./components/Activity.js";
 import { Settings } from "./components/Settings.js";
+import { WhileYouWereAway } from "./components/WhileYouWereAway.js";
 import { MobileCompanion } from "./components/MobileCompanion.js";
 import type { View } from "./wp/state.js";
 import t from "./components/typography.module.css";
@@ -28,7 +29,13 @@ const VIEW_LABEL: Record<View, string> = {
 function ViewBody(): JSX.Element {
   const { nav } = useWaypoint();
   if (nav.view === "home") return <Home />;
-  if (nav.view === "map") return <ProjectMap />;
+  if (nav.view === "map")
+    return (
+      <>
+        <WhileYouWereAway />
+        <ProjectMap />
+      </>
+    );
   if (nav.view === "inbox") return <Inbox />;
   if (nav.view === "proposal") return <Proposal />;
   if (nav.view === "activity") return <Activity />;
