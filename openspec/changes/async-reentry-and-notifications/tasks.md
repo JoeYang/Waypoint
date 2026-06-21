@@ -5,7 +5,7 @@
 
 ## 2. Schema (migration — its own commit)
 
-- [ ] 2.1 Migration: add a **new `principal_cursor` table** `(principal, project_id, last_seen_seq)` PK `(principal, project_id)` — the per-principal read cursor (not a column on an existing table). Add a **`notification_policy`** carrier (cadence, blast_radius_threshold, age_sla_seconds) keyed the same way. Reversible down. The event log is untouched (append-only). Pre-auth, both key on a well-known default principal via the `principal` seam (mirroring `DEFAULT_PROJECT_ID`).
+- [x] 2.1 Migration: add a **new `principal_cursor` table** `(principal, project_id, last_seen_seq)` PK `(principal, project_id)` — the per-principal read cursor (not a column on an existing table). Add a **`notification_policy`** carrier (cadence, blast_radius_threshold, age_sla_seconds) keyed the same way. Reversible down. The event log is untouched (append-only). Pre-auth, both key on a well-known default principal via the `principal` seam (mirroring `DEFAULT_PROJECT_ID`).
 
 ## 3. Core — projections (TDD over in-memory fakes)
 
