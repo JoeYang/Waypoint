@@ -1,4 +1,12 @@
-import type { Project, ProjectSummary, Node, Ask, Event, DependencyEdge } from "@waypoint/shared";
+import type {
+  Project,
+  ProjectSummary,
+  Node,
+  Ask,
+  Event,
+  DependencyEdge,
+  NotificationPolicy,
+} from "@waypoint/shared";
 
 // Outbound ports declared by the domain and implemented by adapters (server/Postgres,
 // in-memory fakes in tests). Core reaches persistence, time, and identity ONLY through
@@ -55,6 +63,21 @@ export interface EventLog {
   earliestRetainedSeq(projectId: string): Promise<number | null>;
 }
 
+// Per-principal re-entry state (V2 slice 3): the read cursor (highest acknowledged event seq)
+// and the notification policy. Keyed (principal, projectId) — project_id is the tenant boundary,
+// principal the future per-user boundary (a default principal pre-auth). NOT the event log: these
+// are mutable support rows; the log stays append-only.
+export interface CursorRepository {
+  // Highest event seq the principal has acknowledged seeing; 0 if never visited.
+  getLastSeen(principal: string, projectId: string): Promise<number>;
+  // Persist the cursor. Callers guard monotonicity (never move it backward); this just writes.
+  setLastSeen(principal: string, projectId: string, seq: number): Promise<void>;
+  // The principal's notification policy, or null if they have set none (caller falls back to the
+  // application default).
+  getPolicy(principal: string, projectId: string): Promise<NotificationPolicy | null>;
+  setPolicy(principal: string, projectId: string, policy: NotificationPolicy): Promise<void>;
+}
+
 // The repositories visible inside a transaction. Reads issued here participate in the
 // same transaction as writes, so read-compare-write version guards are race-safe.
 export interface RepositoryContext {
@@ -62,6 +85,7 @@ export interface RepositoryContext {
   readonly nodes: NodeRepository;
   readonly asks: AskRepository;
   readonly events: EventLog;
+  readonly cursors: CursorRepository;
 }
 
 // Transaction boundary. `work` runs atomically: if it throws, nothing is persisted

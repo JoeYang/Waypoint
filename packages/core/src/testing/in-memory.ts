@@ -1,4 +1,12 @@
-import type { Project, ProjectSummary, Node, Ask, Event, DependencyEdge } from "@waypoint/shared";
+import type {
+  Project,
+  ProjectSummary,
+  Node,
+  Ask,
+  Event,
+  DependencyEdge,
+  NotificationPolicy,
+} from "@waypoint/shared";
 import type {
   Clock,
   IdGenerator,
@@ -6,6 +14,7 @@ import type {
   NodeRepository,
   AskRepository,
   EventLog,
+  CursorRepository,
   RepositoryContext,
   UnitOfWork,
 } from "../ports.js";
@@ -39,6 +48,9 @@ interface State {
   edges: DependencyEdge[];
   events: Event[];
   seq: Map<string, number>;
+  // Re-entry support state, keyed `${principal}::${projectId}`.
+  cursors: Map<string, number>;
+  policies: Map<string, NotificationPolicy>;
 }
 
 const emptyState = (): State => ({
@@ -48,6 +60,8 @@ const emptyState = (): State => ({
   edges: [],
   events: [],
   seq: new Map(),
+  cursors: new Map(),
+  policies: new Map(),
 });
 
 // In-memory implementation of every port, used by core's unit tests and reused as the
@@ -143,6 +157,21 @@ export class InMemoryBackend {
     },
   };
 
+  readonly cursors: CursorRepository = {
+    getLastSeen: async (principal, projectId) =>
+      this.state.cursors.get(`${principal}::${projectId}`) ?? 0,
+    setLastSeen: async (principal, projectId, seq) => {
+      this.state.cursors.set(`${principal}::${projectId}`, seq);
+    },
+    getPolicy: async (principal, projectId) => {
+      const p = this.state.policies.get(`${principal}::${projectId}`);
+      return p ? structuredClone(p) : null;
+    },
+    setPolicy: async (principal, projectId, policy) => {
+      this.state.policies.set(`${principal}::${projectId}`, structuredClone(policy));
+    },
+  };
+
   readonly uow: UnitOfWork = {
     run: async (work) => {
       const snapshot = structuredClone(this.state);
@@ -161,6 +190,12 @@ export class InMemoryBackend {
   }
 
   private repositoryContext(): RepositoryContext {
-    return { projects: this.projects, nodes: this.nodes, asks: this.asks, events: this.events };
+    return {
+      projects: this.projects,
+      nodes: this.nodes,
+      asks: this.asks,
+      events: this.events,
+      cursors: this.cursors,
+    };
   }
 }

@@ -20,6 +20,7 @@ import type {
   AskRepository,
   EventLog,
   EventDraft,
+  CursorRepository,
   RepositoryContext,
   UnitOfWork,
 } from "@waypoint/core";
@@ -380,7 +381,60 @@ function makeContext(db: Queryable): RepositoryContext {
     },
   };
 
-  return { projects, nodes, asks, events };
+  const cursors: CursorRepository = {
+    getLastSeen: async (principal, projectId) => {
+      const { rows } = await db.query<{ last_seen_seq: string }>(
+        "SELECT last_seen_seq FROM principal_cursor WHERE principal = $1 AND project_id = $2",
+        [principal, projectId],
+      );
+      return rows[0] ? Number(rows[0].last_seen_seq) : 0;
+    },
+    setLastSeen: async (principal, projectId, seq) => {
+      await db.query(
+        `INSERT INTO principal_cursor (principal, project_id, last_seen_seq) VALUES ($1, $2, $3)
+         ON CONFLICT (principal, project_id) DO UPDATE SET last_seen_seq = EXCLUDED.last_seen_seq`,
+        [principal, projectId, seq],
+      );
+    },
+    getPolicy: async (principal, projectId) => {
+      const { rows } = await db.query<{
+        blast_radius_threshold: number;
+        age_sla_seconds: number;
+        digest_cadence_seconds: number;
+      }>(
+        `SELECT blast_radius_threshold, age_sla_seconds, digest_cadence_seconds
+         FROM notification_policy WHERE principal = $1 AND project_id = $2`,
+        [principal, projectId],
+      );
+      const r = rows[0];
+      if (!r) return null;
+      return {
+        blastRadiusThreshold: r.blast_radius_threshold,
+        ageSlaSeconds: r.age_sla_seconds,
+        digestCadenceSeconds: r.digest_cadence_seconds,
+      };
+    },
+    setPolicy: async (principal, projectId, policy) => {
+      await db.query(
+        `INSERT INTO notification_policy
+           (principal, project_id, blast_radius_threshold, age_sla_seconds, digest_cadence_seconds)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (principal, project_id) DO UPDATE SET
+           blast_radius_threshold = EXCLUDED.blast_radius_threshold,
+           age_sla_seconds = EXCLUDED.age_sla_seconds,
+           digest_cadence_seconds = EXCLUDED.digest_cadence_seconds`,
+        [
+          principal,
+          projectId,
+          policy.blastRadiusThreshold,
+          policy.ageSlaSeconds,
+          policy.digestCadenceSeconds,
+        ],
+      );
+    },
+  };
+
+  return { projects, nodes, asks, events, cursors };
 }
 
 // Connection-level failures we surface as a typed "unavailable" error.
