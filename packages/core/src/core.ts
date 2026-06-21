@@ -24,9 +24,16 @@ import type {
   TaskState,
   PlanState,
   GoalState,
+  StoryResponse,
+  Digest,
+  NotificationPolicy,
+  EscalationInput,
+  EscalationDecision,
 } from "@waypoint/shared";
 import type { Clock, IdGenerator, UnitOfWork, RepositoryContext } from "./ports.js";
 import { NotFoundError, ValidationError, StaleVersionError } from "./errors.js";
+import { stableAliasFromSession, countDependents } from "./projections.js";
+import { projectStory, projectDigest, decideEscalation, REENTRY_PAGE_MAX } from "./reentry.js";
 
 // The status spine. Every legal move is listed; anything else is rejected. DONE and
 // DISCARDED are terminal in this slice.
@@ -77,47 +84,6 @@ export interface AnswerInput {
   proposalVerdict?: ProposalVerdict; // PROPOSAL: approve | adjust | reject
   adjustmentNote?: string; // only meaningful (and required) with an `adjust` verdict
   sessionId?: string;
-}
-
-// A stable, human-friendly alias derived deterministically from a session id, so the same
-// session always reads as the same "who" in the story without ever exposing the raw id.
-// Pure (no clock/random) — same input always yields the same label.
-const ALIAS_ADJECTIVES = [
-  "swift",
-  "calm",
-  "bright",
-  "bold",
-  "keen",
-  "wise",
-  "brave",
-  "quiet",
-  "sharp",
-  "deft",
-] as const;
-const ALIAS_NOUNS = [
-  "otter",
-  "falcon",
-  "maple",
-  "harbor",
-  "cedar",
-  "comet",
-  "river",
-  "lark",
-  "ember",
-  "fox",
-] as const;
-function stableAliasFromSession(sessionId: string): string {
-  // FNV-1a 32-bit hash → deterministic index into the friendly name pools.
-  let h = 0x811c9dc5;
-  for (let i = 0; i < sessionId.length; i++) {
-    h ^= sessionId.charCodeAt(i);
-    h = Math.imul(h, 0x01000193);
-  }
-  const u = h >>> 0;
-  const adj = ALIAS_ADJECTIVES[u % ALIAS_ADJECTIVES.length] ?? "agent";
-  const noun =
-    ALIAS_NOUNS[Math.floor(u / ALIAS_ADJECTIVES.length) % ALIAS_NOUNS.length] ?? "session";
-  return `${adj}-${noun}`;
 }
 
 // Human-readable resolution of a resolved ask for the context pack (never raw payloads).
@@ -173,6 +139,17 @@ export interface Core {
   listProjects(): Promise<ProjectListResponse>;
   readEvents(projectId: string, sinceSeq?: number): Promise<EventLogResponse>;
   getContext(projectId: string): Promise<ContextPack>;
+  // Re-entry projections (V2 slice 3) — read models over the append-only event log, bounded.
+  story(projectId: string, sinceSeq?: number, limit?: number): Promise<StoryResponse>;
+  digest(projectId: string, lastSeenSeq: number, limit?: number): Promise<Digest>;
+  // The tiered-notification decision for one ask: gathers blast radius (recomputed now) + age +
+  // the count of waiting asks, then applies the policy. The server notifier calls this — it holds
+  // no domain logic and issues no raw query.
+  evaluateEscalation(
+    projectId: string,
+    askId: string,
+    policy: NotificationPolicy,
+  ): Promise<{ decision: EscalationDecision; input: EscalationInput }>;
 }
 
 // True if `target` is reachable from `from` by following depends_on edges. Used to
@@ -193,11 +170,6 @@ function dependsOnReaches(edges: DependencyEdge[], from: string, target: string)
     for (const next of adjacency.get(cur) ?? []) stack.push(next);
   }
   return false;
-}
-
-// Count of nodes that directly depend on `nodeId` — its blast radius (direct edges only).
-function countDependents(edges: DependencyEdge[], nodeId: string): number {
-  return edges.filter((e) => e.dependsOnId === nodeId).length;
 }
 
 // The named nodes that directly depend on `nodeId`, resolved to { nodeId, title }.
@@ -774,6 +746,57 @@ export function createCore(deps: CoreDeps): Core {
     // computes the aggregate in one query (no N+1 over projects).
     async listProjects() {
       return uow.run(async (ctx) => ({ projects: await ctx.projects.listSummaries() }));
+    },
+
+    // The threaded project story since `sinceSeq` — the event log read back as narrative,
+    // oldest-first, bounded. A projection only; it never mutates an event.
+    async story(projectId, sinceSeq = 0, limit = REENTRY_PAGE_MAX) {
+      return uow.run(async (ctx) => {
+        const project = await ctx.projects.findById(projectId);
+        if (!project) throw new NotFoundError("project", projectId);
+        const since = await ctx.events.listSince(projectId, sinceSeq);
+        const nodes = await ctx.nodes.listByProject(projectId);
+        const asks = await ctx.asks.listByProject(projectId);
+        const nodeById = new Map(nodes.map((n) => [n.id, n]));
+        const askById = new Map(asks.map((a) => [a.id, a]));
+        const entries = projectStory(since, nodeById, askById, limit);
+        const seq = since.length > 0 ? since[since.length - 1]!.seq : sinceSeq;
+        return { projectId, seq, entries };
+      });
+    },
+
+    // The while-you-were-away digest since the caller's last-seen cursor. Read-only — the cursor
+    // is advanced separately by an explicit ack (server), so repeated reads are stable.
+    async digest(projectId, lastSeenSeq, limit = REENTRY_PAGE_MAX) {
+      return uow.run(async (ctx) => {
+        const project = await ctx.projects.findById(projectId);
+        if (!project) throw new NotFoundError("project", projectId);
+        const window = await ctx.events.listSince(projectId, lastSeenSeq);
+        const nodes = await ctx.nodes.listByProject(projectId);
+        const asks = await ctx.asks.listByProject(projectId);
+        const edges = await ctx.nodes.listDependencies(projectId);
+        const seq = window.length > 0 ? window[window.length - 1]!.seq : lastSeenSeq;
+        const buckets = projectDigest(window, nodes, asks, edges, lastSeenSeq, clock.now(), limit);
+        return { projectId, seq, ...buckets };
+      });
+    },
+
+    // The tiered-notification decision for one ask: recompute its blast radius and age now, count
+    // the waiting queue, then apply the policy. No raw query in the adapter — it calls this.
+    async evaluateEscalation(projectId, askId, policy) {
+      return uow.run(async (ctx) => {
+        const ask = await ctx.asks.findById(projectId, askId);
+        if (!ask) throw new NotFoundError("ask", askId);
+        const edges = await ctx.nodes.listDependencies(projectId);
+        const asks = await ctx.asks.listByProject(projectId);
+        const input: EscalationInput = {
+          askId,
+          blastRadius: countDependents(edges, ask.nodeId),
+          ageSeconds: Math.max(0, Math.floor((clock.now() - ask.createdAt) / 1000)),
+          waitingCount: asks.filter((a) => a.state === "OPEN").length,
+        };
+        return { decision: decideEscalation(input, policy), input };
+      });
     },
 
     // The project's append-only event log (the Activity timeline source). `sinceSeq`
