@@ -29,27 +29,23 @@ The server SHALL expose a `get_context` tool that, given a project, returns a co
 - **THEN** the server returns a typed not-found error and no context pack
 
 ### Requirement: Mutating tools require expected_version
-The server SHALL expose `create_node`, `park_ask`, and `transition` tools. Tools that mutate an existing node or ask MUST require `expected_version` and, on mismatch, return the current state without mutating.
 
-#### Scenario: park_ask creates an ask
-- **WHEN** an agent calls `park_ask` with a valid node, type, and (for decisions) options
-- **THEN** the ask is created in state `OPEN` and the tool returns its id and version
+The server SHALL expose `create_node`, `park_ask`, and `transition` tools. Tools that mutate an existing node or ask MUST require `expected_version` and, on mismatch, return the current state without mutating. The `create_node` tool MAY accept an optional `prUrl` — a GitHub pull request URL associated with the work behind the node — validated as a URL at the boundary; when supplied it SHALL be persisted on the node, and when omitted the node SHALL carry no PR URL (null). No GitHub API is called; the URL is opaque to Waypoint.
 
-#### Scenario: Stale transition is rejected
-- **WHEN** an agent calls `transition` with an `expected_version` that does not match the node's current version
-- **THEN** the tool returns the current node state and a stale-version error, and the node is unchanged
+#### Scenario: create_node persists a supplied PR URL
 
-#### Scenario: transition moves a node along the spine
-- **WHEN** an agent calls `transition` to move a node from `DRAFT` to `ACTIVE` with the matching `expected_version`
-- **THEN** the node status becomes `ACTIVE`, its version increments, and one event is appended
+- **WHEN** an agent calls `create_node` with a valid `prUrl`
+- **THEN** the created node carries that `prUrl`
 
-#### Scenario: transition rejects an illegal spine move
-- **WHEN** an agent calls `transition` for a move not permitted by the status spine
-- **THEN** the tool returns a validation error and the node is unchanged
+#### Scenario: create_node without a PR URL leaves it null
 
-#### Scenario: Mutations record session provenance
-- **WHEN** an agent mutates a node via a tool while carrying a session id
-- **THEN** that session id is recorded as provenance on the affected node
+- **WHEN** an agent calls `create_node` without a `prUrl`
+- **THEN** the created node's PR URL is null
+
+#### Scenario: create_node rejects a malformed PR URL
+
+- **WHEN** an agent calls `create_node` with a `prUrl` that is not a valid URL
+- **THEN** the boundary rejects the input and creates nothing
 
 ### Requirement: Tool inputs validated at the boundary
 The server SHALL validate every tool argument against a shared schema and reject malformed input with a typed error before any domain logic runs.
