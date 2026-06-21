@@ -27,6 +27,7 @@ import type {
 } from "@waypoint/shared";
 import type { Clock, IdGenerator, UnitOfWork, RepositoryContext } from "./ports.js";
 import { NotFoundError, ValidationError, StaleVersionError } from "./errors.js";
+import { stableAliasFromSession, countDependents } from "./projections.js";
 
 // The status spine. Every legal move is listed; anything else is rejected. DONE and
 // DISCARDED are terminal in this slice.
@@ -77,47 +78,6 @@ export interface AnswerInput {
   proposalVerdict?: ProposalVerdict; // PROPOSAL: approve | adjust | reject
   adjustmentNote?: string; // only meaningful (and required) with an `adjust` verdict
   sessionId?: string;
-}
-
-// A stable, human-friendly alias derived deterministically from a session id, so the same
-// session always reads as the same "who" in the story without ever exposing the raw id.
-// Pure (no clock/random) — same input always yields the same label.
-const ALIAS_ADJECTIVES = [
-  "swift",
-  "calm",
-  "bright",
-  "bold",
-  "keen",
-  "wise",
-  "brave",
-  "quiet",
-  "sharp",
-  "deft",
-] as const;
-const ALIAS_NOUNS = [
-  "otter",
-  "falcon",
-  "maple",
-  "harbor",
-  "cedar",
-  "comet",
-  "river",
-  "lark",
-  "ember",
-  "fox",
-] as const;
-function stableAliasFromSession(sessionId: string): string {
-  // FNV-1a 32-bit hash → deterministic index into the friendly name pools.
-  let h = 0x811c9dc5;
-  for (let i = 0; i < sessionId.length; i++) {
-    h ^= sessionId.charCodeAt(i);
-    h = Math.imul(h, 0x01000193);
-  }
-  const u = h >>> 0;
-  const adj = ALIAS_ADJECTIVES[u % ALIAS_ADJECTIVES.length] ?? "agent";
-  const noun =
-    ALIAS_NOUNS[Math.floor(u / ALIAS_ADJECTIVES.length) % ALIAS_NOUNS.length] ?? "session";
-  return `${adj}-${noun}`;
 }
 
 // Human-readable resolution of a resolved ask for the context pack (never raw payloads).
@@ -193,11 +153,6 @@ function dependsOnReaches(edges: DependencyEdge[], from: string, target: string)
     for (const next of adjacency.get(cur) ?? []) stack.push(next);
   }
   return false;
-}
-
-// Count of nodes that directly depend on `nodeId` — its blast radius (direct edges only).
-function countDependents(edges: DependencyEdge[], nodeId: string): number {
-  return edges.filter((e) => e.dependsOnId === nodeId).length;
 }
 
 // The named nodes that directly depend on `nodeId`, resolved to { nodeId, title }.
