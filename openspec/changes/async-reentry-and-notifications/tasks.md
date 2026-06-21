@@ -31,5 +31,12 @@
 
 ## 7. Wiring & verification
 
-- [ ] 7.1 Wire the cursor on visit; demo seed produces a believable overnight story + one high-blast-radius escalation.
-- [ ] 7.2 `npm test` green (incl. failure paths); e2e for return-after-away; `openspec validate async-reentry-and-notifications --strict`; update README + docs.
+- [x] 7.1 Wire the cursor on visit (the WhileYouWereAway panel fetches the digest on visit and
+      acks on dismiss); the dogfood seed produces a believable story (shipped/blocked/waiting).
+      Caveat: a high-blast-radius escalation can't be seeded over MCP — blast radius needs
+      dependency edges and there is no dependency MCP tool in this slice; the escalation path is
+      covered by the core + server unit tests instead.
+- [x] 7.2 `npm test` green incl. failure paths (467 passed); e2e for return-after-away written
+      (`e2e/return-after-away.e2e.ts`, run via `npm run e2e` against a dev stack, mirroring the
+      hero-loop e2e — not in unit CI); `openspec validate --strict` passes; README + docs updated
+      (docs/re-entry-and-notifications.md).

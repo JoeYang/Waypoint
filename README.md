@@ -78,6 +78,25 @@ in place on the task it blocks) and the **Decision inbox** (a "needs you" lens).
 screens run on typed mock fixtures behind the `WaypointSource` seam; wiring them to the live
 progress endpoint + WebSocket is a separate change.
 
+## While you were away
+
+Re-entry turns the append-only event log into a returning human's briefing — both **projections**
+over the log, never a new source of truth. `GET /v1/projects/:id/digest` reports what changed since
+the caller's last-seen cursor (what shipped, what is newly blocked, what is waiting), and
+`GET /v1/projects/:id/story` reads the log back as a node-threaded narrative. The cursor is a
+per-principal `principal_cursor` row that advances only on an **explicit ack**
+(`POST …/digest/ack`), so the digest is stable across repeated reads. The web renders this as a
+dismissible **While you were away** banner atop the spine.
+
+Notifications are **tiered and batched**: most asks wait silently for the next visit; a single push
+escalates only when an ask's blast radius crosses a user-set threshold or it ages past an SLA
+(`notification_policy`, read via `GET/PUT …/notification-policy`) — never one ping per ask. The
+reference transport is a `digest.ready` frame over the existing WebSocket (carrying the seq + a
+non-sensitive summary only); web-push is a later adapter behind the same `Notifier` port. The
+escalation decision is a pure `core` use-case; the notifier holds no domain logic and is
+best-effort, so a dead transport never fails the underlying mutation. See
+[docs/re-entry-and-notifications.md](docs/re-entry-and-notifications.md).
+
 ## Develop
 
 Requires **Node ≥ 22**. Postgres runs as a user-owned cluster — no Docker, no sudo.
