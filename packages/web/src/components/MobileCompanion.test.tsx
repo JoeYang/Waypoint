@@ -5,7 +5,7 @@ import { userEvent } from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 import { WaypointProvider } from "../wp/WaypointProvider.js";
 import { WP_DATA } from "../wp/fixtures.js";
-import type { WaypointSource } from "../wp/source.js";
+import { mockSource, type WaypointSource } from "../wp/source.js";
 import { MobileCompanion } from "./MobileCompanion.js";
 
 afterEach(cleanup);
@@ -62,6 +62,7 @@ describe("MobileCompanion", () => {
       projects: WP_DATA.projects.map((p) => ({ ...p, decisions: [] })),
     };
     const emptySource: WaypointSource = {
+      ...mockSource,
       initial: () => data,
       load: () => Promise.resolve(data),
       subscribe: () => () => {},

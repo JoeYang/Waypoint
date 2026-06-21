@@ -16,6 +16,7 @@ import {
   useState,
 } from "react";
 import type { JSX, ReactNode } from "react";
+import type { Digest, StoryResponse } from "@waypoint/shared";
 import { mockSource, type WaypointSource } from "./source.js";
 import { initialState, loadNav, reducer, saveNav, safeNav, type Nav, type View } from "./state.js";
 import type { Decision, ProjectsData, Message } from "./types.js";
@@ -32,6 +33,11 @@ export interface WaypointContextValue {
   resolve: (id: string, option: string) => void;
   comment: (id: string, text: string) => void;
   adjust: (id: string, note: string) => void;
+  // Re-entry (slice 3): read the while-you-were-away digest / story for a project and ack the
+  // read cursor. Pass-throughs to the source so screens never import it directly.
+  digest: (projectId: string) => Promise<Digest>;
+  ackDigest: (projectId: string, seq: number) => Promise<void>;
+  story: (projectId: string) => Promise<StoryResponse>;
 }
 
 const WaypointContext = createContext<WaypointContextValue | null>(null);
@@ -156,6 +162,9 @@ function ReadyProvider({
           })
           .then(reload, reload);
       },
+      digest: (projectId) => source.digest(projectId),
+      ackDigest: (projectId, seq) => source.ackDigest(projectId, seq),
+      story: (projectId) => source.story(projectId),
       comment: (id, text) => dispatch({ type: "comment", id, text }),
       // A PROPOSAL "Approve with adjustment": resolves the ask carrying the note (per D3, the
       // backend's "adjust" verdict is an approval, not a discussion turn). Optimistic, then the

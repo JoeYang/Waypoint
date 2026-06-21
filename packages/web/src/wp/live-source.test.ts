@@ -188,6 +188,17 @@ describe("liveSource", () => {
       expect(changes).toBe(1);
       ws.emit("message", { data: JSON.stringify({ type: "delta", seq: 1 }) });
       expect(changes).toBe(2);
+      // A tiered notification escalating also refreshes (the digest is derived from the reload).
+      ws.emit("message", {
+        data: JSON.stringify({
+          type: "digest.ready",
+          seq: 2,
+          reason: "threshold",
+          askId: "a1",
+          summary: "1 waiting",
+        }),
+      });
+      expect(changes).toBe(3);
 
       unsubscribe();
       expect(ws.closed).toBe(true);

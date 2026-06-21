@@ -2,7 +2,16 @@ import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
 import type { InboxResponse, AnswerResponse } from "@waypoint/shared";
-import { fetchInbox, fetchProjects, fetchEvents, answerAsk, ApiError } from "./client.js";
+import {
+  fetchInbox,
+  fetchProjects,
+  fetchEvents,
+  answerAsk,
+  fetchDigest,
+  ackDigest,
+  fetchStory,
+  ApiError,
+} from "./client.js";
 
 const BASE = "http://waypoint.test";
 const server = setupServer();
@@ -122,5 +131,87 @@ describe("REST client", () => {
     const result = await fetchEvents(BASE, "default", 2);
     expect(result).toMatchObject({ projectId: "default", seq: 4 });
     expect(url).toContain("sinceSeq=2");
+  });
+
+  it("fetches and validates the while-you-were-away digest", async () => {
+    server.use(
+      http.get(`${BASE}/v1/projects/default/digest`, () =>
+        HttpResponse.json({
+          projectId: "default",
+          sinceSeq: 3,
+          seq: 7,
+          shipped: [{ nodeId: "n1", kind: "task", title: "Wire the spine" }],
+          newlyBlocked: [],
+          waiting: [
+            {
+              askId: "a1",
+              nodeId: "n2",
+              nodeTitle: "Pick a DB",
+              type: "DECISION",
+              prompt: "Postgres?",
+              blastRadius: 3,
+              ageMs: 7200000,
+            },
+          ],
+        }),
+      ),
+    );
+    const d = await fetchDigest(BASE, "default");
+    expect(d.shipped[0]?.title).toBe("Wire the spine");
+    expect(d.waiting[0]?.blastRadius).toBe(3);
+  });
+
+  it("posts a digest ack and returns the new cursor", async () => {
+    let body: unknown;
+    server.use(
+      http.post(`${BASE}/v1/projects/default/digest/ack`, async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json({ projectId: "default", lastSeenSeq: 7 });
+      }),
+    );
+    const res = await ackDigest(BASE, "default", 7);
+    expect(res.lastSeenSeq).toBe(7);
+    expect(body).toMatchObject({ seq: 7 });
+  });
+
+  it("fetches and validates the threaded story", async () => {
+    server.use(
+      http.get(`${BASE}/v1/projects/default/story`, () =>
+        HttpResponse.json({
+          projectId: "default",
+          seq: 2,
+          entries: [
+            {
+              seq: 1,
+              at: 1700000000000,
+              actor: "agent",
+              actorLabel: "brave-lark",
+              verb: "node.created",
+              nodeId: "n1",
+              nodeTitle: "A",
+              summary: "created task: A",
+            },
+          ],
+        }),
+      ),
+    );
+    const story = await fetchStory(BASE, "default");
+    expect(story.entries[0]?.actorLabel).toBe("brave-lark");
+  });
+
+  it("surfaces an unknown project as a typed ApiError on the digest route", async () => {
+    server.use(
+      http.get(`${BASE}/v1/projects/ghost/digest`, () =>
+        HttpResponse.json(
+          { error: "NOT_FOUND", message: "project not found", request_id: "r" },
+          { status: 404 },
+        ),
+      ),
+    );
+    await expect(fetchDigest(BASE, "ghost")).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      status: 404,
+    });
+    await expect(fetchDigest(BASE, "ghost")).rejects.toBeInstanceOf(ApiError);
   });
 });
