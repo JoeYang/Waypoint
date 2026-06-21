@@ -18,6 +18,9 @@ export const initialInboxState: InboxState = { itemsById: {}, seq: -1 };
 // no seq, so local state cannot be trusted and is cleared).
 export function applyFrame(state: InboxState, frame: WsServerFrame): InboxState {
   if (frame.type === "resync") return initialInboxState;
+  // digest.ready is a tiered-notification signal, not an inbox-state change — the stream hook
+  // reacts to it (refetch the digest); the inbox projection ignores it.
+  if (frame.type !== "delta") return state;
   if (frame.seq <= state.seq) return state;
 
   const itemsById = { ...state.itemsById };

@@ -35,5 +35,22 @@ export const WsResyncSchema = z.object({
 });
 export type WsResync = z.infer<typeof WsResyncSchema>;
 
-export const WsServerFrameSchema = z.discriminatedUnion("type", [WsDeltaSchema, WsResyncSchema]);
+// Server → client: a tiered notification escalated (V2 slice 3) — the reference transport for the
+// notifier. Emitted at most once per escalating ask, never one-per-ask in bulk. Carries the
+// `seq` + a non-sensitive `summary` only (security.md: never tokens/PII/decision payloads). The
+// client refetches the digest in response; reason mirrors the escalation decision.
+export const WsDigestReadySchema = z.object({
+  type: z.literal("digest.ready"),
+  seq: z.number().int().nonnegative(),
+  reason: z.enum(["threshold", "sla"]), // why it escalated (a batched ask never pushes)
+  askId: z.string().min(1), // the ask that triggered the escalation
+  summary: z.string().min(1), // non-sensitive, human-legible
+});
+export type WsDigestReady = z.infer<typeof WsDigestReadySchema>;
+
+export const WsServerFrameSchema = z.discriminatedUnion("type", [
+  WsDeltaSchema,
+  WsResyncSchema,
+  WsDigestReadySchema,
+]);
 export type WsServerFrame = z.infer<typeof WsServerFrameSchema>;
