@@ -19,9 +19,9 @@
 
 ## 5. Server — re-entry endpoint + notifier (TDD)
 
-- [ ] 5.1 RED: `GET /v1/projects/:id/digest` returns the while-you-were-away payload since the caller's last-seen cursor (**read-only — does not advance the cursor**); `POST /v1/projects/:id/digest/ack` advances the cursor to a given seq (**explicit ack**, consistent with the WS resume cursor) → implement.
-- [ ] 5.2 RED: the notifier batches by default and escalates a single push only when blast radius crosses the threshold or an ask ages past the SLA; it never emits one-per-ask → implement. It reads escalation inputs through the `core` use-case (not raw SQL), and ships **one concrete reference transport — a `digest.ready` frame over the existing WebSocket** — behind the `Notifier` port so escalation is end-to-end testable (web-push is a later adapter).
-- [ ] 5.3 Failure injection: notifier transport down (no WS subscribers / send throws) → the mutation and durable log are unaffected (best-effort, like the live push); digest still computable from the log. Cursor-write failure after a read is a tolerated double-delivery (documented), never a corruption.
+- [x] 5.1 RED: `GET /v1/projects/:id/digest` returns the while-you-were-away payload since the caller's last-seen cursor (**read-only — does not advance the cursor**); `POST /v1/projects/:id/digest/ack` advances the cursor to a given seq (**explicit ack**, consistent with the WS resume cursor) → implement.
+- [x] 5.2 RED: the notifier batches by default and escalates a single push only when blast radius crosses the threshold or an ask ages past the SLA; it never emits one-per-ask → implement. It reads escalation inputs through the `core` use-case (not raw SQL), and ships **one concrete reference transport — a `digest.ready` frame over the existing WebSocket** — behind the `Notifier` port so escalation is end-to-end testable (web-push is a later adapter).
+- [x] 5.3 Failure injection: notifier transport down (no WS subscribers / send throws) → the mutation and durable log are unaffected (best-effort, like the live push); digest still computable from the log. Cursor-write failure after a read is a tolerated double-delivery (documented), never a corruption.
 
 ## 6. Web — while-you-were-away + story (TDD, RTL)
 

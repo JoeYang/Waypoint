@@ -2,11 +2,18 @@ import Fastify, { type FastifyInstance } from "fastify";
 import fastifyStatic from "@fastify/static";
 import {
   AnswerRequestSchema,
+  DigestAckRequestSchema,
+  NotificationPolicySchema,
+  DEFAULT_PRINCIPAL,
   type AnswerResponse,
   type InboxResponse,
   type ProjectProgress,
   type ProjectListResponse,
   type EventLogResponse,
+  type Digest,
+  type DigestAckResponse,
+  type StoryResponse,
+  type NotificationPolicy,
 } from "@waypoint/shared";
 import { type Core, WaypointError, ValidationError, type ErrorCode } from "@waypoint/core";
 
@@ -61,7 +68,7 @@ export function createRestServer(core: Core, opts: RestServerOptions = {}): Fast
     if (corsOrigin !== "*") reply.header("Vary", "Origin");
     if (req.method === "OPTIONS") {
       reply
-        .header("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+        .header("Access-Control-Allow-Methods", "GET,POST,PUT,OPTIONS")
         .header("Access-Control-Allow-Headers", "content-type")
         .header("Access-Control-Max-Age", "86400")
         .status(204)
@@ -144,6 +151,72 @@ export function createRestServer(core: Core, opts: RestServerOptions = {}): Fast
     const progress: ProjectProgress = await core.listProject(req.params.projectId);
     reply.send(progress);
   });
+
+  // Re-entry (slice 3). The while-you-were-away digest since the caller's last-seen cursor.
+  // Read-only — it does NOT advance the cursor (explicit ack below), so repeated reads are stable.
+  // Pre-auth the principal is the well-known default; it becomes the authenticated user later.
+  app.get<{ Params: ProjectParams }>("/v1/projects/:projectId/digest", async (req, reply) => {
+    const digest: Digest = await core.digestFor(req.params.projectId, DEFAULT_PRINCIPAL);
+    reply.send(digest);
+  });
+
+  // Advance the read cursor to a given seq (explicit ack — consistent with the WS resume cursor).
+  app.post<{ Params: ProjectParams }>("/v1/projects/:projectId/digest/ack", async (req, reply) => {
+    const parsed = DigestAckRequestSchema.safeParse(req.body);
+    if (!parsed.success) {
+      throw new ValidationError("invalid digest ack body", { issues: parsed.error.issues });
+    }
+    const ack: DigestAckResponse = await core.ackDigest(
+      req.params.projectId,
+      DEFAULT_PRINCIPAL,
+      parsed.data.seq,
+    );
+    reply.send(ack);
+  });
+
+  // The threaded project story since `sinceSeq` — the event log read back as narrative.
+  app.get<{ Params: ProjectParams; Querystring: EventsQuery }>(
+    "/v1/projects/:projectId/story",
+    async (req, reply) => {
+      let sinceSeq: number | undefined;
+      const raw = req.query.sinceSeq;
+      if (raw !== undefined) {
+        const n = Number(raw);
+        if (!Number.isInteger(n) || n < 0) {
+          throw new ValidationError("sinceSeq must be a non-negative integer", { sinceSeq: raw });
+        }
+        sinceSeq = n;
+      }
+      const story: StoryResponse = await core.story(req.params.projectId, sinceSeq);
+      reply.send(story);
+    },
+  );
+
+  // The caller's notification policy (cadence/threshold/SLA), defaulting when none is set.
+  app.get<{ Params: ProjectParams }>(
+    "/v1/projects/:projectId/notification-policy",
+    async (req, reply) => {
+      const policy: NotificationPolicy = await core.policyFor(
+        req.params.projectId,
+        DEFAULT_PRINCIPAL,
+      );
+      reply.send(policy);
+    },
+  );
+
+  // Set the caller's notification policy. PUT is idempotent — the single (principal, project) row
+  // is upserted.
+  app.put<{ Params: ProjectParams }>(
+    "/v1/projects/:projectId/notification-policy",
+    async (req, reply) => {
+      const parsed = NotificationPolicySchema.safeParse(req.body);
+      if (!parsed.success) {
+        throw new ValidationError("invalid notification policy", { issues: parsed.error.issues });
+      }
+      await core.setPolicyFor(req.params.projectId, DEFAULT_PRINCIPAL, parsed.data);
+      reply.send(parsed.data);
+    },
+  );
 
   app.post<{ Params: AnswerParams }>(
     "/v1/projects/:projectId/asks/:askId/answer",
