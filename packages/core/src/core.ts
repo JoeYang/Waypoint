@@ -26,10 +26,12 @@ import type {
   GoalState,
   StoryResponse,
   Digest,
+  DigestAckResponse,
   NotificationPolicy,
   EscalationInput,
   EscalationDecision,
 } from "@waypoint/shared";
+import { DEFAULT_NOTIFICATION_POLICY } from "@waypoint/shared";
 import type { Clock, IdGenerator, UnitOfWork, RepositoryContext } from "./ports.js";
 import { NotFoundError, ValidationError, StaleVersionError } from "./errors.js";
 import { stableAliasFromSession, countDependents } from "./projections.js";
@@ -142,6 +144,13 @@ export interface Core {
   // Re-entry projections (V2 slice 3) — read models over the append-only event log, bounded.
   story(projectId: string, sinceSeq?: number, limit?: number): Promise<StoryResponse>;
   digest(projectId: string, lastSeenSeq: number, limit?: number): Promise<Digest>;
+  // Cursor-aware re-entry (V2 slice 3), keyed by principal. digestFor reads the caller's cursor
+  // then projects the digest since it; ackDigest advances the cursor monotonically; policyFor
+  // returns the principal's policy or the application default.
+  digestFor(projectId: string, principal: string, limit?: number): Promise<Digest>;
+  ackDigest(projectId: string, principal: string, seq: number): Promise<DigestAckResponse>;
+  policyFor(projectId: string, principal: string): Promise<NotificationPolicy>;
+  setPolicyFor(projectId: string, principal: string, policy: NotificationPolicy): Promise<void>;
   // The tiered-notification decision for one ask: gathers blast radius (recomputed now) + age +
   // the count of waiting asks, then applies the policy. The server notifier calls this — it holds
   // no domain logic and issues no raw query.
@@ -778,6 +787,52 @@ export function createCore(deps: CoreDeps): Core {
         const seq = window.length > 0 ? window[window.length - 1]!.seq : lastSeenSeq;
         const buckets = projectDigest(window, nodes, asks, edges, lastSeenSeq, clock.now(), limit);
         return { projectId, seq, ...buckets };
+      });
+    },
+
+    // Cursor-aware digest: read the principal's last-seen cursor, then project since it. The read
+    // does not advance the cursor (explicit ack only), so repeated reads are stable.
+    async digestFor(projectId, principal, limit = REENTRY_PAGE_MAX) {
+      return uow.run(async (ctx) => {
+        const project = await ctx.projects.findById(projectId);
+        if (!project) throw new NotFoundError("project", projectId);
+        const lastSeen = await ctx.cursors.getLastSeen(principal, projectId);
+        const window = await ctx.events.listSince(projectId, lastSeen);
+        const nodes = await ctx.nodes.listByProject(projectId);
+        const asks = await ctx.asks.listByProject(projectId);
+        const edges = await ctx.nodes.listDependencies(projectId);
+        const seq = window.length > 0 ? window[window.length - 1]!.seq : lastSeen;
+        const buckets = projectDigest(window, nodes, asks, edges, lastSeen, clock.now(), limit);
+        return { projectId, seq, ...buckets };
+      });
+    },
+
+    // Advance the read cursor monotonically (an ack to an older seq is a no-op) and report the
+    // resulting position. Idempotent.
+    async ackDigest(projectId, principal, seq) {
+      return uow.run(async (ctx) => {
+        const project = await ctx.projects.findById(projectId);
+        if (!project) throw new NotFoundError("project", projectId);
+        const current = await ctx.cursors.getLastSeen(principal, projectId);
+        const next = Math.max(current, seq);
+        if (next !== current) await ctx.cursors.setLastSeen(principal, projectId, next);
+        return { projectId, lastSeenSeq: next };
+      });
+    },
+
+    // The principal's notification policy, or the application default when none is set.
+    async policyFor(projectId, principal) {
+      return uow.run(async (ctx) => {
+        const stored = await ctx.cursors.getPolicy(principal, projectId);
+        return stored ?? DEFAULT_NOTIFICATION_POLICY;
+      });
+    },
+
+    async setPolicyFor(projectId, principal, policy) {
+      await uow.run(async (ctx) => {
+        const project = await ctx.projects.findById(projectId);
+        if (!project) throw new NotFoundError("project", projectId);
+        await ctx.cursors.setPolicy(principal, projectId, policy);
       });
     },
 

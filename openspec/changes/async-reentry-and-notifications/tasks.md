@@ -15,7 +15,7 @@
 
 ## 4. Persistence — Postgres
 
-- [ ] 4.1 `pg-backend`: read/write `principal_cursor` + `notification_policy`; the story/digest queries are **bounded (LIMIT/window)**, parameterized, and read the existing event/seq columns. Integration test gated on `WAYPOINT_TEST_DATABASE_URL`.
+- [x] 4.1 `pg-backend`: read/write `principal_cursor` + `notification_policy`; the story/digest queries are **bounded (LIMIT/window)**, parameterized, and read the existing event/seq columns. Integration test gated on `WAYPOINT_TEST_DATABASE_URL`.
 
 ## 5. Server — re-entry endpoint + notifier (TDD)
 

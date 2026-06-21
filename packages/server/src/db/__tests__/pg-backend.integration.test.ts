@@ -26,7 +26,9 @@ describeDb("PgBackend satisfies the repository port contract", () => {
   });
 
   beforeEach(async () => {
-    await pool.query("TRUNCATE event, dependency, ask, node RESTART IDENTITY CASCADE");
+    await pool.query(
+      "TRUNCATE event, dependency, ask, node, principal_cursor, notification_policy RESTART IDENTITY CASCADE",
+    );
     await pool.query(
       `INSERT INTO project (id, name, seq_counter, created_at) VALUES ($1,$2,0,0)
        ON CONFLICT (id) DO UPDATE SET seq_counter = 0`,
@@ -377,5 +379,48 @@ describeDb("PgBackend satisfies the repository port contract", () => {
     // Budget is p95 < 150 ms; surface the real number for the record.
     console.log(`listProject p95 over 55-node tree: ${p95.toFixed(1)}ms (budget 150ms)`);
     expect(p95).toBeLessThan(150);
+  });
+
+  // --- Re-entry cursor + notification policy (slice 3) ---
+  const PRINCIPAL = "__default__";
+
+  it("defaults the read cursor to 0 for a principal that has never visited", async () => {
+    const d = await core.digestFor(PROJECT, PRINCIPAL);
+    expect(d.sinceSeq).toBe(0);
+  });
+
+  it("persists the cursor across transactions and advances it monotonically", async () => {
+    await core.ackDigest(PROJECT, PRINCIPAL, 4);
+    expect((await core.ackDigest(PROJECT, PRINCIPAL, 2)).lastSeenSeq).toBe(4); // no backward move
+    const { rows } = await pool.query(
+      "SELECT last_seen_seq FROM principal_cursor WHERE principal = $1 AND project_id = $2",
+      [PRINCIPAL, PROJECT],
+    );
+    expect(Number(rows[0]?.last_seen_seq)).toBe(4);
+  });
+
+  it("round-trips a notification policy and upserts on re-set", async () => {
+    await core.setPolicyFor(PROJECT, PRINCIPAL, {
+      blastRadiusThreshold: 2,
+      ageSlaSeconds: 120,
+      digestCadenceSeconds: 3600,
+    });
+    expect(await core.policyFor(PROJECT, PRINCIPAL)).toEqual({
+      blastRadiusThreshold: 2,
+      ageSlaSeconds: 120,
+      digestCadenceSeconds: 3600,
+    });
+    // Re-set upserts the single (principal, project) row rather than inserting a duplicate.
+    await core.setPolicyFor(PROJECT, PRINCIPAL, {
+      blastRadiusThreshold: 9,
+      ageSlaSeconds: 9,
+      digestCadenceSeconds: 9,
+    });
+    const { rows } = await pool.query(
+      "SELECT count(*)::int AS c FROM notification_policy WHERE principal = $1 AND project_id = $2",
+      [PRINCIPAL, PROJECT],
+    );
+    expect(rows[0]?.c).toBe(1);
+    expect((await core.policyFor(PROJECT, PRINCIPAL)).blastRadiusThreshold).toBe(9);
   });
 });
