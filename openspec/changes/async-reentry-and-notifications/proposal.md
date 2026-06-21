@@ -45,6 +45,17 @@ notifications that escalate by impact and age — never one ping per ask.
   project-scoped through the `principal` seam. No secrets in transport; cadence/threshold are per-user.
 - **Depends on**: the spine (slice 2), and slice 1's enriched events + stable `agentLabel` — the story is
   unreadable if the actor is a raw session id, so the label is owned in slice 1 and consumed here.
-- **Open / transport**: the model stays transport-agnostic behind a port, but this slice MUST ship **one
-  concrete reference transport** (web push the natural first) so the tiered escalation is end-to-end
-  testable. Email and chat-webhook transports are additional adapters behind the same port, later.
+- **Open / transport**: the model stays transport-agnostic behind a `Notifier` port, but this slice ships
+  **one concrete reference transport — a `digest.ready` frame over the existing WebSocket** — so the
+  tiered escalation is end-to-end testable today with no new dependency (it reuses the resume-since-seq +
+  heartbeat already in place). A web-push (VAPID) adapter, email, and chat-webhook are additional adapters
+  behind the same port, later. Trade-off: the WS frame only reaches a human with an open tab; background
+  delivery waits for the web-push adapter.
+- **Decisions (from independent review)**: the read cursor lives in a **new `principal_cursor` table**
+  keyed `(principal, project_id)` via the existing `principal` seam (not a column on an existing table),
+  and advances by **explicit ack** (`GET /digest` is read-only; an ack endpoint advances it — consistent
+  with the WS resume cursor). The `NotificationPolicy` (cadence, threshold, SLA) is a **persisted** entity,
+  not just a DTO. The story actor is derived by **joining to `ask.agent_label`** / re-deriving the alias in
+  the projection — the event table stays append-only with no `agentLabel` column added here. The escalation
+  use-case depends on **both `AskRepository` and `NodeRepository`** (blast radius is recomputed at
+  notify-time, not stored on the ask). The digest/story reads are **bounded by a window cap**.
