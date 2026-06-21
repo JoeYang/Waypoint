@@ -6,7 +6,7 @@ import "@testing-library/jest-dom/vitest";
 import { WaypointProvider, useWaypoint } from "./WaypointProvider.js";
 import { NAV_KEY } from "./state.js";
 import { WP_DATA } from "./fixtures.js";
-import type { WaypointSource } from "./source.js";
+import { mockSource, type WaypointSource } from "./source.js";
 
 afterEach(cleanup);
 
@@ -130,6 +130,7 @@ describe("WaypointProvider async states", () => {
 
   it("shows the loading state while an async load is in flight (no sync seed)", () => {
     const pending: WaypointSource = {
+      ...mockSource,
       initial: () => null,
       load: () => new Promise(() => {}), // never resolves
       subscribe: () => () => {},
@@ -148,6 +149,7 @@ describe("WaypointProvider async states", () => {
     const user = userEvent.setup();
     let attempts = 0;
     const flaky: WaypointSource = {
+      ...mockSource,
       initial: () => null,
       load: () => {
         attempts += 1;
@@ -171,6 +173,7 @@ describe("WaypointProvider async states", () => {
   it("shows the empty state when the source has no projects", () => {
     const data = { ...WP_DATA, projects: [] };
     const empty: WaypointSource = {
+      ...mockSource,
       initial: () => data,
       load: () => Promise.resolve(data),
       subscribe: () => () => {},
@@ -189,6 +192,7 @@ describe("WaypointProvider async states", () => {
     const handlers: Array<() => void> = [];
     let payload = { ...WP_DATA, projects: WP_DATA.projects.slice(0, 1) };
     const live: WaypointSource = {
+      ...mockSource,
       initial: () => null,
       load: () => Promise.resolve(payload),
       subscribe: (onChange) => {
@@ -245,6 +249,7 @@ describe("WaypointProvider answer wiring", () => {
     const data = answerableData();
     const answer = vi.fn(() => Promise.resolve());
     const source = {
+      ...mockSource,
       initial: () => data,
       load: () => Promise.resolve(data),
       subscribe: () => () => {},
@@ -274,6 +279,7 @@ describe("WaypointProvider answer wiring", () => {
     const data = answerableData();
     const answer = vi.fn(() => Promise.resolve());
     const source = {
+      ...mockSource,
       initial: () => data,
       load: () => Promise.resolve(data),
       subscribe: () => () => {},
@@ -301,6 +307,7 @@ describe("WaypointProvider answer wiring", () => {
     const data = answerableData();
     let loads = 0;
     const source = {
+      ...mockSource,
       initial: () => data,
       load: () => {
         loads += 1;

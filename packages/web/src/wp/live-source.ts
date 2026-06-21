@@ -9,7 +9,16 @@
 import type { ProjectsData, User } from "./types.js";
 import type { WaypointSource, AnswerCommand } from "./source.js";
 import { toProject, deriveNotifications } from "./adapter.js";
-import { fetchProjects, fetchProgress, fetchInbox, fetchEvents, answerAsk } from "../api/client.js";
+import {
+  fetchProjects,
+  fetchProgress,
+  fetchInbox,
+  fetchEvents,
+  answerAsk,
+  fetchDigest,
+  ackDigest,
+  fetchStory,
+} from "../api/client.js";
 
 // No identity until auth lands (D9): a stub viewer and the client clock for the time label.
 const VIEWER: User = { name: "You", email: "", initials: "YOU" };
@@ -65,7 +74,15 @@ export function createLiveSource(baseUrl: string): WaypointSource {
             ws.addEventListener("message", (e: MessageEvent) => {
               try {
                 const frame = JSON.parse(String(e.data)) as { type?: string };
-                if (frame.type === "delta" || frame.type === "resync") onChange();
+                // delta/resync → live re-rank; digest.ready → a tiered notification escalated, so
+                // refresh too (the digest/notifications are derived from the same reload).
+                if (
+                  frame.type === "delta" ||
+                  frame.type === "resync" ||
+                  frame.type === "digest.ready"
+                ) {
+                  onChange();
+                }
               } catch {
                 // ignore a malformed frame
               }
@@ -90,5 +107,10 @@ export function createLiveSource(baseUrl: string): WaypointSource {
           : {}),
       });
     },
+    digest: (projectId) => fetchDigest(baseUrl, projectId),
+    ackDigest: async (projectId, seq) => {
+      await ackDigest(baseUrl, projectId, seq);
+    },
+    story: (projectId) => fetchStory(baseUrl, projectId),
   };
 }
