@@ -57,6 +57,16 @@ export class InboxHub {
     return current;
   }
 
+  // Push an arbitrary server frame (e.g. a tiered-notification `digest.ready`) to every live
+  // subscriber of a project, without recomputing the inbox. A no-op when no one is subscribed —
+  // the durable digest-on-return still covers a human with no open tab. Holds no domain logic;
+  // the notifier decides whether to call this.
+  broadcast(projectId: string, frame: WsServerFrame): void {
+    const state = this.states.get(projectId);
+    if (!state) return;
+    for (const send of state.subscribers) send(frame);
+  }
+
   // Recompute the inbox after a committed mutation and broadcast the resulting delta to
   // every live subscriber. Returns the delta (for tests / callers that want it).
   async notify(projectId: string): Promise<WsDelta> {
