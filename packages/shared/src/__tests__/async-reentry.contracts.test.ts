@@ -4,6 +4,7 @@ import {
   StoryResponseSchema,
   DigestSchema,
   DigestAskSchema,
+  DigestHeadsUpSchema,
   DigestAckRequestSchema,
 } from "../reentry.js";
 import {
@@ -63,6 +64,8 @@ describe("StoryResponse", () => {
 });
 
 describe("Digest", () => {
+  // A waiting decision now carries its risk, reversibility, and an isNew flag (parked since the
+  // caller's last visit) on top of the original wait-time/blast-radius signal.
   const ask = {
     askId: "a1",
     nodeId: "n1",
@@ -71,9 +74,29 @@ describe("Digest", () => {
     prompt: "Postgres or SQLite?",
     blastRadius: 3,
     ageMs: 7200000,
+    risk: "high",
+    reversible: false,
+    isNew: true,
   };
+  const activeWork = {
+    nodeId: "n3",
+    nodeTitle: "Seed scripts",
+    kind: "task",
+    streamId: "p2",
+    streamTitle: "Data layer",
+  };
+  const headsUp = {
+    askId: "a2",
+    nodeId: "n4",
+    nodeTitle: "Merge users + accounts",
+    prompt: "Run the destructive migration?",
+    risk: "high",
+    reversible: false,
+    kind: "danger",
+  };
+  const tallies = { done: 4, active: 2, parked: 2, queued: 6 };
 
-  it("accepts the three rolled-up buckets", () => {
+  it("accepts a fully enriched digest", () => {
     const d = DigestSchema.parse({
       projectId: "p1",
       sinceSeq: 10,
@@ -81,10 +104,18 @@ describe("Digest", () => {
       shipped: [{ nodeId: "n2", kind: "task", title: "Wire the spine" }],
       newlyBlocked: [{ nodeId: "n1", kind: "task", title: "Pick a DB" }],
       waiting: [ask],
+      activeWork: [activeWork],
+      headsUp: [headsUp],
+      tallies,
     });
     expect(d.shipped).toHaveLength(1);
-    expect(d.newlyBlocked).toHaveLength(1);
     expect(d.waiting[0]?.blastRadius).toBe(3);
+    expect(d.waiting[0]?.risk).toBe("high");
+    expect(d.waiting[0]?.reversible).toBe(false);
+    expect(d.waiting[0]?.isNew).toBe(true);
+    expect(d.activeWork[0]?.streamTitle).toBe("Data layer");
+    expect(d.headsUp[0]?.kind).toBe("danger");
+    expect(d.tallies.queued).toBe(6);
   });
 
   it("accepts an empty digest (nothing changed since the cursor)", () => {
@@ -95,12 +126,45 @@ describe("Digest", () => {
       shipped: [],
       newlyBlocked: [],
       waiting: [],
+      activeWork: [],
+      headsUp: [],
+      tallies: { done: 0, active: 0, parked: 0, queued: 0 },
     });
     expect(d.sinceSeq).toBe(18);
   });
 
+  it("requires the enriched fields (a pre-enrichment digest is rejected)", () => {
+    const legacy = {
+      projectId: "p1",
+      sinceSeq: 10,
+      seq: 18,
+      shipped: [],
+      newlyBlocked: [],
+      waiting: [],
+    };
+    expect(DigestSchema.safeParse(legacy).success).toBe(false);
+  });
+
   it("rejects a negative ageMs", () => {
     expect(DigestAskSchema.safeParse({ ...ask, ageMs: -1 }).success).toBe(false);
+  });
+
+  it("rejects a waiting decision missing risk/reversible/isNew", () => {
+    const bare = {
+      askId: "a1",
+      nodeId: "n1",
+      nodeTitle: "Pick a DB",
+      type: "DECISION",
+      prompt: "Postgres or SQLite?",
+      blastRadius: 3,
+      ageMs: 7200000,
+    };
+    expect(DigestAskSchema.safeParse(bare).success).toBe(false);
+  });
+
+  it("restricts headsUp.kind to danger|warning", () => {
+    expect(DigestHeadsUpSchema.safeParse({ ...headsUp, kind: "info" }).success).toBe(false);
+    expect(DigestHeadsUpSchema.safeParse({ ...headsUp, kind: "warning" }).success).toBe(true);
   });
 });
 

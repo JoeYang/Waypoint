@@ -151,14 +151,31 @@ describe("REST client", () => {
               prompt: "Postgres?",
               blastRadius: 3,
               ageMs: 7200000,
+              risk: "medium",
+              reversible: true,
+              isNew: true,
             },
           ],
+          activeWork: [
+            {
+              nodeId: "n3",
+              nodeTitle: "Seed scripts",
+              kind: "task",
+              streamId: "n0",
+              streamTitle: "Data",
+            },
+          ],
+          headsUp: [],
+          tallies: { done: 1, active: 1, parked: 0, queued: 2 },
         }),
       ),
     );
     const d = await fetchDigest(BASE, "default");
     expect(d.shipped[0]?.title).toBe("Wire the spine");
     expect(d.waiting[0]?.blastRadius).toBe(3);
+    expect(d.waiting[0]?.isNew).toBe(true);
+    expect(d.activeWork[0]?.streamTitle).toBe("Data");
+    expect(d.tallies.queued).toBe(2);
   });
 
   it("posts a digest ack and returns the new cursor", async () => {

@@ -7,6 +7,9 @@ import type {
   Digest,
   DigestNode,
   DigestAsk,
+  DigestActiveWork,
+  DigestHeadsUp,
+  DigestTallies,
   NotificationPolicy,
   EscalationInput,
   EscalationDecision,
@@ -75,6 +78,12 @@ export function projectDigest(
   const nodeById = new Map(nodes.map((n) => [n.id, n]));
   const askById = new Map(asks.map((a) => [a.id, a]));
 
+  // Asks parked within the unseen window — the "new since you left" set for waiting rows.
+  const newAskIds = new Set<string>();
+  for (const e of window) {
+    if (e.verb === "ask.parked" && e.ref.kind === "ask") newAskIds.add(e.ref.id);
+  }
+
   // shipped: nodes a transition event moved, that are now DONE. Dedup, keep first-seen order.
   const shipped: DigestNode[] = [];
   const shippedSeen = new Set<string>();
@@ -112,11 +121,65 @@ export function projectDigest(
         prompt: a.prompt,
         blastRadius: countDependents(edges, a.nodeId),
         ageMs: Math.max(0, now - a.createdAt),
+        risk: a.risk,
+        reversible: a.reversible,
+        isNew: newAskIds.has(a.id),
       };
     })
     .sort((x, y) => y.blastRadius - x.blastRadius || y.ageMs - x.ageMs);
 
-  return { sinceSeq: lastSeenSeq, shipped, newlyBlocked, waiting };
+  // activeWork: where agents are now — task nodes that are ACTIVE and not blocked on a required
+  // open ask (a snapshot, not window-bound), most-recently-touched first. Names the task + its
+  // parent stream; never a file path (no agent file-cursor exists). Stable tiebreak on id.
+  const activeWork: DigestActiveWork[] = nodes
+    .filter((n) => n.kind === "task" && n.status === "ACTIVE" && !hasRequiredOpenAsk(asks, n.id))
+    .sort((a, b) => b.updatedAt - a.updatedAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+    .map((n) => {
+      const parent = n.parentId !== null ? nodeById.get(n.parentId) : undefined;
+      return {
+        nodeId: n.id,
+        nodeTitle: n.title,
+        kind: n.kind,
+        streamId: n.parentId,
+        streamTitle: parent?.title ?? null,
+      };
+    });
+
+  // headsUp: open asks that need a careful eye — irreversible or high-risk. Irreversible reads as
+  // danger, a reversible-but-high-risk ask as warning. Danger first, then oldest-waiting first.
+  const headsUp: DigestHeadsUp[] = asks
+    .filter((a) => a.state === "OPEN" && (!a.reversible || a.risk === "high"))
+    .map((a) => {
+      const n = nodeById.get(a.nodeId);
+      const kind = !a.reversible ? "danger" : "warning";
+      return {
+        askId: a.id,
+        nodeId: a.nodeId,
+        nodeTitle: n?.title ?? a.nodeId,
+        prompt: a.prompt,
+        risk: a.risk,
+        reversible: a.reversible,
+        kind,
+      } satisfies DigestHeadsUp;
+    })
+    .sort(
+      (x, y) =>
+        (x.kind === "danger" ? 0 : 1) - (y.kind === "danger" ? 0 : 1) ||
+        (x.askId < y.askId ? -1 : x.askId > y.askId ? 1 : 0),
+    );
+
+  // tallies: task-kind nodes by derived state for the progress meter. A parked task (required open
+  // ask) counts as parked regardless of stored status; DISCARDED is excluded entirely.
+  const tallies: DigestTallies = { done: 0, active: 0, parked: 0, queued: 0 };
+  for (const n of nodes) {
+    if (n.kind !== "task" || n.status === "DISCARDED") continue;
+    if (hasRequiredOpenAsk(asks, n.id)) tallies.parked += 1;
+    else if (n.status === "DONE") tallies.done += 1;
+    else if (n.status === "ACTIVE") tallies.active += 1;
+    else if (n.status === "DRAFT") tallies.queued += 1;
+  }
+
+  return { sinceSeq: lastSeenSeq, shipped, newlyBlocked, waiting, activeWork, headsUp, tallies };
 }
 
 // The tiered-escalation decision: push a single notification only when blast radius crosses the
