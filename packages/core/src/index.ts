@@ -3,4 +3,6 @@
 // to persistence/time/identity through the ports below.
 export * from "./errors.js";
 export * from "./ports.js";
+export * from "./projections.js";
+export * from "./reentry.js";
 export * from "./core.js";

@@ -9,9 +9,9 @@
 
 ## 3. Core — projections (TDD over in-memory fakes)
 
-- [ ] 3.1 RED: `story(projectId, sinceSeq, limit)` projects the event log into node-threaded narrative entries, oldest-first, **bounded by `limit`**, with no source mutation; the actor is resolved from `ask.agent_label` / the session alias (no event-table change) → implement.
-- [ ] 3.2 RED: `digest(projectId, lastSeenSeq, limit)` summarizes since the cursor — what shipped, what is newly blocked, what is waiting — rolled up across goal/plan/task, **bounded** → implement.
-- [ ] 3.3 RED: the escalation decision — given a `NotificationPolicy` and an ask's blast radius + age, decide push-now vs. batch — is a pure `core` use-case that depends on **both `AskRepository` and `NodeRepository`** (blast radius recomputed at notify-time; the server notifier calls it; no raw DB query in the adapter), unit-tested at the boundaries (threshold met, age met, neither) → implement.
+- [x] 3.1 RED: `story(projectId, sinceSeq, limit)` projects the event log into node-threaded narrative entries, oldest-first, **bounded by `limit`**, with no source mutation; the actor is resolved from `ask.agent_label` / the session alias (no event-table change) → implement.
+- [x] 3.2 RED: `digest(projectId, lastSeenSeq, limit)` summarizes since the cursor — what shipped, what is newly blocked, what is waiting — rolled up across goal/plan/task, **bounded** → implement.
+- [x] 3.3 RED: the escalation decision — given a `NotificationPolicy` and an ask's blast radius + age, decide push-now vs. batch — is a pure `core` use-case that depends on **both `AskRepository` and `NodeRepository`** (blast radius recomputed at notify-time; the server notifier calls it; no raw DB query in the adapter), unit-tested at the boundaries (threshold met, age met, neither) → implement.
 
 ## 4. Persistence — Postgres
 
