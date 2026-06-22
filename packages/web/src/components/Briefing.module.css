@@ -1,0 +1,166 @@
+/* Re-entry Briefing surface (S3a) — a centered modal that catches the returning human up on one
+   project: a greeting, the decisions that need them, then where the agent is now / what moved /
+   heads-up. Built on the axiom tokens; no inline styles. */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: start center;
+  overflow-y: auto;
+  padding: 48px 20px;
+  background: color-mix(in srgb, var(--ink-900) 32%, transparent);
+  z-index: 50;
+}
+
+.modal {
+  width: 100%;
+  max-width: 720px;
+  background: var(--bg-raised, #fff);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-3);
+  padding: 28px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* ---- states ---- */
+.state {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+}
+.dim {
+  color: var(--fg-3);
+  font-style: italic;
+  margin: 0;
+}
+.errText {
+  color: var(--fg-2);
+  margin: 0;
+}
+
+/* ---- greeting ---- */
+.greeting {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hello {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.2;
+  margin: 0;
+  color: var(--fg-1);
+}
+.subhead {
+  font-size: 13.5px;
+  color: var(--fg-3);
+  margin: 0;
+}
+.project {
+  color: var(--accent-600);
+  font-weight: 600;
+}
+
+/* ---- sections ---- */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sectionHead {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  margin: 0;
+}
+.allClear {
+  font-size: 13.5px;
+  color: var(--fg-3);
+  margin: 0;
+}
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.item {
+  font-size: 13.5px;
+  color: var(--fg-1);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.muted {
+  color: var(--fg-3);
+}
+
+/* ---- heads up ---- */
+.headsUp {
+  border-left: 3px solid var(--amber-500);
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--amber-500) 8%, transparent);
+  font-size: 13px;
+  color: var(--fg-1);
+}
+.danger {
+  border-left-color: var(--red-500);
+  background: color-mix(in srgb, var(--red-500) 8%, transparent);
+}
+
+/* ---- footer ---- */
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+.jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: var(--accent-600);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 18px;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    transform 0.08s ease;
+}
+.jump:hover {
+  background: var(--accent-700);
+  transform: translateY(-1px);
+}
+
+.retry {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--paper-50);
+  color: var(--fg-1);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+.retry:hover {
+  border-color: var(--accent-300);
+}
