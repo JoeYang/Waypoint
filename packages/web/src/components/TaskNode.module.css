@@ -1,112 +1,174 @@
-/* One task node on a stream lane, ported from waypoint-app.css .tnode/.conn/.tcard. */
+/* One task row on a stream lane, reworked as a connected RAIL: a left rail cell (a vertical
+   connector line + a round status-node marker) and a right content cell (the task name + meta).
+   The active "you are here" node glows and pulses — the brightest node on the lane. Ported and
+   reworked from waypoint-app.css .tnode/.conn/.tcard onto the Axiom tokens. */
 .tnode {
   display: flex;
-  flex-direction: column;
   align-items: stretch;
+  gap: 12px;
   flex-shrink: 0;
 }
+
+/* ---- Rail cell: the round status node (top, aligned with the name) + the connector segment
+   leading down to the next row's node. ----------------------------------------------------- */
+.rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 22px;
+  flex-shrink: 0;
+}
+
+.marker {
+  width: 14px;
+  height: 14px;
+  /* Nudge the node down so it centres on the name's cap height. */
+  margin-top: 2px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+.marker svg {
+  width: 9px;
+  height: 9px;
+}
+
+/* The connector runs from this node down to the next row's node, keeping the spine continuous.
+   It is dashed ("future") when this node is queued; solid otherwise. */
 .conn {
   width: 2px;
-  height: 20px;
-  margin-left: 22px;
+  flex: 1;
+  min-height: 14px;
+  margin-top: 3px;
   background: var(--ink-700);
-  flex-shrink: 0;
 }
 .conn.future {
   width: 0;
   background: none;
   border-left: 2px dashed var(--border-strong);
 }
-.tnode:first-child .conn {
-  display: none;
+/* The last node closes the rail — no segment below it. */
+.tnode:last-child .conn {
+  visibility: hidden;
 }
 
-.tcard {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 9px 13px;
-  min-width: 150px;
+/* done — filled green node with a check glyph. */
+.marker.done {
+  background: var(--green-600);
+  border: 1.5px solid var(--green-600);
+  color: var(--bg-raised);
+}
+/* active — glowing accent node; the brightest node on the lane. */
+.marker.active {
+  background: var(--accent-500);
+  border: 1.5px solid var(--accent-500);
+  box-shadow: 0 0 0 3px var(--accent-100);
+}
+/* "you are here" — the active node also pulses a halo ring. */
+.marker.pulse {
+  animation: nodePulse 1.8s var(--ease-in-out) infinite;
+}
+@keyframes nodePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 76, 173, 0.35);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgba(59, 76, 173, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 76, 173, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marker.pulse {
+    animation: none;
+  }
+}
+/* blocked / parked — hollow node with an amber ring. */
+.marker.blocked {
   background: var(--bg-raised);
+  border: 2px solid var(--amber-500);
+}
+/* queued — hollow, faint node. */
+.marker.queued {
+  background: var(--bg-raised);
+  border: 1.5px dashed var(--fg-4);
+}
+
+/* ---- Content cell: the task name + meta, or an interactive button when blocked. --------- */
+.content {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 8px;
+}
+.tcard {
+  display: block;
+  width: 100%;
   text-align: left;
   font: inherit;
   color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
   cursor: default;
-  transition: box-shadow var(--dur-2);
+}
+.tcard.clickable {
+  cursor: pointer;
+}
+.tcard.clickable:focus-visible {
+  outline: 2px solid var(--accent-500);
+  outline-offset: 3px;
+  border-radius: 6px;
 }
 .tt {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: block;
   font-size: 13px;
   font-weight: 500;
+  color: var(--fg-1);
 }
-.tt svg {
-  width: 15px;
-  height: 15px;
-  flex-shrink: 0;
+.done .tt,
+.tcard.done .tt {
+  color: var(--fg-3);
+}
+.queued .tt,
+.tcard.queued .tt {
+  color: var(--fg-4);
+}
+.blocked .tt,
+.tcard.blocked .tt {
+  color: var(--amber-500);
+}
+.tcard.clickable:hover .tt {
+  color: var(--accent-700);
 }
 .tm {
   display: block;
   font-size: 11px;
   color: var(--fg-4);
   font-family: var(--font-mono);
-  margin-top: 4px;
+  margin-top: 3px;
 }
 .resuming {
   display: block;
   font-size: 11px;
   color: var(--green-600);
   font-family: var(--font-mono);
-  margin-top: 4px;
+  margin-top: 3px;
 }
-.parked,
+.parked {
+  display: inline-flex;
+  margin-top: 6px;
+}
+
+/* The "you are here" pill (waypoint-app.css .here-tag), now anchored to the glowing node. */
 .hereTag {
   display: inline-flex;
-  margin-top: 7px;
-}
-
-.done {
-  background: var(--paper-50);
-}
-.done .tt {
-  color: var(--fg-3);
-}
-.done .tt svg {
-  color: var(--green-600);
-}
-.active {
-  border-color: var(--accent-300);
-  border-width: 1.5px;
-  background: #f6f7fd;
-}
-.active .tt svg {
-  color: var(--accent-600);
-}
-.blocked {
-  border-color: #e9cfa0;
-  background: #fdf8ee;
-  cursor: pointer;
-}
-.blocked .tt svg {
-  color: var(--amber-500);
-}
-.blocked:hover {
-  box-shadow: 0 3px 12px rgba(184, 132, 31, 0.18);
-}
-.queued {
-  border-style: dashed;
-}
-.queued .tt {
-  color: var(--fg-4);
-}
-.queued .tt svg {
-  color: var(--ink-300);
-}
-
-/* The "you are here" pill (waypoint-app.css .here-tag). */
-.hereTag {
   align-items: center;
   gap: 5px;
+  margin-top: 6px;
   font-size: 11px;
   font-weight: 600;
   color: var(--accent-700);
