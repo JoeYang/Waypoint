@@ -32,15 +32,25 @@ export default tseslint.config(
       "coverage/**",
       "playwright-report/**",
       "test-results/**",
+      // Design-handoff reference dump (imported browser artifacts, not authored/built source).
+      "docs/design/storybook-handoff/**",
     ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    // Node scripts (plain ESM) — declare the runtime globals they legitimately use.
-    files: ["scripts/**/*.{js,mjs}"],
+    // Node scripts + container helpers (plain JS/ESM) — declare the runtime globals they
+    // legitimately use. Node 18+ exposes fetch and the timer functions as globals.
+    files: ["scripts/**/*.{js,mjs}", "docker/**/*.js"],
     languageOptions: {
-      globals: { process: "readonly", console: "readonly", URL: "readonly" },
+      globals: {
+        process: "readonly",
+        console: "readonly",
+        URL: "readonly",
+        fetch: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+      },
     },
   },
   {
