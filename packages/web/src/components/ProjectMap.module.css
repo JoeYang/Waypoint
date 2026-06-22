@@ -47,6 +47,60 @@
   border-style: dashed;
 }
 
+/* ---- Map summary strip: streams / live edits / parked + a jump control. ----------------- */
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  padding: 10px 14px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.stat {
+  font-size: 13px;
+  color: var(--fg-2);
+}
+.stat strong {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--fg-1);
+}
+.statDot {
+  width: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: var(--fg-4);
+}
+.jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-700);
+  background: var(--accent-50);
+  border: 1px solid var(--accent-100);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.jump:hover {
+  color: var(--accent-500);
+  border-color: var(--accent-300);
+}
+.jump:focus-visible {
+  outline: 2px solid var(--accent-500);
+  outline-offset: 2px;
+}
+.jump svg {
+  width: 13px;
+  height: 13px;
+}
+
 .lane {
   background: var(--bg-raised);
   border: 1px solid var(--border);
@@ -87,8 +141,41 @@
   color: var(--fg-3);
   font-family: var(--font-mono);
 }
+/* Collapsed done-lane summary: a green check + "{done}/{total} · all green". */
+.allGreen {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--green-600);
+}
+.allGreen svg {
+  width: 12px;
+  height: 12px;
+}
 .lspace {
   flex: 1;
+}
+
+/* ---- Lane-header progress meter: a slim track whose fill width is the done fraction (--pct). */
+.meter {
+  display: inline-block;
+  width: 84px;
+  height: 5px;
+  border-radius: 9999px;
+  background: var(--paper-100);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.meterFill {
+  display: block;
+  width: var(--pct, 0%);
+  height: 100%;
+  background: var(--accent-500);
+  border-radius: 9999px;
+  transition: width 0.3s var(--ease-out, ease);
 }
 /* The rail connects row-to-row, so the track is a single uninterrupted vertical flow: no gap
    between task rows (the connector spans the join) and rows stretch to share the rail's width. */
