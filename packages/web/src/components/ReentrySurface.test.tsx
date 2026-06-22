@@ -47,8 +47,10 @@ describe("ReentrySurface", () => {
     renderWith();
     await screen.findByRole("dialog", { name: /while you were away/i });
 
-    // Briefing's primary action ("Jump into the session") closes it.
-    await user.click(screen.getByRole("button", { name: /jump into the session/i }));
+    // Briefing's primary action ("Jump into the session") closes it. The dialog shell mounts
+    // before Briefing's own useReentry fetch resolves, so await the button rather than querying
+    // it synchronously against a still-loading body.
+    await user.click(await screen.findByRole("button", { name: /jump into the session/i }));
     await waitFor(() =>
       expect(
         screen.queryByRole("dialog", { name: /while you were away/i }),
