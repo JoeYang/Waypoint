@@ -4,6 +4,7 @@ import { useReentry } from "../wp/useReentry.js";
 import type { ReentryModel } from "../wp/useReentry.js";
 import { Icon } from "../wp/icons.js";
 import { DecisionCard } from "./DecisionCard.js";
+import { Skeleton } from "./Skeleton.js";
 import type { Stream } from "../wp/types.js";
 import styles from "./MissionControl.module.css";
 
@@ -31,8 +32,10 @@ export function MissionControl({
       aria-label="While you were away"
     >
       {state.status === "loading" ? (
-        <div className={styles.state}>
-          <p className={styles.dim}>Catching you up…</p>
+        <div className={styles.state} role="status" aria-busy="true" aria-label="Loading…">
+          <span className={styles.srOnly}>Loading…</span>
+          <Skeleton height={32} width="50%" radius="6px" />
+          <Skeleton lines={4} height={48} radius="8px" />
         </div>
       ) : state.status === "error" ? (
         <div className={styles.state} role="alert">

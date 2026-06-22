@@ -1,0 +1,39 @@
+/* A presentational shimmer placeholder. Decorative only (aria-hidden); used in loading states to
+   approximate the incoming layout so the content swap is calm rather than an abrupt snap. */
+
+.block {
+  display: block;
+  width: 100%;
+  height: 14px;
+  border-radius: var(--r-2);
+  background: linear-gradient(
+    90deg,
+    var(--bg-sunken) 0%,
+    var(--paper-200) 50%,
+    var(--bg-sunken) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Respect reduced-motion: keep the placeholder visible, drop the moving shimmer. */
+@media (prefers-reduced-motion: reduce) {
+  .block {
+    animation: none;
+  }
+}
