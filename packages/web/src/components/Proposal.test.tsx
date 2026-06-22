@@ -7,6 +7,7 @@ import { WaypointProvider, useWaypoint } from "../wp/WaypointProvider.js";
 import { ToastProvider } from "./ToastProvider.js";
 import { NAV_KEY } from "../wp/state.js";
 import { Proposal } from "./Proposal.js";
+import styles from "./Proposal.module.css";
 
 afterEach(cleanup);
 beforeEach(() => localStorage.clear());
@@ -103,5 +104,29 @@ describe("Proposal", () => {
     seedProposal("orbit-api", "d3"); // d3 is one-way (not reversible)
     renderProposal();
     expect(screen.getByText(/Needs typed confirmation/)).toBeInTheDocument();
+  });
+
+  it("gives the recommended option an accent wash distinct from the alternatives", () => {
+    seedProposal("orbit-api", "d1");
+    const { container } = renderProposal();
+    const opts = container.querySelectorAll<HTMLElement>(`.${styles.opt}`);
+    const recOpt = Array.from(opts).find((o) => /Agent recommends/.test(o.textContent ?? ""));
+    const otherOpt = Array.from(opts).find((o) => !/Agent recommends/.test(o.textContent ?? ""));
+    expect(recOpt?.className).toContain(styles.rec);
+    expect(otherOpt?.className).not.toContain(styles.rec);
+  });
+
+  it("gives a high-risk proposal a high-risk accent on the container", () => {
+    seedProposal("orbit-api", "d3"); // d3 is high-risk
+    const { container } = renderProposal();
+    const prop = container.querySelector<HTMLElement>(`.${styles.prop}`);
+    expect(prop?.className).toContain(styles.highRisk);
+  });
+
+  it("leaves a non-high-risk proposal without the high-risk accent", () => {
+    seedProposal("orbit-api", "d1"); // d1 is medium-risk
+    const { container } = renderProposal();
+    const prop = container.querySelector<HTMLElement>(`.${styles.prop}`);
+    expect(prop?.className).not.toContain(styles.highRisk);
   });
 });

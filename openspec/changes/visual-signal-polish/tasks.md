@@ -3,16 +3,16 @@
 ## 1. OpenSpec
 
 - [x] 1.1 Write proposal, tasks, and the `storybook-ui` spec delta; `openspec validate
-  visual-signal-polish --strict`.
+visual-signal-polish --strict`.
 
 ## 2. Tests (red first)
 
 - [x] 2.1 Inbox: a high-risk row (`d3`) carries the high-risk row class; a hover chevron element
-  is present on the rows.
+      is present on the rows.
 - [x] 2.2 Proposal: the recommended option carries the rec-wash marker; the high-risk decision
-  (`d3`) gives the proposal header/container its high-risk accent class.
+      (`d3`) gives the proposal header/container its high-risk accent class.
 - [x] 2.3 DecisionCard: an `isNew` card carries the new-since-left accent marker; the recommended
-  review chip carries the rec-wash marker.
+      review chip carries the rec-wash marker.
 
 ## 3. CSS
 

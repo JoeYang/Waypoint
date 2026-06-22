@@ -65,7 +65,10 @@ export function Home(): JSX.Element {
                   className={styles.review}
                   onClick={() => review(project, d.id)}
                 >
-                  Review <Icon name="arrowRight" size={14} />
+                  Review
+                  <span className={styles.reviewChev} aria-hidden="true">
+                    <Icon name="arrowRight" size={14} />
+                  </span>
                 </button>
               </li>
             ))}

@@ -52,6 +52,11 @@
   gap: 14px;
   padding: 13px 0;
   border-top: 1px solid var(--border);
+  transition: transform var(--dur-2);
+}
+/* A subtle lift on hover signals the whole row leads somewhere (the Review action). */
+.decRow:hover {
+  transform: translateY(-1px);
 }
 .decMain {
   flex: 1;
@@ -88,6 +93,24 @@
 }
 .review:hover {
   background: var(--accent-100);
+}
+/* The chevron slides right when the row is hovered, signalling it opens the decision. */
+.reviewChev {
+  display: inline-flex;
+  transition: transform var(--dur-2);
+}
+.decRow:hover .reviewChev {
+  transform: translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .decRow,
+  .decRow:hover,
+  .reviewChev,
+  .decRow:hover .reviewChev {
+    transition: none;
+    transform: none;
+  }
 }
 
 .allClear {

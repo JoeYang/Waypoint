@@ -6,6 +6,7 @@ import "@testing-library/jest-dom/vitest";
 import { WaypointProvider, useWaypoint } from "../wp/WaypointProvider.js";
 import { NAV_KEY } from "../wp/state.js";
 import { Inbox } from "./Inbox.js";
+import styles from "./Inbox.module.css";
 
 afterEach(cleanup);
 beforeEach(() => localStorage.clear());
@@ -82,6 +83,29 @@ describe("Inbox", () => {
     // d3 is the remaining (non-blocking) decision; filtering to blocking empties the list.
     await user.click(screen.getByRole("button", { name: "Blocking" }));
     expect(screen.getByText(/No decisions in this filter/i)).toBeInTheDocument();
+  });
+
+  it("gives a high-risk row the high-risk edge class and leaves others unmarked", () => {
+    seedInbox("orbit-api");
+    const { container } = renderInbox();
+    // orbit-api: d3 ("Merge the users and accounts tables?") is the high-risk decision.
+    const rows = container.querySelectorAll<HTMLElement>(`.${styles.qrow}`);
+    const highRow = Array.from(rows).find((r) =>
+      /Merge the users and accounts/i.test(r.textContent ?? ""),
+    );
+    const mediumRow = Array.from(rows).find((r) =>
+      /Which ORM should the data layer use/i.test(r.textContent ?? ""),
+    );
+    expect(highRow?.className).toContain(styles.high);
+    expect(mediumRow?.className).not.toContain(styles.high);
+  });
+
+  it("renders a hover chevron affordance on each queue row", () => {
+    seedInbox("orbit-api");
+    const { container } = renderInbox();
+    const chevrons = container.querySelectorAll(`.${styles.qchev}`);
+    // One chevron per waiting decision (orbit-api has three).
+    expect(chevrons.length).toBe(3);
   });
 
   it("shows the all-caught-up empty state when nothing is waiting", async () => {

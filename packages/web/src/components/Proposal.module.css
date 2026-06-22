@@ -41,6 +41,14 @@
     grid-template-columns: 1fr;
   }
 }
+/* A high-risk decision carries a faint red top edge + header tint, matching the red
+   read on the map node and the inline card. */
+.prop.highRisk {
+  border-top: 3px solid var(--red-500);
+}
+.prop.highRisk .propH {
+  background: color-mix(in srgb, var(--red-500) 5%, transparent);
+}
 .propH {
   padding: 22px 26px;
   border-bottom: 1px solid var(--border);
@@ -127,6 +135,12 @@
 }
 .opt:disabled {
   cursor: default;
+}
+/* The recommended option gets a faint accent wash so it wins the glance, beyond its
+   "Agent recommends" tag. A selected option (.sel below) still reads stronger. */
+.opt.rec {
+  border-color: var(--accent-300, var(--accent-100));
+  background: var(--accent-50);
 }
 .opt.sel {
   border-color: var(--accent-500);

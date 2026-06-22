@@ -58,11 +58,19 @@
   cursor: pointer;
   transition:
     border-color var(--dur-2),
-    box-shadow var(--dur-2);
+    box-shadow var(--dur-2),
+    transform var(--dur-2);
 }
 .qrow:hover {
   border-color: var(--border-strong);
   box-shadow: var(--shadow-2);
+  transform: translateY(-1px);
+}
+/* High-risk decision: a faint red left edge so risk reads at a glance (matches the
+   map node and inline card). */
+.qrow.high {
+  border-left: 3px solid var(--red-500);
+  padding-left: 18px;
 }
 .qico {
   width: 38px;
@@ -133,6 +141,24 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+/* The chevron slides right on row hover, signalling the row opens the proposal. */
+.qchev {
+  display: inline-flex;
+  transition: transform var(--dur-2);
+}
+.qrow:hover .qchev {
+  transform: translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qrow,
+  .qrow:hover,
+  .qchev,
+  .qrow:hover .qchev {
+    transition: none;
+    transform: none;
+  }
 }
 
 .emptyState {
