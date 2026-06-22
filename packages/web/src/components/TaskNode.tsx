@@ -10,6 +10,8 @@ export interface TaskNodeProps {
   resolved: boolean;
   /** The parked decision this task is blocked on, resolved by the map; absent → plain fallback. */
   decision?: Decision;
+  /** Optional DOM id on the row — a stable scroll target (e.g. the "you are here" node). */
+  id?: string;
   onOpenDecision: (id: string) => void;
 }
 
@@ -19,7 +21,13 @@ export interface TaskNodeProps {
 // unresolved decision is the only interactive node — a button that opens the proposal; once
 // resolved it flips to a non-interactive "resuming" active node. The connector above a queued
 // node is dashed ("future"); solid otherwise.
-export function TaskNode({ task, resolved, decision, onOpenDecision }: TaskNodeProps): JSX.Element {
+export function TaskNode({
+  task,
+  resolved,
+  decision,
+  id,
+  onOpenDecision,
+}: TaskNodeProps): JSX.Element {
   const isResolved = task.status === "blocked" && resolved;
   const status = isResolved ? "active" : task.status;
   // The decision to open on click — only set for an unresolved blocked task that has one.
@@ -75,7 +83,7 @@ export function TaskNode({ task, resolved, decision, onOpenDecision }: TaskNodeP
   );
 
   return (
-    <div className={styles.tnode}>
+    <div className={styles.tnode} id={id}>
       <span className={styles.rail} aria-hidden="true">
         <span className={markerClassName}>
           {status === "done" ? <Icon name="check" size={9} /> : null}

@@ -42,8 +42,8 @@ describe("ProjectMap", () => {
     // orbit-api has five streams; check a couple of lane heads and a progress count.
     expect(screen.getByText("Data layer")).toBeInTheDocument();
     expect(screen.getByText("API routes")).toBeInTheDocument();
-    // Auth: 2/2 done.
-    expect(screen.getByText("2/2 done")).toBeInTheDocument();
+    // API routes: 0/4 done (an expanded lane shows the "X/Y done" meta).
+    expect(screen.getByText("0/4 done")).toBeInTheDocument();
   });
 
   it("shows the legend", () => {
@@ -93,7 +93,8 @@ describe("ProjectMap", () => {
     // The "Auth" stream is status: "done" (2/2). Its header stays visible…
     const auth = screen.getByRole("button", { name: /Auth/ });
     expect(auth).toHaveAttribute("aria-expanded", "false");
-    expect(screen.getByText("2/2 done")).toBeInTheDocument();
+    // A collapsed done lane reads as complete via the "all green" summary, not "X/Y done".
+    expect(within(auth).getByText(/2\/2 · all green/)).toBeInTheDocument();
     // …but its task nodes are not rendered while collapsed.
     expect(screen.queryByText("Auth middleware")).not.toBeInTheDocument();
     expect(screen.queryByText("Token rotation")).not.toBeInTheDocument();
@@ -124,5 +125,52 @@ describe("ProjectMap", () => {
     // No seed → provider stays on home (project null) → map has nothing to show.
     renderMap();
     expect(screen.getByText(/No project selected/i)).toBeInTheDocument();
+  });
+
+  it("shows a summary strip with stream, live-edit, and parked counts", () => {
+    seedMap("orbit-api");
+    renderMap();
+    // orbit-api: 5 streams; active tasks (Seed scripts, Resource routes, Dockerfile) = 3 live
+    // edits; blocked tasks (Choose ORM, Session store) = 2 parked.
+    const strip = screen.getByRole("group", { name: /map summary/i });
+    expect(strip).toHaveTextContent(/5\s*streams/);
+    expect(strip).toHaveTextContent(/3\s*live edits/);
+    expect(strip).toHaveTextContent(/2\s*parked/);
+  });
+
+  it("exposes a progress meter on each lane header with the right value", () => {
+    seedMap("orbit-api");
+    renderMap();
+    // Auth is 2/2 done → aria-valuenow 2, max 2.
+    const auth = screen.getByRole("progressbar", { name: /Auth progress/i });
+    expect(auth).toHaveAttribute("aria-valuenow", "2");
+    expect(auth).toHaveAttribute("aria-valuemin", "0");
+    expect(auth).toHaveAttribute("aria-valuemax", "2");
+    // Data layer is 1/3 done.
+    const data = screen.getByRole("progressbar", { name: /Data layer progress/i });
+    expect(data).toHaveAttribute("aria-valuenow", "1");
+    expect(data).toHaveAttribute("aria-valuemax", "3");
+  });
+
+  it("shows an 'all green' summary on a collapsed done lane", () => {
+    seedMap("orbit-api");
+    renderMap();
+    // Auth (done, 2/2) starts collapsed → its header carries the all-green summary.
+    const auth = screen.getByRole("button", { name: /Auth/ });
+    expect(auth).toHaveAttribute("aria-expanded", "false");
+    expect(within(auth).getByText(/all green/i)).toBeInTheDocument();
+    expect(within(auth).getByText(/2\/2/)).toBeInTheDocument();
+  });
+
+  it("offers a 'Jump to where you left off' button that expands the here task's lane", async () => {
+    const user = userEvent.setup();
+    seedMap("orbit-api");
+    renderMap();
+    // The here task ("Seed scripts") lives in the Data layer lane.
+    const jump = screen.getByRole("button", { name: /jump to where you left off/i });
+    await user.click(jump);
+    const dataLayer = screen.getByRole("button", { name: /Data layer/ });
+    expect(dataLayer).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("Seed scripts")).toBeInTheDocument();
   });
 });
