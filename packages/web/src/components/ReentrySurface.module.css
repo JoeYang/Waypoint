@@ -1,0 +1,88 @@
+/* Re-entry surface switcher + mount (S3d). A small control bar atop the project map: a segmented
+   radiogroup that picks which of the three re-entry surfaces (Briefing / Mission Control / Timeline)
+   greets the returning human, plus a "While you were away" trigger to reopen the surface after it is
+   closed. The surfaces themselves own their own layout (modal / takeover / drawer); this module
+   styles only the switcher bar. Built on the axiom tokens; no inline styles. */
+
+.root {
+  display: contents;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+/* ---- segmented switcher ---- */
+.switcher {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 3px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.option {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--fg-3);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
+}
+.option:hover {
+  color: var(--fg-1);
+}
+.option:focus-visible {
+  outline: 2px solid var(--border-accent);
+  outline-offset: 1px;
+}
+
+.optionOn {
+  background: var(--bg-raised);
+  border-color: var(--border);
+  color: var(--fg-accent);
+  box-shadow: var(--shadow-1);
+}
+
+.optionLabel {
+  white-space: nowrap;
+}
+
+/* ---- reopen trigger ---- */
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--paper-50);
+  color: var(--fg-2);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+.trigger:hover {
+  border-color: var(--border-accent);
+  color: var(--fg-1);
+}
+.trigger:focus-visible {
+  outline: 2px solid var(--border-accent);
+  outline-offset: 1px;
+}
