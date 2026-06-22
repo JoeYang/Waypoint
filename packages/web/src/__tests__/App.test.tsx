@@ -27,7 +27,7 @@ describe("App shell", () => {
     expect(sidebar().getByRole("button", { name: /orbit-api/ })).toBeInTheDocument();
     expect(screen.getByText("11:24 AM")).toBeInTheDocument();
     // Home has no project selected → the cross-project Home screen renders.
-    expect(screen.getByText("Decisions waiting on you")).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /needs you/i })).toBeInTheDocument();
   });
 
   it("updates the breadcrumb and body when a project + view is chosen", async () => {
