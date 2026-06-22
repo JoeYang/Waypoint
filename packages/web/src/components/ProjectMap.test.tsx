@@ -54,12 +54,20 @@ describe("ProjectMap", () => {
     expect(legend.getByText("Queued")).toBeInTheDocument();
   });
 
+  it("surfaces the parked decision question on the map node", () => {
+    seedMap("orbit-api");
+    renderMap();
+    // d1's question is resolved from project.decisions and rendered on the parked node.
+    expect(screen.getByText(/Which ORM should the data layer use\?/)).toBeInTheDocument();
+  });
+
   it("opens the proposal when a blocked task node is clicked", async () => {
     const user = userEvent.setup();
     seedMap("orbit-api");
     renderMap();
     expect(screen.getByTestId("view")).toHaveTextContent("map");
-    await user.click(screen.getByRole("button", { name: /Choose ORM/ }));
+    // The parked node's accessible name now carries the decision question.
+    await user.click(screen.getByRole("button", { name: /Which ORM should the data layer use\?/ }));
     expect(screen.getByTestId("view")).toHaveTextContent("proposal");
   });
 
@@ -67,12 +75,16 @@ describe("ProjectMap", () => {
     const user = userEvent.setup();
     seedMap("orbit-api");
     renderMap();
-    // d1 (Choose ORM) starts as a clickable parked node.
-    expect(screen.getByRole("button", { name: /Choose ORM/ })).toBeInTheDocument();
+    // d1 (Choose ORM) starts as a clickable parked node, named by its question.
+    expect(
+      screen.getByRole("button", { name: /Which ORM should the data layer use\?/ }),
+    ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "resolve-d1" }));
     expect(screen.getByText(/resolved → resuming/)).toBeInTheDocument();
     // It is no longer interactive once resolved.
-    expect(screen.queryByRole("button", { name: /Choose ORM/ })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Which ORM should the data layer use\?/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("collapses a done lane by default — its task nodes are hidden", () => {

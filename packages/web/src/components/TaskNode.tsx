@@ -1,13 +1,15 @@
 import type { JSX } from "react";
 import { Icon } from "../wp/icons.js";
-import { Badge } from "./Badge.js";
-import type { Task } from "../wp/types.js";
+import { RiskBadge } from "./RiskBadge.js";
+import type { Decision, Task } from "../wp/types.js";
 import styles from "./TaskNode.module.css";
 
 export interface TaskNodeProps {
   task: Task;
   /** Whether this task's parked decision has been resolved (blocked → resuming). */
   resolved: boolean;
+  /** The parked decision this task is blocked on, resolved by the map; absent → plain fallback. */
+  decision?: Decision;
   onOpenDecision: (id: string) => void;
 }
 
@@ -17,11 +19,14 @@ export interface TaskNodeProps {
 // unresolved decision is the only interactive node — a button that opens the proposal; once
 // resolved it flips to a non-interactive "resuming" active node. The connector above a queued
 // node is dashed ("future"); solid otherwise.
-export function TaskNode({ task, resolved, onOpenDecision }: TaskNodeProps): JSX.Element {
+export function TaskNode({ task, resolved, decision, onOpenDecision }: TaskNodeProps): JSX.Element {
   const isResolved = task.status === "blocked" && resolved;
   const status = isResolved ? "active" : task.status;
   // The decision to open on click — only set for an unresolved blocked task that has one.
   const openId = !isResolved && task.status === "blocked" ? task.decision : undefined;
+  const isParked = !isResolved && task.status === "blocked";
+  // High-risk parked decisions get a red-edge accent so they stand out while scanning the map.
+  const highRisk = isParked && decision?.risk === "high";
   // The "you are here" emphasis: a non-resolved active task flagged `here` pulses its node.
   const pulsing = !isResolved && task.here === true && status === "active";
 
@@ -31,7 +36,12 @@ export function TaskNode({ task, resolved, onOpenDecision }: TaskNodeProps): JSX
   const markerClassName = [styles.marker, styles[status], pulsing && styles.pulse]
     .filter(Boolean)
     .join(" ");
-  const cardClassName = [styles.tcard, styles[status], openId !== undefined && styles.clickable]
+  const cardClassName = [
+    styles.tcard,
+    styles[status],
+    openId !== undefined && styles.clickable,
+    highRisk && styles.highRisk,
+  ]
     .filter(Boolean)
     .join(" ");
 
@@ -48,9 +58,17 @@ export function TaskNode({ task, resolved, onOpenDecision }: TaskNodeProps): JSX
       {!isResolved && task.note && !task.here ? (
         <span className={styles.tm}>{task.note}</span>
       ) : null}
-      {!isResolved && task.status === "blocked" ? (
-        <span className={styles.parked}>
-          <Badge variant="warning">Decision parked</Badge>
+      {isParked ? (
+        <span className={styles.parkedRow}>
+          {/* The actual decision question (or a plain fallback when none is supplied). */}
+          <span className={styles.parkedQ}>{decision?.title ?? "Decision parked"}</span>
+          <span className={styles.parkedFoot}>
+            {highRisk && decision ? <RiskBadge risk={decision.risk} /> : null}
+            <span className={styles.review}>
+              Review
+              <Icon name="arrowRight" size={12} />
+            </span>
+          </span>
         </span>
       ) : null}
     </>

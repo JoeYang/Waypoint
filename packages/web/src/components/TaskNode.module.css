@@ -163,6 +163,50 @@
   margin-top: 6px;
 }
 
+/* ---- Inline-actionable parked row: surfaces the decision question + a "Review →" affordance
+   inside the interactive node, so a parked task can be read and acted on from the map. ------ */
+.parkedRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--amber-500);
+  border-left-width: 3px;
+  border-radius: 6px;
+  background: var(--bg-raised);
+}
+/* A high-risk parked decision gets a red left edge so it stands out while scanning. */
+.tcard.highRisk .parkedRow {
+  border-left-color: var(--red-500);
+}
+.parkedQ {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--amber-500);
+  line-height: 1.35;
+}
+.parkedFoot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.review {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-700);
+}
+.review svg {
+  width: 12px;
+  height: 12px;
+}
+.tcard.clickable:hover .review {
+  color: var(--accent-500);
+}
+
 /* The "you are here" pill (waypoint-app.css .here-tag), now anchored to the glowing node. */
 .hereTag {
   display: inline-flex;
