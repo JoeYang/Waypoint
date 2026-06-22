@@ -61,6 +61,13 @@ describe("useReentry", () => {
     expect(m.headsUp[0]?.prompt).toBe("Redis or in-process?");
     expect(m.tallies.done).toBe(4);
     expect(m.seq).toBe(3);
+    // The story is threaded into the model oldest-first, alongside the digest cursor.
+    expect(m.timeline.map((e) => e.nodeTitle)).toEqual([
+      "Wire the spine to live data",
+      "Choose the cache strategy",
+    ]);
+    expect(m.timeline[0]?.seq).toBe(1);
+    expect(m.sinceSeq).toBe(0);
   });
 
   it("marks a needsYou decision new when a matching waiting entry is new", async () => {
