@@ -258,6 +258,205 @@ describe("core.digest — while-you-were-away", () => {
   });
 });
 
+describe("core.digest — enriched signals (risk/isNew/activeWork/headsUp/tallies)", () => {
+  let core: Core;
+  beforeEach(() => {
+    ({ core } = harness());
+  });
+
+  it("stamps risk/reversible on each waiting decision, and marks it new only since the cursor", async () => {
+    const t = await core.createNode({
+      projectId: PROJECT,
+      parentId: null,
+      kind: "task",
+      title: "pick",
+    });
+    await core.parkAsk({
+      projectId: PROJECT,
+      nodeId: t.id,
+      type: "DECISION",
+      prompt: "which ORM?",
+      required: true,
+      risk: "high",
+      reversible: false,
+      options: [{ label: "Prisma" }, { label: "Drizzle" }],
+    });
+    const parkedSeq = (await core.readEvents(PROJECT)).seq;
+
+    const fresh = await core.digest(PROJECT, 0);
+    const row = fresh.waiting.find((a) => a.nodeId === t.id);
+    expect(row?.risk).toBe("high");
+    expect(row?.reversible).toBe(false);
+    expect(row?.isNew).toBe(true);
+
+    // Seen: when the cursor already covers the parking event, the ask still waits but is not new.
+    const seen = await core.digest(PROJECT, parkedSeq);
+    expect(seen.waiting.find((a) => a.nodeId === t.id)?.isNew).toBe(false);
+  });
+
+  it("lists active work (active, unblocked task) with its parent stream, excluding blocked/done/draft", async () => {
+    const plan = await core.createNode({
+      projectId: PROJECT,
+      parentId: null,
+      kind: "plan",
+      title: "Data layer",
+    });
+    const active = await core.createNode({
+      projectId: PROJECT,
+      parentId: plan.id,
+      kind: "task",
+      title: "Seed scripts",
+    });
+    await core.transition({
+      projectId: PROJECT,
+      nodeId: active.id,
+      to: "ACTIVE",
+      expectedVersion: 1,
+    });
+    // A task that is ACTIVE but blocked on a required open ask → must NOT count as active work.
+    const blocked = await core.createNode({
+      projectId: PROJECT,
+      parentId: plan.id,
+      kind: "task",
+      title: "Choose ORM",
+    });
+    await core.transition({
+      projectId: PROJECT,
+      nodeId: blocked.id,
+      to: "ACTIVE",
+      expectedVersion: 1,
+    });
+    await core.parkAsk({
+      projectId: PROJECT,
+      nodeId: blocked.id,
+      type: "QUESTION",
+      prompt: "?",
+      required: true,
+      options: [],
+    });
+    // A done task and a draft task → neither is active work.
+    const done = await core.createNode({
+      projectId: PROJECT,
+      parentId: plan.id,
+      kind: "task",
+      title: "Schema migration",
+    });
+    await core.transition({
+      projectId: PROJECT,
+      nodeId: done.id,
+      to: "ACTIVE",
+      expectedVersion: 1,
+    });
+    await core.transition({ projectId: PROJECT, nodeId: done.id, to: "DONE", expectedVersion: 2 });
+    await core.createNode({ projectId: PROJECT, parentId: plan.id, kind: "task", title: "Queued" });
+
+    const d = await core.digest(PROJECT, 0);
+    expect(d.activeWork.map((w) => w.nodeId)).toEqual([active.id]);
+    expect(d.activeWork[0]?.streamId).toBe(plan.id);
+    expect(d.activeWork[0]?.streamTitle).toBe("Data layer");
+  });
+
+  it("surfaces only irreversible or high-risk open asks as heads-up, danger before warning", async () => {
+    const mk = async (title: string, risk: "low" | "medium" | "high", reversible: boolean) => {
+      const n = await core.createNode({
+        projectId: PROJECT,
+        parentId: null,
+        kind: "task",
+        title,
+      });
+      await core.parkAsk({
+        projectId: PROJECT,
+        nodeId: n.id,
+        type: "QUESTION",
+        prompt: "?",
+        required: true,
+        risk,
+        reversible,
+        options: [],
+      });
+      return n.id;
+    };
+    const irreversible = await mk("merge tables", "medium", false); // danger
+    const highRisk = await mk("rate limits", "high", true); // warning
+    await mk("rename var", "low", true); // neither → excluded
+
+    const d = await core.digest(PROJECT, 0);
+    expect(d.headsUp.map((h) => h.nodeId)).toEqual([irreversible, highRisk]);
+    expect(d.headsUp[0]?.kind).toBe("danger");
+    expect(d.headsUp[1]?.kind).toBe("warning");
+  });
+
+  it("tallies task nodes by state and excludes discarded", async () => {
+    const doneT = await core.createNode({
+      projectId: PROJECT,
+      parentId: null,
+      kind: "task",
+      title: "done",
+    });
+    await core.transition({
+      projectId: PROJECT,
+      nodeId: doneT.id,
+      to: "ACTIVE",
+      expectedVersion: 1,
+    });
+    await core.transition({ projectId: PROJECT, nodeId: doneT.id, to: "DONE", expectedVersion: 2 });
+
+    const activeT = await core.createNode({
+      projectId: PROJECT,
+      parentId: null,
+      kind: "task",
+      title: "active",
+    });
+    await core.transition({
+      projectId: PROJECT,
+      nodeId: activeT.id,
+      to: "ACTIVE",
+      expectedVersion: 1,
+    });
+
+    const parkedT = await core.createNode({
+      projectId: PROJECT,
+      parentId: null,
+      kind: "task",
+      title: "parked",
+    });
+    await core.parkAsk({
+      projectId: PROJECT,
+      nodeId: parkedT.id,
+      type: "QUESTION",
+      prompt: "?",
+      required: true,
+      options: [],
+    });
+
+    await core.createNode({ projectId: PROJECT, parentId: null, kind: "task", title: "queued" });
+
+    const discardedT = await core.createNode({
+      projectId: PROJECT,
+      parentId: null,
+      kind: "task",
+      title: "gone",
+    });
+    await core.transition({
+      projectId: PROJECT,
+      nodeId: discardedT.id,
+      to: "DISCARDED",
+      reason: "dropped",
+      expectedVersion: 1,
+    });
+
+    const d = await core.digest(PROJECT, 0);
+    expect(d.tallies).toEqual({ done: 1, active: 1, parked: 1, queued: 1 });
+  });
+
+  it("returns empty enriched fields for a project with nothing in flight", async () => {
+    const d = await core.digest(PROJECT, 0);
+    expect(d.activeWork).toEqual([]);
+    expect(d.headsUp).toEqual([]);
+    expect(d.tallies).toEqual({ done: 0, active: 0, parked: 0, queued: 0 });
+  });
+});
+
 describe("core.evaluateEscalation", () => {
   let core: Core;
   let clock: FakeClock;

@@ -42,6 +42,37 @@ describe("Re-entry REST API (digest / ack / story / policy)", () => {
       expect(body.sinceSeq).toBe(0);
     });
 
+    it("passes the enriched signals (activeWork / headsUp / tallies) through the endpoint", async () => {
+      const active = await task("seed");
+      await core.transition({
+        projectId: PROJECT,
+        nodeId: active.id,
+        to: "ACTIVE",
+        expectedVersion: 1,
+      });
+      const risky = await task("destructive migration");
+      await core.parkAsk({
+        projectId: PROJECT,
+        nodeId: risky.id,
+        type: "QUESTION",
+        prompt: "run it?",
+        required: true,
+        risk: "high",
+        reversible: false,
+        options: [],
+      });
+      const body = (
+        await app.inject({ method: "GET", url: `/v1/projects/${PROJECT}/digest` })
+      ).json();
+      expect(body.activeWork.map((w: { nodeId: string }) => w.nodeId)).toContain(active.id);
+      expect(body.headsUp.map((h: { nodeId: string }) => h.nodeId)).toContain(risky.id);
+      expect(body.headsUp.find((h: { nodeId: string }) => h.nodeId === risky.id).kind).toBe(
+        "danger",
+      );
+      expect(body.tallies).toMatchObject({ active: 1, parked: 1 });
+      expect(body.waiting.find((a: { nodeId: string }) => a.nodeId === risky.id).isNew).toBe(true);
+    });
+
     it("404s an unknown project with the error envelope", async () => {
       const res = await app.inject({ method: "GET", url: `/v1/projects/ghost/digest` });
       expect(res.statusCode).toBe(404);

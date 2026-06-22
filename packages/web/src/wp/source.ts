@@ -54,8 +54,32 @@ const MOCK_DIGEST: Digest = {
       prompt: "Redis or in-process?",
       blastRadius: 4,
       ageMs: 3 * 60 * 60 * 1000,
+      risk: "high",
+      reversible: false,
+      isNew: true,
     },
   ],
+  activeWork: [
+    {
+      nodeId: "n-seed",
+      nodeTitle: "Seed scripts",
+      kind: "task",
+      streamId: "n-data",
+      streamTitle: "Data layer",
+    },
+  ],
+  headsUp: [
+    {
+      askId: "d-cache",
+      nodeId: "n-block",
+      nodeTitle: "Choose the cache strategy",
+      prompt: "Redis or in-process?",
+      risk: "high",
+      reversible: false,
+      kind: "danger",
+    },
+  ],
+  tallies: { done: 4, active: 2, parked: 1, queued: 6 },
 };
 
 const MOCK_STORY: StoryResponse = {

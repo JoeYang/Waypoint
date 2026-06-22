@@ -33,6 +33,9 @@ const EMPTY: Digest = {
   shipped: [],
   newlyBlocked: [],
   waiting: [],
+  activeWork: [],
+  headsUp: [],
+  tallies: { done: 0, active: 0, parked: 0, queued: 0 },
 };
 
 describe("WhileYouWereAway", () => {
