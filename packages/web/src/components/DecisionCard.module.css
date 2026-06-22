@@ -14,6 +14,12 @@
   border-left-color: var(--red-500);
 }
 
+/* New since you left: an accent ring around the card, beyond the NEW text badge, so it
+   draws the eye on re-entry. */
+.new {
+  box-shadow: 0 0 0 2px var(--accent-100);
+}
+
 .head {
   display: flex;
   gap: 12px;
@@ -157,6 +163,12 @@
 }
 .chip:hover {
   border-color: var(--accent-300);
+}
+/* The recommended chip gets a faint accent wash so it wins the glance, beyond its
+   "Recommended" pill. The selected chip (.sel below) still reads stronger. */
+.recChip {
+  border-color: var(--accent-100);
+  background: color-mix(in srgb, var(--accent-50) 60%, var(--bg-raised, #fff));
 }
 .sel {
   border-color: var(--accent-500);

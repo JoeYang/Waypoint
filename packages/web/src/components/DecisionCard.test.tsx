@@ -6,6 +6,7 @@ import "@testing-library/jest-dom/vitest";
 import { WaypointProvider, useWaypoint } from "../wp/WaypointProvider.js";
 import { ToastProvider } from "./ToastProvider.js";
 import { DecisionCard } from "./DecisionCard.js";
+import styles from "./DecisionCard.module.css";
 import type { Decision } from "../wp/types.js";
 
 afterEach(cleanup);
@@ -55,6 +56,29 @@ describe("DecisionCard", () => {
   it("marks a decision parked since you left as NEW", () => {
     renderCard("d1", { isNew: true });
     expect(screen.getByText("NEW")).toBeInTheDocument();
+  });
+
+  it("gives a new-since-you-left card the new-accent ring class", () => {
+    const { container } = renderCard("d1", { isNew: true });
+    const card = container.querySelector<HTMLElement>(`.${styles.card}`);
+    expect(card?.className).toContain(styles.new);
+  });
+
+  it("leaves a seen card without the new-accent ring class", () => {
+    const { container } = renderCard("d1", { isNew: false });
+    const card = container.querySelector<HTMLElement>(`.${styles.card}`);
+    expect(card?.className).not.toContain(styles.new);
+  });
+
+  it("gives the recommended review chip an accent wash distinct from alternatives", async () => {
+    const user = userEvent.setup();
+    const { container } = renderCard("d1");
+    await user.click(screen.getByRole("button", { name: /Review & redirect/i }));
+    const allChips = container.querySelectorAll<HTMLElement>(`.${styles.chip}`);
+    const recChip = Array.from(allChips).find((c) => /Recommended/.test(c.textContent ?? ""));
+    const otherChip = Array.from(allChips).find((c) => !/Recommended/.test(c.textContent ?? ""));
+    expect(recChip?.className).toContain(styles.recChip);
+    expect(otherChip?.className).not.toContain(styles.recChip);
   });
 
   it("approves the recommendation inline and shows the resolved row", async () => {

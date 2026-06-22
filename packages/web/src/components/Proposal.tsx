@@ -59,7 +59,7 @@ function ProposalView({
       </button>
 
       <div className={styles.propGrid}>
-        <div className={styles.prop}>
+        <div className={`${styles.prop} ${decision.risk === "high" ? styles.highRisk : ""}`}>
           <div className={styles.propH}>
             <div className={styles.propBadges}>
               <RiskBadge risk={decision.risk} />
@@ -100,7 +100,7 @@ function ProposalView({
                       role="radio"
                       aria-checked={active}
                       disabled={isResolved}
-                      className={`${styles.opt} ${active ? styles.sel : ""}`}
+                      className={`${styles.opt} ${o.rec ? styles.rec : ""} ${active ? styles.sel : ""}`}
                       onClick={isResolved ? undefined : () => setSelected(i)}
                     >
                       {o.rec ? (

@@ -100,7 +100,11 @@ export function Inbox(): JSX.Element {
         <ul className={styles.qlist} aria-label="Parked decisions">
           {decisions.map((d) => (
             <li key={d.id}>
-              <button type="button" className={styles.qrow} onClick={() => openDecision(d.id)}>
+              <button
+                type="button"
+                className={`${styles.qrow} ${d.risk === "high" ? styles.high : ""}`}
+                onClick={() => openDecision(d.id)}
+              >
                 <span className={`${styles.qico} ${styles[d.risk]}`} aria-hidden="true">
                   <Icon name={d.risk === "high" ? "alert" : "diamond"} size={19} />
                 </span>
@@ -125,7 +129,10 @@ export function Inbox(): JSX.Element {
                     <Badge variant="neutral">Non-blocking</Badge>
                   )}
                   <span className={styles.review}>
-                    Review <Icon name="chevronRight" size={15} />
+                    Review
+                    <span className={styles.qchev} aria-hidden="true">
+                      <Icon name="chevronRight" size={15} />
+                    </span>
                   </span>
                 </span>
               </button>

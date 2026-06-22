@@ -55,7 +55,9 @@ export function DecisionCard({ decision }: { decision: Decision }): JSX.Element 
 
   return (
     <section
-      className={`${styles.card} ${decision.risk === "high" ? styles.high : ""}`}
+      className={`${styles.card} ${decision.risk === "high" ? styles.high : ""} ${
+        decision.isNew ? styles.new : ""
+      }`}
       aria-label={decision.title}
     >
       <div className={styles.head}>
@@ -94,7 +96,9 @@ export function DecisionCard({ decision }: { decision: Decision }): JSX.Element 
                 type="button"
                 role="radio"
                 aria-checked={i === sel}
-                className={`${styles.chip} ${i === sel ? styles.sel : ""}`}
+                className={`${styles.chip} ${o.rec ? styles.recChip : ""} ${
+                  i === sel ? styles.sel : ""
+                }`}
                 onClick={() => setSel(i)}
               >
                 <span className={styles.radio} aria-hidden="true" />
