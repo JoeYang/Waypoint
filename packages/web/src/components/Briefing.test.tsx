@@ -54,13 +54,16 @@ describe("Briefing", () => {
     expect(ackedSeq).toBe(3); // MOCK_DIGEST.seq
   });
 
-  it("shows the loading state before data resolves", () => {
+  it("shows skeletons in the loading state while preserving the accessible loading signal", () => {
     // A digest that never resolves keeps the surface in loading.
     const source: WaypointSource = { ...mockSource, digest: () => new Promise<never>(() => {}) };
-    renderWith(source);
-    expect(screen.getByRole("dialog", { name: /while you were away/i })).toHaveTextContent(
-      /catching you up/i,
-    );
+    const { container } = renderWith(source);
+    // The accessible loading signal is preserved: a status region with an accessible "Loading…"
+    // name (visually hidden), even though the visible content is now a skeleton.
+    const status = screen.getByRole("status");
+    expect(status).toHaveAccessibleName(/Loading/i);
+    // The visible decoration is a skeleton placeholder (aria-hidden).
+    expect(container.querySelector('[aria-hidden="true"]')).toBeInTheDocument();
   });
 
   it("shows an error state with a retry when the digest fails", async () => {

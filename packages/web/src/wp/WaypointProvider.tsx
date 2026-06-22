@@ -20,6 +20,7 @@ import type { Digest, StoryResponse } from "@waypoint/shared";
 import { mockSource, type WaypointSource } from "./source.js";
 import { initialState, loadNav, reducer, saveNav, safeNav, type Nav, type View } from "./state.js";
 import type { Decision, ProjectsData, Message } from "./types.js";
+import { Skeleton } from "../components/Skeleton.js";
 import s from "./provider-states.module.css";
 
 export interface WaypointContextValue {
@@ -87,8 +88,25 @@ export function WaypointProvider({
         </button>
       </div>
     ) : (
-      <div className={s.center} role="status" aria-live="polite">
-        Loading…
+      // App-shell skeleton (sidebar + content). The skeletons are decorative (aria-hidden); the
+      // wrapper carries the accessible loading signal — role="status", aria-busy, and a visually
+      // hidden "Loading…" name — so screen readers announce it and tests can assert it.
+      <div
+        className={s.shellSkeleton}
+        role="status"
+        aria-busy="true"
+        aria-live="polite"
+        aria-label="Loading…"
+      >
+        <span className={s.srOnly}>Loading…</span>
+        <div className={s.shellSidebar}>
+          <Skeleton height={28} radius="8px" />
+          <Skeleton lines={5} height={18} />
+        </div>
+        <div className={s.shellContent}>
+          <Skeleton height={36} width="40%" radius="8px" />
+          <Skeleton lines={4} height={56} radius="8px" />
+        </div>
       </div>
     );
   }

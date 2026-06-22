@@ -136,12 +136,18 @@ describe("WaypointProvider async states", () => {
       subscribe: () => () => {},
       answer: () => Promise.resolve(),
     };
-    render(
+    const { container } = render(
       <WaypointProvider source={pending}>
         <CountProbe />
       </WaypointProvider>,
     );
-    expect(screen.getByRole("status")).toHaveTextContent(/Loading/i);
+    // The accessible loading signal is preserved: a status region with an accessible "Loading…"
+    // name and aria-busy, even though the visible content is now a skeleton (not the bare text).
+    const status = screen.getByRole("status");
+    expect(status).toHaveAccessibleName(/Loading/i);
+    expect(status).toHaveAttribute("aria-busy", "true");
+    // The visible decoration is a skeleton placeholder (aria-hidden), not the data.
+    expect(container.querySelector('[aria-hidden="true"]')).toBeInTheDocument();
     expect(screen.queryByTestId("projects")).not.toBeInTheDocument();
   });
 

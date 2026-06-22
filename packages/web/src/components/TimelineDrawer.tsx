@@ -5,6 +5,7 @@ import { useReentry } from "../wp/useReentry.js";
 import type { ReentryModel } from "../wp/useReentry.js";
 import { Icon } from "../wp/icons.js";
 import { DecisionCard } from "./DecisionCard.js";
+import { Skeleton } from "./Skeleton.js";
 import styles from "./TimelineDrawer.module.css";
 
 // The re-entry Timeline surface (S3c): a right-side drawer that replays the session for a returning
@@ -31,8 +32,10 @@ export function TimelineDrawer({
       aria-label="While you were away"
     >
       {state.status === "loading" ? (
-        <div className={styles.state}>
-          <p className={styles.dim}>Catching you up…</p>
+        <div className={styles.state} role="status" aria-busy="true" aria-label="Loading…">
+          <span className={styles.srOnly}>Loading…</span>
+          <Skeleton height={24} width="70%" radius="6px" />
+          <Skeleton lines={5} height={40} radius="8px" />
         </div>
       ) : state.status === "error" ? (
         <div className={styles.state} role="alert">

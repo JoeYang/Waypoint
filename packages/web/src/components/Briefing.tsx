@@ -4,6 +4,7 @@ import { useReentry } from "../wp/useReentry.js";
 import type { ReentryModel } from "../wp/useReentry.js";
 import { Icon } from "../wp/icons.js";
 import { DecisionCard } from "./DecisionCard.js";
+import { Skeleton } from "./Skeleton.js";
 import t from "./typography.module.css";
 import styles from "./Briefing.module.css";
 
@@ -30,8 +31,10 @@ export function Briefing({
         aria-label="While you were away"
       >
         {state.status === "loading" ? (
-          <div className={styles.state}>
-            <p className={styles.dim}>Catching you up…</p>
+          <div className={styles.state} role="status" aria-busy="true" aria-label="Loading…">
+            <span className={styles.srOnly}>Loading…</span>
+            <Skeleton height={24} width="60%" radius="6px" />
+            <Skeleton lines={3} height={56} radius="8px" />
           </div>
         ) : state.status === "error" ? (
           <div className={styles.state} role="alert">
