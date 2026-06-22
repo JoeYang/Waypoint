@@ -1,5 +1,6 @@
 import { useState, type JSX } from "react";
 import { useWaypoint } from "../wp/WaypointProvider.js";
+import { useToast } from "./ToastProvider.js";
 import { Icon } from "../wp/icons.js";
 import { Badge } from "./Badge.js";
 import { RiskBadge } from "./RiskBadge.js";
@@ -13,6 +14,17 @@ import styles from "./DecisionCard.module.css";
 // resolved card is terminal here (the agent resumes), matching the Proposal's resolved banner.
 export function DecisionCard({ decision }: { decision: Decision }): JSX.Element {
   const { resolved, resolve, adjust } = useWaypoint();
+  const { toast } = useToast();
+  // Resolve / adjust, confirming with a toast alongside the existing optimistic flip. The toast
+  // never changes resolve/adjust semantics — it is enqueued on the same user action.
+  const applyOption = (name: string): void => {
+    resolve(decision.id, name);
+    toast(`Applied ${name} — agent resuming`);
+  };
+  const sendAdjustment = (note: string): void => {
+    adjust(decision.id, note);
+    toast("Sent your adjustment — agent resuming");
+  };
   const recIdx = decision.options.findIndex((o) => o.rec);
   const recName = decision.options[recIdx >= 0 ? recIdx : 0]?.name ?? "";
   const [open, setOpen] = useState(false);
@@ -37,8 +49,8 @@ export function DecisionCard({ decision }: { decision: Decision }): JSX.Element 
   const selName = decision.options[sel]?.name ?? recName;
   const hasConstraint = redirect.trim().length > 0;
   const apply = (): void => {
-    if (hasConstraint) adjust(decision.id, redirect.trim());
-    else resolve(decision.id, selName);
+    if (hasConstraint) sendAdjustment(redirect.trim());
+    else applyOption(selName);
   };
 
   return (
@@ -124,7 +136,7 @@ export function DecisionCard({ decision }: { decision: Decision }): JSX.Element 
           <button
             type="button"
             className={`${styles.btn} ${styles.primary}`}
-            onClick={() => resolve(decision.id, recName)}
+            onClick={() => applyOption(recName)}
           >
             <Icon name="check" size={15} />
             Approve {recName}

@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { WaypointProvider } from "./wp/WaypointProvider.js";
+import { ToastProvider } from "./components/ToastProvider.js";
 import { selectSource, resolveApiBase } from "./wp/select-source.js";
 import { App } from "./App.js";
 import "./styles/axiom-tokens.css";
@@ -21,7 +22,9 @@ const apiBase = resolveApiBase(
 createRoot(root).render(
   <StrictMode>
     <WaypointProvider source={selectSource(apiBase)}>
-      <App />
+      <ToastProvider>
+        <App />
+      </ToastProvider>
     </WaypointProvider>
   </StrictMode>,
 );

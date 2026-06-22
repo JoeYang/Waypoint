@@ -1,5 +1,6 @@
 import { useState, type JSX } from "react";
 import { useWaypoint } from "../wp/WaypointProvider.js";
+import { useToast } from "./ToastProvider.js";
 import { Icon } from "../wp/icons.js";
 import { Badge } from "./Badge.js";
 import { RiskBadge } from "./RiskBadge.js";
@@ -37,6 +38,7 @@ function ProposalView({
   decision: Decision;
 }): JSX.Element {
   const { resolved, resolve, navigate } = useWaypoint();
+  const { toast } = useToast();
   const recIdx = decision.options.findIndex((o) => o.rec);
   const [selected, setSelected] = useState(recIdx >= 0 ? recIdx : 0);
 
@@ -149,7 +151,10 @@ function ProposalView({
               <button
                 type="button"
                 className={`${styles.btn} ${styles.primary}`}
-                onClick={() => resolve(decision.id, chosenName)}
+                onClick={() => {
+                  resolve(decision.id, chosenName);
+                  toast(`Applied ${chosenName} — agent resuming`);
+                }}
               >
                 <Icon name="check" size={16} />
                 {isRec ? "Approve recommendation" : `Apply ${chosenName}`}

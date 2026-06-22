@@ -4,6 +4,7 @@ import { render, screen, cleanup, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 import { WaypointProvider, useWaypoint } from "../wp/WaypointProvider.js";
+import { ToastProvider } from "./ToastProvider.js";
 import { NAV_KEY } from "../wp/state.js";
 import { Proposal } from "./Proposal.js";
 
@@ -72,6 +73,22 @@ describe("Proposal", () => {
     expect(
       screen.queryByRole("button", { name: "Approve recommendation" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("toasts a confirmation when an option is applied", async () => {
+    const user = userEvent.setup();
+    seedProposal("orbit-api", "d1");
+    render(
+      <WaypointProvider>
+        <ToastProvider>
+          <Proposal />
+        </ToastProvider>
+      </WaypointProvider>,
+    );
+    await user.click(screen.getByRole("button", { name: "Approve recommendation" }));
+    expect(screen.getByRole("status", { name: /notifications/i })).toHaveTextContent(
+      "Applied Drizzle — agent resuming",
+    );
   });
 
   it("navigates back to the inbox via the back link", async () => {
