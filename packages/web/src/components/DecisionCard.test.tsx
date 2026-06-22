@@ -4,6 +4,7 @@ import { render, screen, cleanup, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 import { WaypointProvider, useWaypoint } from "../wp/WaypointProvider.js";
+import { ToastProvider } from "./ToastProvider.js";
 import { DecisionCard } from "./DecisionCard.js";
 import type { Decision } from "../wp/types.js";
 
@@ -27,6 +28,16 @@ const renderCard = (id: string, patch?: Partial<Decision>) =>
   );
 
 const chips = () => within(screen.getByRole("radiogroup", { name: /options/i }));
+
+// Same as renderCard but wrapped in a ToastProvider, for the toast-confirmation cases.
+const renderWith = (id: string, patch?: Partial<Decision>) =>
+  render(
+    <WaypointProvider>
+      <ToastProvider>
+        <CardFor id={id} patch={patch} />
+      </ToastProvider>
+    </WaypointProvider>,
+  );
 
 describe("DecisionCard", () => {
   it("shows the question, risk, and the agent's recommended approve action", () => {
@@ -76,6 +87,29 @@ describe("DecisionCard", () => {
     await user.click(screen.getByRole("button", { name: /Send & apply/i }));
     expect(screen.getByText(/agent is applying/i)).toBeInTheDocument();
     expect(screen.getByText(note)).toBeInTheDocument();
+  });
+
+  it("toasts a confirmation when applying the recommendation", async () => {
+    const user = userEvent.setup();
+    renderWith("d1");
+    await user.click(screen.getByRole("button", { name: /Approve Drizzle/ }));
+    expect(screen.getByRole("status", { name: /notifications/i })).toHaveTextContent(
+      "Applied Drizzle — agent resuming",
+    );
+  });
+
+  it("toasts an adjustment confirmation on the Send & apply constraint path", async () => {
+    const user = userEvent.setup();
+    renderWith("d1");
+    await user.click(screen.getByRole("button", { name: /Review & redirect/i }));
+    await user.type(
+      screen.getByRole("textbox", { name: /redirect the agent/i }),
+      "Keep the Repository seam",
+    );
+    await user.click(screen.getByRole("button", { name: /Send & apply/i }));
+    expect(screen.getByRole("status", { name: /notifications/i })).toHaveTextContent(
+      "Sent your adjustment — agent resuming",
+    );
   });
 
   it("can cancel out of the review panel", async () => {

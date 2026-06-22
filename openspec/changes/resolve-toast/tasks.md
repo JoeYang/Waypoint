@@ -14,8 +14,8 @@
 
 ## 2. web — wire the resolve surfaces
 
-- [ ] 2.1 `Proposal`: after `resolve(id, chosenName)`, `toast("Applied <name> — agent resuming")`.
-- [ ] 2.2 `DecisionCard`: after `resolve`, the same applied toast; after `adjust` (Send & apply),
+- [x] 2.1 `Proposal`: after `resolve(id, chosenName)`, `toast("Applied <name> — agent resuming")`.
+- [x] 2.2 `DecisionCard`: after `resolve`, the same applied toast; after `adjust` (Send & apply),
       `toast("Sent your adjustment — agent resuming")`.
-- [ ] 2.3 Tests: approving in `Proposal` shows the applied toast; the `DecisionCard` Send & apply
+- [x] 2.3 Tests: approving in `Proposal` shows the applied toast; the `DecisionCard` Send & apply
       path shows the adjustment toast. Existing Proposal/DecisionCard tests stay green.
