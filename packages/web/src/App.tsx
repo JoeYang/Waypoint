@@ -9,7 +9,7 @@ import { Inbox } from "./components/Inbox.js";
 import { Proposal } from "./components/Proposal.js";
 import { Activity } from "./components/Activity.js";
 import { Settings } from "./components/Settings.js";
-import { WhileYouWereAway } from "./components/WhileYouWereAway.js";
+import { ReentrySurface } from "./components/ReentrySurface.js";
 import { MobileCompanion } from "./components/MobileCompanion.js";
 import type { View } from "./wp/state.js";
 import t from "./components/typography.module.css";
@@ -32,7 +32,7 @@ function ViewBody(): JSX.Element {
   if (nav.view === "map")
     return (
       <>
-        <WhileYouWereAway />
+        {nav.project !== null ? <ReentrySurface projectId={nav.project} /> : null}
         <ProjectMap />
       </>
     );
