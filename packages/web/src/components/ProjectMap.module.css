@@ -90,6 +90,8 @@
 .lspace {
   flex: 1;
 }
+/* The rail connects row-to-row, so the track is a single uninterrupted vertical flow: no gap
+   between task rows (the connector spans the join) and rows stretch to share the rail's width. */
 .laneTrack {
   display: flex;
   flex-direction: column;
