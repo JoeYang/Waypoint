@@ -1,98 +1,124 @@
-/* Home — cross-project landing (ported from waypoint-app.css briefing/stat/proj-grid). */
-.briefing {
-  display: flex;
-  gap: 18px;
-  align-items: flex-start;
-  background: var(--accent-50);
-  border: 1px solid var(--accent-100);
+/* Home — cross-project landing. Needs-you command bar, demoted metric strip, project cards. */
+
+/* ── Needs-you command bar ─────────────────────────────────────────────── */
+.bar {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 20px 22px;
-  margin-bottom: 30px;
+  padding: 24px 26px;
+  margin-bottom: 18px;
 }
-.bi {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-  background: var(--accent-600);
-  color: #fff;
+.barHead {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
 }
-.briefingTitle {
-  margin: 0 0 4px;
+.count {
   font-family: var(--font-serif);
-  font-size: 19px;
-  font-weight: 500;
-  color: var(--accent-700);
+  font-size: 56px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--amber-500);
 }
-.briefingText {
-  margin: 0;
+.countCalm {
+  color: var(--green-600);
+}
+.barTitles {
+  flex: 1;
+  min-width: 0;
+}
+.waiting {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: var(--ink-900);
+}
+.greeting {
   font-size: 14px;
-  color: var(--ink-700);
-  max-width: 760px;
-  line-height: 1.55;
+  color: var(--fg-3);
+  margin-top: 4px;
 }
-.x {
-  margin-left: auto;
-  color: var(--accent-600);
-  width: 30px;
-  height: 30px;
-  border-radius: 7px;
+
+.decList {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.decRow {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 14px;
+  padding: 13px 0;
+  border-top: 1px solid var(--border);
+}
+.decMain {
+  flex: 1;
+  min-width: 0;
+}
+.decTitle {
+  font-size: 15px;
+  color: var(--ink-900);
+}
+.decMeta {
+  font-size: 12px;
+  color: var(--fg-4);
+  margin-top: 3px;
+}
+.decProject {
+  font-family: var(--font-mono);
+  color: var(--fg-3);
+}
+.review {
   flex-shrink: 0;
   appearance: none;
-  background: none;
-  border: none;
+  border: 1px solid var(--accent-300);
+  background: var(--accent-50);
+  color: var(--accent-700);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 13px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background var(--dur-2);
 }
-.x:hover {
+.review:hover {
   background: var(--accent-100);
 }
 
-.head {
-  margin-bottom: 24px;
+.allClear {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  font-size: 14px;
+  color: var(--green-600);
 }
 
-.statRow {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 30px;
-}
-.stat {
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 18px 20px;
-}
-.v {
-  font-family: var(--font-serif);
-  font-size: 34px;
-  line-height: 1;
-  letter-spacing: -0.02em;
-}
-.vAccent {
-  color: var(--accent-600);
-}
-.vWarn {
-  color: var(--amber-500);
-}
-.l {
+/* ── Demoted metric strip ──────────────────────────────────────────────── */
+.metricStrip {
   font-size: 13px;
-  color: var(--fg-3);
-  margin-top: 8px;
+  color: var(--fg-4);
+  margin: 0 0 28px;
+  padding: 0 2px;
 }
 
+.head {
+  margin-bottom: 18px;
+}
+
+/* ── Project cards ─────────────────────────────────────────────────────── */
 .projGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 18px;
 }
 .pcard {
+  position: relative;
   background: var(--bg-raised);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -106,16 +132,22 @@
   width: 100%;
   font: inherit;
   color: inherit;
+  overflow: hidden;
 }
 .pcard:hover {
   border-color: var(--border-strong);
   box-shadow: var(--shadow-2);
 }
+/* Amber left-edge accent for cards with a parked (open) decision. */
+.pcard[data-parked="true"] {
+  border-left: 3px solid var(--amber-500);
+  padding-left: 19px;
+}
 .pcardTop {
   display: flex;
   align-items: center;
   gap: 13px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 .glyph {
   width: 40px;
@@ -142,49 +174,59 @@
   font-size: 13px;
   color: var(--fg-3);
 }
-.pcardStreams {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  margin-bottom: 18px;
-}
-.streamline {
+.now {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 7px;
   font-size: 13px;
-}
-.snm {
   color: var(--fg-2);
-  width: 110px;
+  margin-bottom: 14px;
+}
+.nowDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-500);
   flex-shrink: 0;
+}
+.nowTask {
+  color: var(--ink-900);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.bar {
+
+/* Single segmented progress meter: done / active / parked. */
+.meter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.meterTrack {
   flex: 1;
-  height: 6px;
+  display: flex;
+  height: 7px;
   border-radius: 9999px;
-  background: var(--paper-200);
   overflow: hidden;
-  position: relative;
+  background: var(--paper-200);
 }
-.barFill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  border-radius: 9999px;
+.segDone {
+  background: var(--green-600);
 }
-.pct {
+.segActive {
+  background: var(--accent-500);
+}
+.segParked {
+  background: var(--amber-500);
+}
+.meterLabel {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--fg-4);
-  width: 34px;
-  text-align: right;
   flex-shrink: 0;
 }
+
 .pcardFoot {
   display: flex;
   align-items: center;
@@ -204,8 +246,5 @@
 @media (max-width: 1080px) {
   .projGrid {
     grid-template-columns: 1fr;
-  }
-  .statRow {
-    grid-template-columns: repeat(2, 1fr);
   }
 }

@@ -1,52 +1,87 @@
-import { useState, type JSX } from "react";
+import type { JSX } from "react";
 import { useWaypoint } from "../wp/WaypointProvider.js";
 import { Icon } from "../wp/icons.js";
 import { AgentPill } from "./AgentPill.js";
 import { Badge } from "./Badge.js";
-import { streamProgress, streamBarColor } from "../wp/helpers.js";
+import { currentTask, projectTally } from "../wp/helpers.js";
 import type { Project } from "../wp/types.js";
 import t from "./typography.module.css";
 import styles from "./Home.module.css";
 
-// Cross-project landing: the returning-human briefing, summary stats, and per-project cards.
+// Cross-project landing / re-entry: a needs-you command bar surfacing the actual parked decisions,
+// a demoted metric strip, and per-project cards showing where each agent is now.
 export function Home(): JSX.Element {
-  const { data, navigate, resolved } = useWaypoint();
-  const [briefingOpen, setBriefingOpen] = useState(true);
+  const { data, navigate, openDecision, resolved } = useWaypoint();
 
-  const open = (p: Project): number => p.decisions.filter((d) => !resolved[d.id]).length;
-  const decisionsWaiting = data.projects.reduce((a, p) => a + open(p), 0);
+  const openCount = (p: Project): number => p.decisions.filter((d) => !resolved[d.id]).length;
+
+  // The actual parked decisions across all projects, each carrying its project.
+  const parked = data.projects
+    .flatMap((p) => p.decisions.map((d) => ({ d, project: p })))
+    .filter(({ d }) => !resolved[d.id]);
+
+  const decisionsWaiting = parked.length;
   const agentsWorking = data.projects.filter((p) => p.agent === "working").length;
-  const tasksInFlight = data.projects.reduce((a, p) => a + p.agentTasks, 0);
+  const tasksInFlight = data.projects.reduce(
+    (a, p) =>
+      a + p.streams.reduce((b, s) => b + s.tasks.filter((x) => x.status === "active").length, 0),
+    0,
+  );
   const streamsActive = data.projects.reduce(
     (a, p) => a + p.streams.filter((s) => s.status === "active").length,
     0,
   );
 
+  const review = (project: Project, id: string): void => {
+    navigate({ project: project.id });
+    openDecision(id);
+  };
+
   return (
     <div className={`${t.viewInner} ${t.fadeIn}`}>
-      {briefingOpen ? (
-        <section className={styles.briefing} aria-label="Morning briefing">
-          <span className={styles.bi}>
-            <Icon name="sun" size={22} />
+      <section className={styles.bar} aria-label="Needs you">
+        <div className={styles.barHead}>
+          <span className={`${styles.count} ${decisionsWaiting === 0 ? styles.countCalm : ""}`}>
+            {decisionsWaiting}
           </span>
-          <div>
-            <div className={styles.briefingTitle}>Good morning, Joe — it's {data.now}.</div>
-            <div className={styles.briefingText}>
-              While you were away, your three agents kept building. They finished what they could
-              and parked {decisionsWaiting} decisions for you. Nothing is fully blocked — pick these
-              up whenever you're ready.
-            </div>
+          <div className={styles.barTitles}>
+            <div className={styles.waiting}>waiting on you</div>
+            <div className={styles.greeting}>Good morning, Joe — it&apos;s {data.now}.</div>
           </div>
-          <button
-            type="button"
-            className={styles.x}
-            aria-label="Dismiss briefing"
-            onClick={() => setBriefingOpen(false)}
-          >
-            <Icon name="x" size={17} />
-          </button>
-        </section>
-      ) : null}
+        </div>
+
+        {decisionsWaiting > 0 ? (
+          <ul className={styles.decList}>
+            {parked.map(({ d, project }) => (
+              <li key={d.id} className={styles.decRow}>
+                <div className={styles.decMain}>
+                  <div className={styles.decTitle}>{d.title}</div>
+                  <div className={styles.decMeta}>
+                    <span className={styles.decProject}>{project.name}</span> · parked {d.parked}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className={styles.review}
+                  onClick={() => review(project, d.id)}
+                >
+                  Review <Icon name="arrowRight" size={14} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className={styles.allClear}>
+            <Icon name="check" size={16} />
+            You&apos;re all caught up — nothing is waiting on you.
+          </div>
+        )}
+      </section>
+
+      <p className={styles.metricStrip}>
+        {data.projects.length} projects · {agentsWorking} agents working · {tasksInFlight} tasks in
+        flight · {streamsActive} active streams
+      </p>
 
       <div className={styles.head}>
         <div className={t.eyebrowSm}>Overview</div>
@@ -55,33 +90,19 @@ export function Home(): JSX.Element {
         </h1>
       </div>
 
-      <div className={styles.statRow}>
-        <div className={styles.stat}>
-          <div className={`${styles.v} ${styles.vWarn}`}>{decisionsWaiting}</div>
-          <div className={styles.l}>Decisions waiting on you</div>
-        </div>
-        <div className={styles.stat}>
-          <div className={`${styles.v} ${styles.vAccent}`}>{agentsWorking}</div>
-          <div className={styles.l}>Agents working now</div>
-        </div>
-        <div className={styles.stat}>
-          <div className={styles.v}>{tasksInFlight}</div>
-          <div className={styles.l}>Tasks in flight</div>
-        </div>
-        <div className={styles.stat}>
-          <div className={styles.v}>{streamsActive}</div>
-          <div className={styles.l}>Active work streams</div>
-        </div>
-      </div>
-
       <div className={styles.projGrid}>
         {data.projects.map((p) => {
-          const dc = open(p);
+          const dc = openCount(p);
+          const tally = projectTally(p);
+          const now = currentTask(p);
+          const pct = (n: number): string =>
+            tally.total > 0 ? `${(n / tally.total) * 100}%` : "0%";
           return (
             <button
               key={p.id}
               type="button"
               className={styles.pcard}
+              data-parked={dc > 0 ? "true" : undefined}
               onClick={() => navigate({ project: p.id, view: "map" })}
             >
               <div className={styles.pcardTop}>
@@ -94,25 +115,29 @@ export function Home(): JSX.Element {
                 </div>
                 <AgentPill agent={p.agent} tasks={p.agentTasks} />
               </div>
-              <div className={styles.pcardStreams}>
-                {p.streams.slice(0, 4).map((s) => {
-                  const pr = streamProgress(s);
-                  return (
-                    <div key={s.id} className={styles.streamline}>
-                      <span className={styles.snm}>{s.name}</span>
-                      <span className={styles.bar}>
-                        <i
-                          className={styles.barFill}
-                          style={{ width: `${pr.pct}%`, background: streamBarColor(s) }}
-                        />
-                      </span>
-                      <span className={styles.pct}>
-                        {pr.done}/{pr.total}
-                      </span>
-                    </div>
-                  );
-                })}
+
+              {now ? (
+                <div className={styles.now}>
+                  <span className={styles.nowDot} />
+                  Now — <span className={styles.nowTask}>{now.name}</span>
+                </div>
+              ) : null}
+
+              <div className={styles.meter}>
+                <span
+                  className={styles.meterTrack}
+                  role="img"
+                  aria-label={`Progress: ${tally.done} of ${tally.total} tasks done`}
+                >
+                  <i className={styles.segDone} style={{ width: pct(tally.done) }} />
+                  <i className={styles.segActive} style={{ width: pct(tally.active) }} />
+                  <i className={styles.segParked} style={{ width: pct(tally.parked) }} />
+                </span>
+                <span className={styles.meterLabel}>
+                  {tally.done} / {tally.total}
+                </span>
               </div>
+
               <div className={styles.pcardFoot}>
                 {dc > 0 ? (
                   <Badge variant="warning">
