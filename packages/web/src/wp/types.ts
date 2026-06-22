@@ -91,6 +91,9 @@ export interface Decision {
   // "Approve with adjustment", a DECISION/QUESTION is read-only (answered via options). Absent for
   // mock fixtures, which keep the prototype's free-form composer.
   kind?: DecisionKind;
+  // Parked since the viewer's last visit ("new since you left"). Carried by the re-entry surfaces
+  // from the enriched digest's `isNew`; absent elsewhere (treated as not-new).
+  isNew?: boolean;
 }
 
 export type DecisionKind = "question" | "proposal" | "decision";
