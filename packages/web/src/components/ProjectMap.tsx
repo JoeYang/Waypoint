@@ -123,6 +123,7 @@ export function ProjectMap(): JSX.Element {
                   <TaskNode
                     key={i}
                     task={task}
+                    decision={project.decisions.find((d) => d.id === task.decision)}
                     resolved={task.decision !== undefined && resolved[task.decision] !== undefined}
                     onOpenDecision={openDecision}
                   />
